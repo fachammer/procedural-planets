@@ -1,0 +1,18 @@
+#version 330 core
+
+// Input vertex data, different for all executions of this shader.
+layout(location = 0) in vec3 vertexPosition_modelspace;
+layout(location = 1) in vec2 vertexUV;
+layout(location = 2) in vec3 vertexNormal_modelspace;
+
+// Output data to geometry shader, same as input
+out vec2 UV;
+
+void main(){
+	// do NOT apply any modelviewprojection matrix, the quad is 
+	// already on the correct positionon the screen 
+	gl_Position = vec4(vertexPosition_modelspace, 1.0);
+	// pass on the UVS
+	UV = vertexUV;
+}
+

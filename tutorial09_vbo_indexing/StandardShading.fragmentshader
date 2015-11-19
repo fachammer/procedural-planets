@@ -1,0 +1,84 @@
+#version 330 core
+
+// Interpolated values from the vertex shaders
+in vec2 UV;
+in vec3 Position_worldspace;
+in vec3 Normal_cameraspace;
+in vec3 EyeDirection_cameraspace;
+in vec3 LightDirection_cameraspace;
+
+// Ouput data
+out vec4 color;
+
+// Values that stay constant for the whole mesh.
+uniform sampler2D myTextureSampler;
+uniform sampler2D textureSampler2;
+uniform samplerCube cubeSampler;
+uniform mat4 MV;
+uniform vec3 LightPosition_worldspace;
+uniform vec3 MaterialSpecularColor;
+uniform float metalness;
+uniform float shininess;
+uniform float specularity;
+
+float SchlickFresnelFactor(vec3 halfwayDirection, vec3 viewDirection)
+{
+	
+    float w = pow(1.0 - max(0.0, 
+        dot(halfwayDirection, viewDirection)), 5.0);
+		return w;
+}
+
+
+void main(){
+
+	// Light emission properties
+	// You probably want to put them as uniforms
+	vec3 LightColor = vec3(1,1,1);
+	float LightPower = 50.0f;
+	
+	// Material properties
+	vec3 MaterialDiffuseColor = texture( myTextureSampler, UV ).rgb;
+	vec3 MaterialAmbientColor = vec3(0.1,0.1,0.1) * MaterialDiffuseColor;
+	vec3 specColor = mix(MaterialSpecularColor, MaterialDiffuseColor, metalness);
+	specColor = specularity * specColor;
+
+	// Distance to the light
+	float distance = length( LightPosition_worldspace - Position_worldspace );
+	LightPower /= distance*distance;
+
+	// Normal of the computed fragment, in camera space
+	vec3 n = normalize( Normal_cameraspace );
+	// Direction of the light (from the fragment to the light)
+	vec3 l = normalize( LightDirection_cameraspace );
+	// Cosine of the angle between the normal and the light direction, 
+	// clamped above 0
+	//  - light is at the vertical of the triangle -> 1
+	//  - light is perpendicular to the triangle -> 0
+	//  - light is behind the triangle -> 0
+	float ndotL = clamp( dot( n,l ), 0,1 );
+	
+	// Eye vector (towards the camera)
+	vec3 E = normalize(EyeDirection_cameraspace);
+
+
+	vec3 halfwayDirection = normalize(l + E);
+	float ndotH = max(0.0, dot(halfwayDirection, n));
+	vec3 specularLight = LightPower * vec3(LightColor) 
+            * specColor 
+            * pow(ndotH, shininess);
+	vec3 diffuseLight = LightPower*  MaterialDiffuseColor * ndotL;
+
+	
+	color.xyz = 
+		MaterialAmbientColor +
+		diffuseLight +
+		specularLight;
+
+		// completely wrong 
+		//color.xyz = texture(cubeSampler, n).xyz;
+
+		color.rgb = texture( myTextureSampler, UV ).rgb;//vec3(1.0, 0.0, 0.0);//
+		color.a = texture( myTextureSampler, UV ).a;
+
+}
