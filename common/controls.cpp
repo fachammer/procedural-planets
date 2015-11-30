@@ -30,9 +30,11 @@ float verticalAngle = 0.0f;
 float initialFoV = 45.0f;
 
 float speed = 3.0f; // 3 units / second
+float hRotateSpeed = 1.5f;
+float vRotateSpeed = 1.5f;
 float mouseSpeed = 0.005f;
 
-
+glm::vec3 up = glm::vec3(0, 1, 0);
 
 void computeMatricesFromInputs(){
 
@@ -85,29 +87,53 @@ void computeMatricesFromInputs(){
 	glm::vec3 up = glm::cross( right, direction );
 
 	// Move forward
-	if (glfwGetKey( window, GLFW_KEY_UP ) == GLFW_PRESS){
+	if (glfwGetKey( window, GLFW_KEY_W ) == GLFW_PRESS){
 		position += direction * deltaTime * speed;
 	}
 	// Move backward
-	if (glfwGetKey( window, GLFW_KEY_DOWN ) == GLFW_PRESS){
+	if (glfwGetKey( window, GLFW_KEY_S ) == GLFW_PRESS){
 		position -= direction * deltaTime * speed;
 	}
 	// Strafe right
-	if (glfwGetKey( window, GLFW_KEY_RIGHT ) == GLFW_PRESS){
+	if (glfwGetKey( window, GLFW_KEY_D ) == GLFW_PRESS){
 		position += right * deltaTime * speed;
 	}
 	// Strafe left
-	if (glfwGetKey( window, GLFW_KEY_LEFT ) == GLFW_PRESS){
+	if (glfwGetKey( window, GLFW_KEY_A ) == GLFW_PRESS){
 		position -= right * deltaTime * speed;
 	}
+	//Rotate left
+	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+		horizontalAngle += hRotateSpeed * deltaTime;
+	}
+	//Rotate right
+	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+		horizontalAngle -= hRotateSpeed * deltaTime;
+	}
+	//Rotate up
+	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+		verticalAngle += vRotateSpeed * deltaTime;
+	}
+	//Rotate down
+	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+		verticalAngle -= vRotateSpeed * deltaTime;
+	}
+	// Move up
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+		position += up * deltaTime * speed;
+	}
+	// Move down
+	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
+		position -= up * deltaTime * speed;
+	}
 
-	if (glfwGetKey (window, GLFW_KEY_SPACE ) == GLFW_PRESS){
+	if (glfwGetKey (window, GLFW_KEY_R ) == GLFW_PRESS){
 		position = position = glm::vec3( 0, 0, 5 ); 
 		horizontalAngle = 3.14f;
 		verticalAngle = 0.0f;
 	}
 		
-	if (glfwGetKey (window, GLFW_KEY_A ) == GLFW_PRESS){
+	if (glfwGetKey (window, GLFW_KEY_I ) == GLFW_PRESS){
 		printf("up: %f/%f/%f, at: %f/%f/%f\n", up.x, up.y, up.z, direction.x, direction.y, direction.z);
 	}
 
