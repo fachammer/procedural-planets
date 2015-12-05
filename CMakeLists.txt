@@ -55,6 +55,7 @@ add_definitions(
 add_executable(tutorial09_AssImp
 	tutorial09_vbo_indexing/tutorial09_AssImp.cpp
 	tutorial09_vbo_indexing/SphereGenerator.hpp
+	tutorial09_vbo_indexing/SphereGenerator.cpp
 	common/shader.cpp
 	common/shader.hpp
 	common/controls.cpp

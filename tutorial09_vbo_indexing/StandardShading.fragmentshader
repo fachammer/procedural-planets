@@ -70,15 +70,16 @@ void main(){
 	vec3 diffuseLight = LightPower*  MaterialDiffuseColor * ndotL;
 
 	
-	color.xyz = 
+	color.rgb =
 		MaterialAmbientColor +
 		diffuseLight +
 		specularLight;
+    color.a = 1;
 
 		// completely wrong 
 		//color.xyz = texture(cubeSampler, n).xyz;
 
-		color.rgb = texture( myTextureSampler, UV ).rgb;//vec3(1.0, 0.0, 0.0);//
-		color.a = texture( myTextureSampler, UV ).a;
+		//color.rgb = texture( myTextureSampler, UV ).rgb;//vec3(1.0, 0.0, 0.0);//
+		//color.a = texture( myTextureSampler, UV ).a;
 
 }
