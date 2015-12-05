@@ -288,7 +288,7 @@ int main( void )
 
 // ############## Load the meshes ###############
 	std::vector<Mesh *> meshes;
-    Mesh* sphereMesh = generateSphere(1, 0);
+    Mesh* sphereMesh = generateSphere(1, 2);
     sphereMesh->modelMatrix = glm::translate(glm::mat4(1.0), glm::vec3(0, 0, 0));
     meshes.push_back(sphereMesh);
     
@@ -341,7 +341,7 @@ int main( void )
 
 		check_gl_error();
 		// Clear the screen
-		glClearColor(0.0, 0.0, 0.5, 1.0);
+		glClearColor(0.5, 0.5, 0.5, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
 		// Compute the MVP matrix from keyboard and mouse input
