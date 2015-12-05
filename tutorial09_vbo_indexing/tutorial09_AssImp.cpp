@@ -254,7 +254,7 @@ int main( void )
 
 	// Enable depth test
 	glEnable(GL_DEPTH_TEST);
-	glViewport(0, 0, SCREENWIDTH, SCREENHEIGHT);
+	glViewport(0, 0, SCREENWIDTH * 2, SCREENHEIGHT * 2);
 	//
 	// Accept fragment if it closer to the camera than the former one
 	glDepthFunc(GL_LESS);
@@ -289,7 +289,7 @@ int main( void )
 // ############## Load the meshes ###############
 	std::vector<Mesh *> meshes;
     Mesh* sphereMesh = generateSphere(1, 0);
-    sphereMesh->modelMatrix = glm::translate(glm::mat4(1.0), glm::vec3(1.0, 1.0, 1.0));
+    sphereMesh->modelMatrix = glm::translate(glm::mat4(1.0), glm::vec3(0, 0, 0));
     meshes.push_back(sphereMesh);
     
 	for(int i = 0; i < meshes.size(); i++){
@@ -361,8 +361,6 @@ int main( void )
 		// render to the screen buffer
 		renderObjects(scenes[0], ViewMatrix, ProjectionMatrix, lightPos, lightMVPMatrix);
 
-		// draw gui
-		TwDraw();
 		// Swap buffers
 		glfwSwapBuffers(window);
 		glfwPollEvents();
