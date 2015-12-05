@@ -242,20 +242,6 @@ int main( void )
 	glm::vec3 lightSpecularColor = glm::vec3(0.3, 0.3, 0.3);
 	glm::vec3 lightPos = glm::vec3(-4.64,6.7,-5.7);
 
-	// create GUI for light position
-	TwInit(TW_OPENGL_CORE, NULL);
-	TwWindowSize(SCREENWIDTH, SCREENHEIGHT);
-	TwBar * LightGUI = TwNewBar("Light Settings");
-	TwAddVarRW(LightGUI, "LightPos X"  , TW_TYPE_FLOAT, &lightPos.x, "step=0.1");
-	TwAddVarRW(LightGUI, "LightPos Y"  , TW_TYPE_FLOAT, &lightPos.y, "step=0.1");
-	TwAddVarRW(LightGUI, "LightPos Z"  , TW_TYPE_FLOAT, &lightPos.z, "step=0.1");
-
-	TwAddVarRW(LightGUI, "Shadow magic number"  , TW_TYPE_FLOAT, &shadowMagicNumber, "step=0.0001");
-    
-    TwAddVarRW(LightGUI, "Texture to show"  , TW_TYPE_UINT8, &textureToShow, "");
-
-	TwAddVarRW(LightGUI, "Layer to show"  , TW_TYPE_UINT8, &layerToShow, "");
-
 	// Set GLFW event callbacks. I removed glfwSetWindowSizeCallback for conciseness
 	glfwSetMouseButtonCallback(window, (GLFWmousebuttonfun)TwEventMouseButtonGLFW); // - Directly redirect GLFW mouse button events to AntTweakBar
 	glfwSetCursorPosCallback(window, (GLFWcursorposfun)TwEventMousePosGLFW);          // - Directly redirect GLFW mouse position events to AntTweakBar
@@ -297,27 +283,11 @@ int main( void )
 	check_gl_error();
 
 // ########### Load the textures ################
-	GLuint Texture2 = loadSoil("lichenStone.dds", contentPath.c_str());
+	GLuint lichenStoneTextureId = loadSoil("lichenStone.dds", contentPath.c_str());
 	check_gl_error();
 
 // ############## Load the meshes ###############
 	std::vector<Mesh *> meshes;
-//	//std::vector<Mesh *> spongeBobMeshes;
-//	std::string modelPath = contentPath;
-//	#ifdef MINGW_COMPILER
-//        modelPath += std::string("ACGR_Scene_GI_Unwrap.dae");
-//	#else
-//        modelPath += std::string("ACGR_Scene_GI_Unwrap_II.3ds");
-//	#endif
-//	Mesh::loadAssImp(modelPath.c_str(), meshes, true);	
-//
-//	int spongeMeshStartId = meshes.size();
-//	std::string spongeBobPath = contentPath;
-//	spongeBobPath += std::string("Spongebob/spongebob_bind.obj");
-//	Mesh::loadAssImp(spongeBobPath.c_str(), meshes, true);
-//
-//	glm::mat4 spongeBobMatrix;
-
     Mesh* sphereMesh = generateSphere(1, 0);
     sphereMesh->modelMatrix = glm::translate(glm::mat4(1.0), glm::vec3(1.0, 1.0, 1.0));
     meshes.push_back(sphereMesh);
@@ -327,39 +297,15 @@ int main( void )
 		SimpleRenderState* rtts = new SimpleRenderState();
 		rtts->meshId = i;
 		rtts->shaderEffectId = STANDARDSHADING; // the Render to texture shader effect
-		rtts->texId = Texture2;
+		rtts->texId = lichenStoneTextureId;
 		objects.push_back(rtts);
 	}
 	
-	// generate mesh VBOs
-	check_gl_error();
 	for (int i = 0; i < meshes.size(); i++)
 	{
 		meshes[i]->generateVBOs();
 	}
 	check_gl_error();
-
-	// create a quad mesh which is about a quarter of the screen big and in the middle of the right side
-	Mesh debugQuad; debugQuad.createQuad(vec2(0.0, -0.5), vec2(1.0, 0.5));
-	debugQuad.generateVBOs();
-	meshes.push_back(&debugQuad);
-	// create a SimpleRenderstate for the quad (just has to show a texture
-	SimpleRenderState* debugQuadState = new SimpleRenderState(); 
-	debugQuadState->meshId = meshes.size()-1;
-	debugQuadState->shaderEffectId = TEXTURED_QUAD;
-	debugQuadState->texId = Texture2;
-	objects.push_back(debugQuadState);
-
-	// create a screen filled quad
-	Mesh fullscreenQuad; fullscreenQuad.createQuad(vec2(-1.0, -1.0), vec2(1.0, 1.0));
-	fullscreenQuad.generateVBOs();
-	meshes.push_back(&fullscreenQuad);
-	// create a SimpleRenderState with the SSAO Shaderset for the Quad
-	SimpleRenderState* fullscreenQuadState = new SimpleRenderState(); 
-	fullscreenQuadState->meshId = meshes.size()-1;
-	fullscreenQuadState->shaderEffectId = JUST_COLOR;
-	fullscreenQuadState->texId = Texture2;
-	//ssaoPassObjects.push_back(FullscreenQuadState);
 
 	// create the scenes
 	enum Scenes {
