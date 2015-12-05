@@ -32,6 +32,8 @@ using namespace glm;
 // Include AntTweakBar
 #include <AntTweakBar.h>
 
+#include "SphereGenerator.hpp"
+
 #define PATHTOCONTENT "../tutorial09_vbo_indexing/"
 
 // Create and compile our GLSL program from the shaders
@@ -346,6 +348,8 @@ int main( void )
 	glm::mat4 spongeBobMatrix;
 	spongeBobMatrix = glm::translate(glm::mat4(1.0), glm::vec3(1.0, 1.0, 1.0));
 	
+    meshes.push_back(generateSphere(1, 0));
+    
 	for(int i = 0; i < meshes.size(); i++){
 		// DONE create a SimpleRenderstate for all objects which should cast shadows
 		SimpleRenderState* rtts = new SimpleRenderState();
