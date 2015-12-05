@@ -288,7 +288,7 @@ int main( void )
 
 // ############## Load the meshes ###############
 	std::vector<Mesh *> meshes;
-    Mesh* sphereMesh = generateSphere(1, 2);
+    Mesh* sphereMesh = generateSphere(1, 4);
     sphereMesh->modelMatrix = glm::translate(glm::mat4(1.0), glm::vec3(0, 0, 0));
     meshes.push_back(sphereMesh);
     
