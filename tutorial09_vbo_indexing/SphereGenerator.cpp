@@ -76,8 +76,9 @@ Mesh* generateSphere(GLfloat radius, int subdivisions){
         sphere->indices.push_back(ICOSAHEDRON_INDICES[i]);
     
     for(int s = 0; s < subdivisions; s++) {
-        int indicesSize = sphere->indices.size();
-        for(int i = 0; (i + 2) < indicesSize; i += 3){
+        std::vector<unsigned int> subdividedSphereIndices;
+        
+        for(int i = 0; (i + 2) < sphere->indices.size(); i += 3){
             int aIndex = sphere->indices[i];
             int bIndex = sphere->indices[i + 1];
             int cIndex = sphere->indices[i + 2];
@@ -94,22 +95,24 @@ Mesh* generateSphere(GLfloat radius, int subdivisions){
             int bcIndex = addSphereVertex(sphere, bc, radius);
             int caIndex = addSphereVertex(sphere, ca, radius);
             
-            sphere->indices[i] = abIndex;
-            sphere->indices[i + 1] = bcIndex;
-            sphere->indices[i + 2] = caIndex;
+            subdividedSphereIndices.push_back(aIndex);
+            subdividedSphereIndices.push_back(abIndex);
+            subdividedSphereIndices.push_back(caIndex);
             
-            sphere->indices.push_back(aIndex);
-            sphere->indices.push_back(abIndex);
-            sphere->indices.push_back(caIndex);
+            subdividedSphereIndices.push_back(bIndex);
+            subdividedSphereIndices.push_back(bcIndex);
+            subdividedSphereIndices.push_back(abIndex);
             
-            sphere->indices.push_back(bIndex);
-            sphere->indices.push_back(bcIndex);
-            sphere->indices.push_back(abIndex);
+            subdividedSphereIndices.push_back(cIndex);
+            subdividedSphereIndices.push_back(caIndex);
+            subdividedSphereIndices.push_back(bcIndex);
             
-            sphere->indices.push_back(cIndex);
-            sphere->indices.push_back(caIndex);
-            sphere->indices.push_back(bcIndex);
+            subdividedSphereIndices.push_back(abIndex);
+            subdividedSphereIndices.push_back(bcIndex);
+            subdividedSphereIndices.push_back(caIndex);
         }
+        
+        sphere->indices = subdividedSphereIndices;
     }
         
     return sphere;
