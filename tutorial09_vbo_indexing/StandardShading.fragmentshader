@@ -38,7 +38,7 @@ void main(){
 	float LightPower = 50.0f;
 	
 	// Material properties
-	vec3 MaterialDiffuseColor = texture( myTextureSampler, UV ).rgb;
+	vec3 MaterialDiffuseColor = vec3(0.8, 0.2, 0.2);
 	vec3 MaterialAmbientColor = vec3(0.1,0.1,0.1) * MaterialDiffuseColor;
 	vec3 specColor = mix(MaterialSpecularColor, MaterialDiffuseColor, metalness);
 	specColor = specularity * specColor;
@@ -70,15 +70,9 @@ void main(){
 	vec3 diffuseLight = LightPower*  MaterialDiffuseColor * ndotL;
 
 	
-	color.xyz = 
+	color.rgb =
 		MaterialAmbientColor +
 		diffuseLight +
 		specularLight;
-
-		// completely wrong 
-		//color.xyz = texture(cubeSampler, n).xyz;
-
-		color.rgb = texture( myTextureSampler, UV ).rgb;//vec3(1.0, 0.0, 0.0);//
-		color.a = texture( myTextureSampler, UV ).a;
-
+    color.a = 1;
 }

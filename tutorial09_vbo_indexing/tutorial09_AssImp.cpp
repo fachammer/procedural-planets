@@ -32,6 +32,8 @@ using namespace glm;
 // Include AntTweakBar
 #include <AntTweakBar.h>
 
+#include "SphereGenerator.hpp"
+
 #define PATHTOCONTENT "../tutorial09_vbo_indexing/"
 
 // Create and compile our GLSL program from the shaders
@@ -97,23 +99,12 @@ void renderObjects(Scene& scene, glm::mat4x4& viewMatrix, glm::mat4x4& projectio
 		glUniformMatrix4fv(effect->VId, 1, GL_FALSE, &viewMatrix[0][0]);
         check_gl_error();
 
-		//glUniform3f(effect.lightPositionId, lightPos.x, lightPos.y, lightPos.z);
-		//glUniform1f(effect.shadowMagicNumberId, shadowMagicNumber);
-        check_gl_error();
-
         if (effect->lightMatrixId != 0xffffffff){
 			glm::mat4 lm = lightMatrix * modelMatrix;
 			glUniformMatrix4fv(effect->lightMatrixId, 1, GL_FALSE, &lm[0][0]);
 		}
-		//glUniform1f(effect.shininessId, rs.shininess);
-		//glUniform1f(effect.metalnessId, rs.metalness);
-		//glUniform1f(effect.specularityId, rs.specularity);
-		//glUniform3f(effect.specColorId, rs.specularMaterialColor.r,rs.specularMaterialColor.g, rs.specularMaterialColor.b);
-  //      glUniform1i(effect.isShadowCasterId, rs.isShadowCaster);
-  //      check_gl_error();
 
 		m->bindBuffersAndDraw();
-
 
 		glDisableVertexAttribArray(0);
 		glDisableVertexAttribArray(1);
@@ -251,20 +242,6 @@ int main( void )
 	glm::vec3 lightSpecularColor = glm::vec3(0.3, 0.3, 0.3);
 	glm::vec3 lightPos = glm::vec3(-4.64,6.7,-5.7);
 
-	// create GUI for light position
-	TwInit(TW_OPENGL_CORE, NULL);
-	TwWindowSize(SCREENWIDTH, SCREENHEIGHT);
-	TwBar * LightGUI = TwNewBar("Light Settings");
-	TwAddVarRW(LightGUI, "LightPos X"  , TW_TYPE_FLOAT, &lightPos.x, "step=0.1");
-	TwAddVarRW(LightGUI, "LightPos Y"  , TW_TYPE_FLOAT, &lightPos.y, "step=0.1");
-	TwAddVarRW(LightGUI, "LightPos Z"  , TW_TYPE_FLOAT, &lightPos.z, "step=0.1");
-
-	TwAddVarRW(LightGUI, "Shadow magic number"  , TW_TYPE_FLOAT, &shadowMagicNumber, "step=0.0001");
-    
-    TwAddVarRW(LightGUI, "Texture to show"  , TW_TYPE_UINT8, &textureToShow, "");
-
-	TwAddVarRW(LightGUI, "Layer to show"  , TW_TYPE_UINT8, &layerToShow, "");
-
 	// Set GLFW event callbacks. I removed glfwSetWindowSizeCallback for conciseness
 	glfwSetMouseButtonCallback(window, (GLFWmousebuttonfun)TwEventMouseButtonGLFW); // - Directly redirect GLFW mouse button events to AntTweakBar
 	glfwSetCursorPosCallback(window, (GLFWcursorposfun)TwEventMousePosGLFW);          // - Directly redirect GLFW mouse position events to AntTweakBar
@@ -277,7 +254,7 @@ int main( void )
 
 	// Enable depth test
 	glEnable(GL_DEPTH_TEST);
-	glViewport(0, 0, SCREENWIDTH, SCREENHEIGHT);
+	glViewport(0, 0, SCREENWIDTH * 2, SCREENHEIGHT * 2);
 	//
 	// Accept fragment if it closer to the camera than the former one
 	glDepthFunc(GL_LESS);
@@ -293,10 +270,6 @@ int main( void )
 	std::vector<ShaderEffect*> shaderSets;
 	std::vector<RenderState*> objects;
 
-	//std::vector<RenderState*> bobObjects;
-
-	
-
 	check_gl_error();
 
 	initShaders(shaderSets);
@@ -310,85 +283,29 @@ int main( void )
 	check_gl_error();
 
 // ########### Load the textures ################
-	GLuint Texture1 = loadSoil("spongebob.DDS", contentPath.c_str());
+	GLuint lichenStoneTextureId = loadSoil("lichenStone.dds", contentPath.c_str());
 	check_gl_error();
 
-	GLuint Texture2 = loadSoil("lichenStone.dds", contentPath.c_str());
-	check_gl_error();
-
-	GLuint ndotl_ndotv = loadSoil("ndotl_ndotv.png", contentPath.c_str());
-	check_gl_error();
-
-    GLuint ndotl_ndoth = loadSoil("ndotl_ndoth.png", contentPath.c_str());
-	check_gl_error();
-
-	GLuint ndotl_vdotl = loadSoil("ndotl_vdotl.png", contentPath.c_str());
-	check_gl_error();
-
-	GLuint cubeMapTex = loadSoilCubeMap(faceFile, contentPath.c_str());
-	check_gl_error();
 // ############## Load the meshes ###############
 	std::vector<Mesh *> meshes;
-	//std::vector<Mesh *> spongeBobMeshes;
-	std::string modelPath = contentPath;
-	#ifdef MINGW_COMPILER
-        modelPath += std::string("ACGR_Scene_GI_Unwrap.dae");
-	#else
-        modelPath += std::string("ACGR_Scene_GI_Unwrap_II.3ds");
-	#endif
-	Mesh::loadAssImp(modelPath.c_str(), meshes, true);	
-
-	int spongeMeshStartId = meshes.size();
-	std::string spongeBobPath = contentPath;
-	spongeBobPath += std::string("Spongebob/spongebob_bind.obj");
-	Mesh::loadAssImp(spongeBobPath.c_str(), meshes, true);
-
-	glm::mat4 spongeBobMatrix;
-	spongeBobMatrix = glm::translate(glm::mat4(1.0), glm::vec3(1.0, 1.0, 1.0));
-	
+    Mesh* sphereMesh = generateSphere(1, 4);
+    sphereMesh->modelMatrix = glm::translate(glm::mat4(1.0), glm::vec3(0, 0, 0));
+    meshes.push_back(sphereMesh);
+    
 	for(int i = 0; i < meshes.size(); i++){
 		// DONE create a SimpleRenderstate for all objects which should cast shadows
 		SimpleRenderState* rtts = new SimpleRenderState();
 		rtts->meshId = i;
 		rtts->shaderEffectId = STANDARDSHADING; // the Render to texture shader effect
-		rtts->texId = Texture2;
+		rtts->texId = lichenStoneTextureId;
 		objects.push_back(rtts);
 	}
-
-	// apply the modelmatrix to the spongebob meshes
-	for(int i = spongeMeshStartId; i < meshes.size(); i++){
-			meshes[i]->modelMatrix = spongeBobMatrix;
-	}
 	
-	// generate mesh VBOs
-	check_gl_error();
 	for (int i = 0; i < meshes.size(); i++)
 	{
 		meshes[i]->generateVBOs();
 	}
 	check_gl_error();
-
-	// create a quad mesh which is about a quarter of the screen big and in the middle of the right side
-	Mesh debugQuad; debugQuad.createQuad(vec2(0.0, -0.5), vec2(1.0, 0.5));
-	debugQuad.generateVBOs();
-	meshes.push_back(&debugQuad);
-	// create a SimpleRenderstate for the quad (just has to show a texture
-	SimpleRenderState* debugQuadState = new SimpleRenderState(); 
-	debugQuadState->meshId = meshes.size()-1;
-	debugQuadState->shaderEffectId = TEXTURED_QUAD;
-	debugQuadState->texId = Texture2;
-	objects.push_back(debugQuadState);
-
-	// create a screen filled quad
-	Mesh fullscreenQuad; fullscreenQuad.createQuad(vec2(-1.0, -1.0), vec2(1.0, 1.0));
-	fullscreenQuad.generateVBOs();
-	meshes.push_back(&fullscreenQuad);
-	// create a SimpleRenderState with the SSAO Shaderset for the Quad
-	SimpleRenderState* fullscreenQuadState = new SimpleRenderState(); 
-	fullscreenQuadState->meshId = meshes.size()-1;
-	fullscreenQuadState->shaderEffectId = JUST_COLOR;
-	fullscreenQuadState->texId = Texture2;
-	//ssaoPassObjects.push_back(FullscreenQuadState);
 
 	// create the scenes
 	enum Scenes {
@@ -424,7 +341,7 @@ int main( void )
 
 		check_gl_error();
 		// Clear the screen
-		glClearColor(0.0, 0.0, 0.5, 1.0);
+		glClearColor(0.5, 0.5, 0.5, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
 		// Compute the MVP matrix from keyboard and mouse input
@@ -444,8 +361,6 @@ int main( void )
 		// render to the screen buffer
 		renderObjects(scenes[0], ViewMatrix, ProjectionMatrix, lightPos, lightMVPMatrix);
 
-		// draw gui
-		TwDraw();
 		// Swap buffers
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -455,10 +370,6 @@ int main( void )
 		   glfwWindowShouldClose(window) == 0 );
 
 	// Cleanup VBO and shader
-	//glDeleteProgram(programID);
-	glDeleteTextures(1, &Texture1);
-	//glDeleteTextures(1, &Texture2);
-	//glDeleteTextures(1, &Texture3);
 	glDeleteVertexArrays(1, &VertexArrayID);
 
 
