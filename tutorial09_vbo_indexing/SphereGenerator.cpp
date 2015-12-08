@@ -13,7 +13,7 @@
 
 using namespace glm;
 
-static const GLdouble theta = 0.5 * (1 + sqrt(5));
+static const GLdouble theta = 0.5 * (1.0 + sqrt(5.0));
 static const vec3 ICOSAHEDRON_VERTICES[12] = {
     vec3(-1, theta, 0),
     vec3(1, theta, 0),
