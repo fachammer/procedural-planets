@@ -31,7 +31,7 @@ uniform vec3 LightPosition_worldspace;
 vec4 permute(vec4 x){return mod(((x*34.0)+1.0)*x, 289.0);}
 vec4 taylorInvSqrt(vec4 r){return 1.79284291400159 - 0.85373472095314 * r;}
 
-float snoise(vec3 v){
+float snoise(vec3 v, out vec3 gradient){
     const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
     const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
     
@@ -95,35 +95,45 @@ float snoise(vec3 v){
     
     // Mix final noise value
     vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
-    m = m * m;
-    return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1), 
-                                 dot(p2,x2), dot(p3,x3) ) );
+    vec4 m2 = m * m;
+    vec4 m4 = m2 * m2;
+    
+    vec4 pdotx = vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3));
+    
+    vec4 temp = m2 * m * pdotx;
+    gradient = -8.0 * (temp.x * x0 + temp.y * x1 + temp.z * x2 + temp.w * x3);
+    gradient += m4.x * p0 + m4.y * p1 + m4.z * p2 + m4.w * p3;
+    gradient *= 42.0;
+    
+    return 42.0 * dot(m4, pdotx);
 }
 
 void main() {
     
     float[3] amplitudes = float[](30.f, 3.f, 0.3f);
     float[3] frequencies = float[](0.01f, 0.3f, 3.f);
-    
-    float elevation = 0.f;
-    vec3 newNormal = vertexNormal_modelspace;
-    for(int i = 0; i < frequencies.length(); i++) {
-        elevation += amplitudes[i] * snoise(vertexPosition_modelspace * frequencies[i]) / 2 + 0.3;
-    }
 
-    vec3 modelPosition = vertexPosition_modelspace + elevation * normalize(newNormal);
+    vec3 gradient;
+    float elevation = amplitudes[0] * snoise(vertexPosition_modelspace * frequencies[0], gradient) / 2 + 0.5;
+    vec3 g = gradient / (length(vertexPosition_modelspace) + elevation);
+    
+    vec3 unitPosition = normalize(vertexPosition_modelspace);
+    vec3 h = g - dot(g, unitPosition) * unitPosition;
+    vec3 newNormal = normalize(unitPosition - amplitudes[0] * h);
+    
+    vec3 modelPosition = vertexPosition_modelspace + elevation * vertexNormal_modelspace;
     position_modelspace = modelPosition;
     gl_Position =  MVP * vec4(modelPosition, 1);
     
     position_worldspace = (M * vec4(modelPosition, 1)).xyz;
     
-    vec3 vertexPosition_cameraspace = ( V * M * vec4(vertexPosition_modelspace,1)).xyz;
+    vec3 vertexPosition_cameraspace = ( V * M * vec4(modelPosition, 1)).xyz;
     eyeDirection_cameraspace = vec3(0,0,0) - vertexPosition_cameraspace;
     
     vec3 LightPosition_cameraspace = ( V * vec4(LightPosition_worldspace,1)).xyz;
     lightDirection_cameraspace = LightPosition_cameraspace + eyeDirection_cameraspace;
     
-    normal_cameraspace = ( V * M * vec4(vertexNormal_modelspace,0)).xyz;
-
+    normal_cameraspace = ( V * M * vec4(newNormal, 0)).xyz;
+    
     uv = vertexUV;
 }

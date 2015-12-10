@@ -81,6 +81,9 @@ add_executable(tutorial09_AssImp
 	tutorial09_vbo_indexing/StandardShading.fragmentShader
 	tutorial09_vbo_indexing/justColor.vertexshader
 	tutorial09_vbo_indexing/justColor.fragmentshader
+    tutorial09_vbo_indexing/TerrainGenerator.vertexshader
+    tutorial09_vbo_indexing/TerrainGenerator.geometryshader
+    tutorial09_vbo_indexing/TerrainGenerator.fragmentshader
 )
 target_link_libraries(tutorial09_AssImp
 	${ALL_LIBS}
