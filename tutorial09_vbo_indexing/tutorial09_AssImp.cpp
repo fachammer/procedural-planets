@@ -189,19 +189,23 @@ void initShaders(std::vector<ShaderEffect*>& shaderSets)
 {
 	// ########## load the shader programs ##########
 
-	GLuint standardProgramID = LoadShaders("StandardShading2.vertexshader", "StandardShading.fragmentshader",  contentPath.c_str());
-    SimpleShaderEffect* standardProgram = new SimpleShaderEffect(standardProgramID);
-	shaderSets.push_back(standardProgram);
-
-	// DONE Load shaders for just drawing a quad on the screen
-	GLuint screenQuadProgramID = LoadShaders("texturedQuad.vertexshader", "texturedQuad.fragmentshader", contentPath.c_str());
-	SimpleShaderEffect* screenQuadProgram = new SimpleShaderEffect(screenQuadProgramID);
-	shaderSets.push_back(screenQuadProgram);
-
-	// Load the shaders for the output of SSAO Render to texture
-	GLuint SSAODepthProgramID = LoadShaders("justColor.vertexshader", "justColor.fragmentshader",  contentPath.c_str());
-    SimpleShaderEffect* SSAODepthProgram = new SimpleShaderEffect(SSAODepthProgramID);
-	shaderSets.push_back(SSAODepthProgram);
+//	GLuint standardProgramID = LoadShaders("StandardShading2.vertexshader", "StandardShading.fragmentshader",  contentPath.c_str());
+//    SimpleShaderEffect* standardProgram = new SimpleShaderEffect(standardProgramID);
+//	shaderSets.push_back(standardProgram);
+//
+//	// DONE Load shaders for just drawing a quad on the screen
+//	GLuint screenQuadProgramID = LoadShaders("texturedQuad.vertexshader", "texturedQuad.fragmentshader", contentPath.c_str());
+//	SimpleShaderEffect* screenQuadProgram = new SimpleShaderEffect(screenQuadProgramID);
+//	shaderSets.push_back(screenQuadProgram);
+//
+//	// Load the shaders for the output of SSAO Render to texture
+//	GLuint SSAODepthProgramID = LoadShaders("justColor.vertexshader", "justColor.fragmentshader",  contentPath.c_str());
+//    SimpleShaderEffect* SSAODepthProgram = new SimpleShaderEffect(SSAODepthProgramID);
+//	shaderSets.push_back(SSAODepthProgram);
+    
+    GLuint terrainGeneratorProgramId = LoadShaders("TerrainGenerator.vertexshader", "TerrainGenerator.geometryshader", "TerrainGenerator.fragmentshader", contentPath.c_str());
+    SimpleShaderEffect* terrainGeneratorProgram = new SimpleShaderEffect(terrainGeneratorProgramId);
+    shaderSets.push_back(terrainGeneratorProgram);
 }
 
 int main( void )
@@ -240,7 +244,7 @@ int main( void )
 	glfwSetCursorPos(window, SCREENWIDTH/2, SCREENHEIGHT/2);
 
 	glm::vec3 lightSpecularColor = glm::vec3(0.3, 0.3, 0.3);
-	glm::vec3 lightPos = glm::vec3(-4.64,6.7,-5.7);
+	glm::vec3 lightPos = glm::vec3(-464,670,-570);
 
 	// Set GLFW event callbacks. I removed glfwSetWindowSizeCallback for conciseness
 	glfwSetMouseButtonCallback(window, (GLFWmousebuttonfun)TwEventMouseButtonGLFW); // - Directly redirect GLFW mouse button events to AntTweakBar
@@ -288,7 +292,7 @@ int main( void )
 
 // ############## Load the meshes ###############
 	std::vector<Mesh *> meshes;
-    Mesh* sphereMesh = generateSphere(1, 4);
+    Mesh* sphereMesh = generateSphere(100, 6);
     sphereMesh->modelMatrix = glm::translate(glm::mat4(1.0), glm::vec3(0, 0, 0));
     meshes.push_back(sphereMesh);
     

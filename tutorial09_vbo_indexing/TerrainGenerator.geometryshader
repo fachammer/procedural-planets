@@ -1,0 +1,49 @@
+//
+//  TerrainGenerator.c
+//  Tutorials
+//
+//  Created by Fabian Achammer on 10.12.15.
+//
+//
+
+#version 330 core
+
+layout(triangles) in;
+layout(triangle_strip, max_vertices=3) out;
+
+in vec2[] uv;
+in vec3[] position_worldspace;
+in vec3[] normal_cameraspace;
+in vec3[] eyeDirection_cameraspace;
+in vec3[] lightDirection_cameraspace;
+in vec3[] position_modelspace;
+
+out vec2 UV;
+out vec3 Position_worldspace;
+out vec3 Normal_cameraspace;
+out vec3 EyeDirection_cameraspace;
+out vec3 LightDirection_cameraspace;
+
+uniform mat4 MVP;
+uniform mat4 M;
+uniform mat4 V;
+
+void main() {
+
+    vec3 ab = position_modelspace[1] - position_modelspace[0];
+    vec3 ac = position_modelspace[2] - position_modelspace[0];
+    
+    vec3 surfaceNormal = normalize(cross(ab, ac));
+
+    for(int i = 0; i < 3; i++) {
+        UV = uv[i];
+        Position_worldspace = position_worldspace[i];
+        Normal_cameraspace = normal_cameraspace[i];
+        EyeDirection_cameraspace = eyeDirection_cameraspace[i];
+        LightDirection_cameraspace = lightDirection_cameraspace[i];
+        gl_Position = MVP * vec4(position_modelspace[i], 1);
+        EmitVertex();
+    }
+    
+    EndPrimitive();
+}
