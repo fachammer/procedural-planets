@@ -30,11 +30,15 @@ float verticalAngle = 0.0f;
 float initialFoV = 45.0f;
 
 float speed = 300.f; // 3 units / second
-float hRotateSpeed = 1.5f;
-float vRotateSpeed = 1.5f;
+float hRotateSpeed = 150.f;
+float vRotateSpeed = 150.f;
 float mouseSpeed = 0.005f;
 
 glm::vec3 up = glm::vec3(0, 1, 0);
+
+float dist = 500;
+float hRot = 0;
+float vRot = 0;
 
 void computeMatricesFromInputs(){
 
@@ -69,86 +73,65 @@ void computeMatricesFromInputs(){
 	horizontalAngle += mouseSpeed * float(dx);
 	verticalAngle   += mouseSpeed * float(dy );
 
-	// Direction : Spherical coordinates to Cartesian coordinates conversion
-	glm::vec3 direction(
-		cos(verticalAngle) * sin(horizontalAngle), 
-		sin(verticalAngle),
-		cos(verticalAngle) * cos(horizontalAngle)
-	);
-	
-	// Right vector
-	glm::vec3 right = glm::vec3(
-		sin(horizontalAngle - 3.14f/2.0f), 
-		0,
-		cos(horizontalAngle - 3.14f/2.0f)
-	);
-	
-	// Up vector
-	glm::vec3 up = glm::cross( right, direction );
-
 	// Move forward
 	if (glfwGetKey( window, GLFW_KEY_W ) == GLFW_PRESS){
-		position += direction * deltaTime * speed;
+		vRot -= deltaTime * vRotateSpeed;
 	}
 	// Move backward
 	if (glfwGetKey( window, GLFW_KEY_S ) == GLFW_PRESS){
-		position -= direction * deltaTime * speed;
+		vRot += deltaTime * vRotateSpeed;
 	}
 	// Strafe right
 	if (glfwGetKey( window, GLFW_KEY_D ) == GLFW_PRESS){
-		position += right * deltaTime * speed;
+		hRot += deltaTime * hRotateSpeed;
 	}
 	// Strafe left
 	if (glfwGetKey( window, GLFW_KEY_A ) == GLFW_PRESS){
-		position -= right * deltaTime * speed;
+		hRot -= deltaTime * hRotateSpeed;
 	}
-	//Rotate left
-	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-		horizontalAngle += hRotateSpeed * deltaTime;
-	}
-	//Rotate right
-	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-		horizontalAngle -= hRotateSpeed * deltaTime;
-	}
-	//Rotate up
+	//Move towards planet
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-		verticalAngle += vRotateSpeed * deltaTime;
+		dist -= speed * deltaTime;
+		if (dist < 10) dist = 20;
 	}
-	//Rotate down
+	//Move away from planet
 	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-		verticalAngle -= vRotateSpeed * deltaTime;
-	}
-	// Move up
-	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-		position += up * deltaTime * speed;
-	}
-	// Move down
-	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
-		position -= up * deltaTime * speed;
+		dist += speed * deltaTime;
+		if (dist > 1000) dist = 1000;
 	}
 
-	if (glfwGetKey (window, GLFW_KEY_R ) == GLFW_PRESS){
-		position = position = glm::vec3( 0, 0, 5 ); 
-		horizontalAngle = 3.14f;
-		verticalAngle = 0.0f;
-	}
-		
-	if (glfwGetKey (window, GLFW_KEY_I ) == GLFW_PRESS){
-		printf("up: %f/%f/%f, at: %f/%f/%f\n", up.x, up.y, up.z, direction.x, direction.y, direction.z);
-	}
+	double hRad = hRot * 3.1415 / 180;
+	double vRad = vRot * 3.1415 / 180;
 
+	double x = dist * sin(vRad) * cos(hRad);
+	double y = dist * sin(vRad) * sin(hRad);
+	double z = dist * cos(vRad);
 
+	double buffer = y;
+	y = -z;
+	z = buffer;
 
-	float FoV = initialFoV;// - 5 * glfwGetMouseWheel(); // Now GLFW 3 requires setting up a callback for this. It's a bit too complicated for this beginner's tutorial, so it's disabled instead.
+	position = glm::vec3(x, y, z);
+
+	float FoV = initialFoV;
+
+	// Direction : Spherical coordinates to Cartesian coordinates conversion
+	glm::vec3 direction(-x, -y, -z);
+
+	// Right vector
+	glm::vec3 right = cross(direction, glm::vec3(0, 1, 0));
+	
+	// Up vector
+	glm::vec3 up = glm::cross(right, direction);
 
 	// Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
-	ProjectionMatrix = glm::perspective(FoV, 4.0f / 3.0f, 1.0f, 1000.0f);
+	ProjectionMatrix = glm::perspective(FoV, 4.0f / 3.0f, 1.0f, 10000.0f);
 	// Camera matrix
-	ViewMatrix       = glm::lookAt(
-								position,           // Camera is here
-								position+direction, // and looks here : at the same position, plus "direction"
-								up                  // Head is up (set to 0,-1,0 to look upside-down)
-						   );
+	ViewMatrix = glm::lookAt(
+		position,           // Camera is here
+		glm::vec3(0, 0, 0), // and looks here : at the same position, plus "direction"
+		up                  // Head is up (set to 0,-1,0 to look upside-down)
+	);
 
 	// For the next frame, the "last time" will be "now"
 	lastTime = currentTime;
