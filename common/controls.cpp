@@ -115,15 +115,6 @@ void computeMatricesFromInputs(){
 
 	float FoV = initialFoV;
 
-	// Direction : Spherical coordinates to Cartesian coordinates conversion
-	glm::vec3 direction(-x, -y, -z);
-
-	// Right vector
-	glm::vec3 right = cross(direction, glm::vec3(0, 1, 0));
-	
-	// Up vector
-	glm::vec3 up = glm::cross(right, direction);
-
 	// Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
 	ProjectionMatrix = glm::perspective(FoV, 4.0f / 3.0f, 1.0f, 10000.0f);
 	// Camera matrix
