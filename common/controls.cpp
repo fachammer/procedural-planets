@@ -75,11 +75,15 @@ void computeMatricesFromInputs(){
 
 	// Move forward
 	if (glfwGetKey( window, GLFW_KEY_W ) == GLFW_PRESS){
-		vRot -= deltaTime * vRotateSpeed;
+		vRot += deltaTime * vRotateSpeed;
+		if (vRot > 90)
+			vRot = 90;
 	}
 	// Move backward
 	if (glfwGetKey( window, GLFW_KEY_S ) == GLFW_PRESS){
-		vRot += deltaTime * vRotateSpeed;
+		vRot -= deltaTime * vRotateSpeed;
+		if (vRot < -90)
+			vRot = -90;
 	}
 	// Strafe right
 	if (glfwGetKey( window, GLFW_KEY_D ) == GLFW_PRESS){
@@ -92,7 +96,7 @@ void computeMatricesFromInputs(){
 	//Move towards planet
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
 		dist -= speed * deltaTime;
-		if (dist < 10) dist = 20;
+		if (dist < 10) dist = 10;
 	}
 	//Move away from planet
 	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
@@ -103,25 +107,41 @@ void computeMatricesFromInputs(){
 	double hRad = hRot * 3.1415 / 180;
 	double vRad = vRot * 3.1415 / 180;
 
-	double x = dist * sin(vRad) * cos(hRad);
+	/*double x = dist * sin(vRad) * cos(hRad);
 	double y = dist * sin(vRad) * sin(hRad);
 	double z = dist * cos(vRad);
 
-	double buffer = y;
-	y = -z;
-	z = buffer;
+	glm::vec4 wrongPos = glm::vec4(x, y, z, 0);
+	
+	float aaa[16] = {
+		1, 0, 0, 0,
+		0, 0, 1, 0,
+		0, 1, 0, 0,
+		0, 0, 0, 1
+	};
+	glm::mat4 bbb;
+	memcpy((&bbb), aaa, sizeof(aaa));
+
+	wrongPos = (bbb * wrongPos);
+	position = glm::vec3(wrongPos.x, wrongPos.y, wrongPos.z);*/
+
+	double x = dist * cos(vRad) * sin(hRad);
+	double y = dist * sin(vRad);
+	double z = dist * cos(vRad) * cos(hRad);
 
 	position = glm::vec3(x, y, z);
 
-	float FoV = initialFoV;
+	glm::vec3 direction = -position;
+
+	printf("\n(%6.4lf, %6.4lf, %6.4lf)", position.x, position.y, position.z);
 
 	// Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
-	ProjectionMatrix = glm::perspective(FoV, 4.0f / 3.0f, 1.0f, 10000.0f);
-	// Camera matrix
+	ProjectionMatrix = glm::perspective(initialFoV, 4.0f / 3.0f, 0.1f, 10000.0f);
+	// Camera matrix	
 	ViewMatrix = glm::lookAt(
-		position,           // Camera is here
-		glm::vec3(0, 0, 0), // and looks here : at the same position, plus "direction"
-		up                  // Head is up (set to 0,-1,0 to look upside-down)
+		position,
+		position+direction,
+		up
 	);
 
 	// For the next frame, the "last time" will be "now"
