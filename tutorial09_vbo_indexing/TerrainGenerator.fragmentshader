@@ -33,15 +33,12 @@ void main() {
     vec3 MaterialAmbientColor = vec3(0.1, 0.1, 0.1) * MaterialDiffuseColor;
     
     vec3 position_cameraspace = (V * vec4(Position_worldspace, 1.0)).xyz;
-    vec3 tangentX = dFdx(position_cameraspace);
-    vec3 tangentY = dFdy(position_cameraspace);
-    vec3 normal_cameraspace = normalize(cross(tangentX, tangentY));
     
     // Distance to the light
     float distance = length( LightPosition_worldspace - Position_worldspace );
     LightPower /= distance * distance;
     
-    vec3 n = normalize( normal_cameraspace );
+    vec3 n = normalize( Normal_cameraspace );
     vec3 l = normalize( LightDirection_cameraspace );
     float ndotL = clamp( dot( n,l ), 0,1 );
 
