@@ -1,6 +1,7 @@
 // Include GLFW
 #include <glfw3.h>
-extern GLFWwindow* window; // The "extern" keyword here is to access the variable "window" declared in tutorialXXX.cpp. This is a hack to keep the tutorials simple. Please avoid this.
+extern GLFWwindow* window;
+extern bool wireFrameMode;
 
 // Include GLM
 #include <glm/glm.hpp>
@@ -19,26 +20,23 @@ glm::mat4 getProjectionMatrix(){
 	return ProjectionMatrix;
 }
 
-
-// Initial position : on +Z
-glm::vec3 position = glm::vec3( 0, 0, -500 );
-// Initial horizontal angle : toward -Z
-float horizontalAngle = 0;
-// Initial vertical angle : none
-float verticalAngle = 0.0f;
+glm::vec3 position;
 // Initial Field of View
 float initialFoV = 45.0f;
 
-float speed = 300.f; // 3 units / second
-float hRotateSpeed = 150.f;
-float vRotateSpeed = 150.f;
-float mouseSpeed = 0.005f;
+float defaultSpeed = 0.75f;
+float speed = 300.f;
+float defaultRotateSpeed = 0.003f;
+float rotateSpeed = 1.5f;
 
 glm::vec3 up = glm::vec3(0, 1, 0);
+glm::vec3 targetPos = glm::vec3(0, 0, 0);
 
-float dist = 500;
-float hRot = 0;
-float vRot = 0;
+float rho = 500;
+float theta = 0;
+float phi = 0;
+
+bool canChangeWireframeMode = true;
 
 void computeMatricesFromInputs(){
 
@@ -48,99 +46,55 @@ void computeMatricesFromInputs(){
 	// Compute time difference between current and last frame
 	double currentTime = glfwGetTime();
 	float deltaTime = float(currentTime - lastTime);
-
-	// Get mouse position
-	double xpos, ypos;
-	glfwGetCursorPos(window, &xpos, &ypos);
-
-	static double lastX =  xpos;
-	static double lastY = ypos;
-
-	// Reset mouse position for next frame
-	//glfwSetCursorPos(window, 1024/2, 768/2);
-	double dx = 0.0;
-	double dy = 0.0;
-	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS)
-	{
-		dx = lastX - xpos ;
-		dy = lastY - ypos ;
-	}
-
-	lastX = xpos;
-	lastY = ypos;
-
-	// Compute new orientation
-	horizontalAngle += mouseSpeed * float(dx);
-	verticalAngle   += mouseSpeed * float(dy );
-
-	// Move forward
-	if (glfwGetKey( window, GLFW_KEY_W ) == GLFW_PRESS){
-		vRot += deltaTime * vRotateSpeed;
-		if (vRot > 90)
-			vRot = 90;
-	}
-	// Move backward
-	if (glfwGetKey( window, GLFW_KEY_S ) == GLFW_PRESS){
-		vRot -= deltaTime * vRotateSpeed;
-		if (vRot < -90)
-			vRot = -90;
-	}
-	// Strafe right
-	if (glfwGetKey( window, GLFW_KEY_D ) == GLFW_PRESS){
-		hRot += deltaTime * hRotateSpeed;
-	}
-	// Strafe left
-	if (glfwGetKey( window, GLFW_KEY_A ) == GLFW_PRESS){
-		hRot -= deltaTime * hRotateSpeed;
-	}
-	//Move towards planet
-	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-		dist -= speed * deltaTime;
-		if (dist < 10) dist = 10;
-	}
-	//Move away from planet
-	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-		dist += speed * deltaTime;
-		if (dist > 1000) dist = 1000;
-	}
-
-	double hRad = hRot * 3.1415 / 180;
-	double vRad = vRot * 3.1415 / 180;
-
-	/*double x = dist * sin(vRad) * cos(hRad);
-	double y = dist * sin(vRad) * sin(hRad);
-	double z = dist * cos(vRad);
-
-	glm::vec4 wrongPos = glm::vec4(x, y, z, 0);
 	
-	float aaa[16] = {
-		1, 0, 0, 0,
-		0, 0, 1, 0,
-		0, 1, 0, 0,
-		0, 0, 0, 1
-	};
-	glm::mat4 bbb;
-	memcpy((&bbb), aaa, sizeof(aaa));
+	//update move speed based on distance
+	rotateSpeed = defaultRotateSpeed * rho;
+	speed = defaultSpeed * rho;
 
-	wrongPos = (bbb * wrongPos);
-	position = glm::vec3(wrongPos.x, wrongPos.y, wrongPos.z);*/
+	// change latitude
+	if (glfwGetKey( window, GLFW_KEY_W ) == GLFW_PRESS)
+		phi += deltaTime * rotateSpeed;
+	if (glfwGetKey( window, GLFW_KEY_S ) == GLFW_PRESS)
+		phi -= deltaTime * rotateSpeed;
 
-	double x = dist * cos(vRad) * sin(hRad);
-	double y = dist * sin(vRad);
-	double z = dist * cos(vRad) * cos(hRad);
+	// change longitude
+	if (glfwGetKey( window, GLFW_KEY_D ) == GLFW_PRESS)
+		theta -= deltaTime * rotateSpeed;
+	if (glfwGetKey( window, GLFW_KEY_A ) == GLFW_PRESS)
+		theta += deltaTime * rotateSpeed;
 
-	position = glm::vec3(x, y, z);
 
-	glm::vec3 direction = -position;
+	//Move towards and away from planet
+	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+		rho -= speed * deltaTime;
+	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+		rho += speed * deltaTime;
 
-	printf("\n(%6.4lf, %6.4lf, %6.4lf)", position.x, position.y, position.z);
+	//toggle wireframe mode
+	int changeMode = glfwGetKey(window, GLFW_KEY_F);
+	if (changeMode == GLFW_PRESS && canChangeWireframeMode) {
+		wireFrameMode = !wireFrameMode;
+		canChangeWireframeMode = false;
+	}
+	else if (changeMode == GLFW_RELEASE)
+		canChangeWireframeMode = true;
 
-	// Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
+	//clamp distance and latitude
+	phi = min(1.57f, max(-1.57f, phi));
+	rho = min(1000.f, max(10.f, rho));
+	
+	position = glm::vec3(
+		rho * cos(theta) * cos(phi), 
+		rho * sin(phi), 
+		rho * sin(theta) * cos(phi)
+	);
+
+	// Projection matrix
 	ProjectionMatrix = glm::perspective(initialFoV, 4.0f / 3.0f, 0.1f, 10000.0f);
 	// Camera matrix	
 	ViewMatrix = glm::lookAt(
 		position,
-		position+direction,
+		targetPos,
 		up
 	);
 

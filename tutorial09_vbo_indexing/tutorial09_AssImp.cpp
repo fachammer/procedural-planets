@@ -15,6 +15,8 @@
 #include <glfw3.h>
 GLFWwindow* window;
 
+bool wireFrameMode = false;
+
 // Include GLM
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -77,6 +79,8 @@ void renderObjects(Scene& scene, glm::mat4x4& viewMatrix, glm::mat4x4& projectio
 	glm::mat4 modelMatrix = glm::mat4(1.0f);
 	#endif
 	
+	glPolygonMode(GL_FRONT_AND_BACK, (wireFrameMode ? GL_LINE : GL_FILL));
+
     check_gl_error();
 	for(int i = 0; i < objects->size(); i++)
 	{
@@ -258,7 +262,7 @@ int main( void )
 
 	// Enable depth test
 	glEnable(GL_DEPTH_TEST);
-	glViewport(0, 0, SCREENWIDTH * 2, SCREENHEIGHT * 2);
+	glViewport(0, 0, SCREENWIDTH, SCREENHEIGHT);
 	//
 	// Accept fragment if it closer to the camera than the former one
 	glDepthFunc(GL_LESS);
@@ -294,7 +298,19 @@ int main( void )
 	std::vector<Mesh *> meshes;
     Mesh* sphereMesh = generateSphere(100, 7);
     sphereMesh->modelMatrix = glm::translate(glm::mat4(1.0), glm::vec3(0, 0, 0));
-    meshes.push_back(sphereMesh);
+	meshes.push_back(sphereMesh);
+
+	Mesh* xCoordinateMesh = generateSphere(10, 0);
+	xCoordinateMesh->modelMatrix = glm::translate(glm::mat4(), glm::vec3(200, 0, 0));
+	meshes.push_back(xCoordinateMesh);
+
+	Mesh* yCoordinateMesh = generateSphere(20, 0);
+	yCoordinateMesh->modelMatrix = glm::translate(glm::mat4(), glm::vec3(0, 200, 0));
+	meshes.push_back(yCoordinateMesh);
+
+	Mesh* zCoordinateMesh = generateSphere(30, 0);
+	zCoordinateMesh->modelMatrix = glm::translate(glm::mat4(), glm::vec3(0, 0, 200));
+	meshes.push_back(zCoordinateMesh);
     
 	for(int i = 0; i < meshes.size(); i++){
 		// DONE create a SimpleRenderstate for all objects which should cast shadows
