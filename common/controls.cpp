@@ -2,6 +2,7 @@
 #include <glfw3.h>
 extern GLFWwindow* window;
 extern bool wireFrameMode;
+extern bool drawCoordinateMeshes;
 
 // Include GLM
 #include <glm/glm.hpp>
@@ -37,6 +38,7 @@ float theta = 0;
 float phi = 0;
 
 bool canChangeWireframeMode = true;
+bool canChangeDrawCoordinateMeshes = true;
 
 void computeMatricesFromInputs(){
 
@@ -78,6 +80,15 @@ void computeMatricesFromInputs(){
 	}
 	else if (changeMode == GLFW_RELEASE)
 		canChangeWireframeMode = true;
+    
+    changeMode = glfwGetKey(window, GLFW_KEY_C);
+    if (changeMode == GLFW_PRESS && canChangeDrawCoordinateMeshes) {
+        drawCoordinateMeshes = !drawCoordinateMeshes;
+        canChangeDrawCoordinateMeshes = false;
+    }
+    else if (changeMode == GLFW_RELEASE)
+        canChangeDrawCoordinateMeshes = true;
+    
 
 	//clamp distance and latitude
 	phi = min(1.57f, max(-1.57f, phi));
