@@ -10,10 +10,20 @@
 //#define MINGW_COMPILER
 #define SCREENWIDTH 1280
 #define SCREENHEIGHT 1024
+#ifdef __APPLE__
+    #include "TargetConditionals.h"
+    #ifdef TARGET_OS_MAC
+        #define RESOLUTION_SCALE 2
+    #endif
+#else
+    #define RESOLUTION_SCALE 1
+#endif
 
 // Include GLFW
 #include <glfw3.h>
 GLFWwindow* window;
+
+bool wireFrameMode = false;
 
 // Include GLM
 #include <glm/glm.hpp>
@@ -68,6 +78,8 @@ struct Scene
 	{}
 };
 
+std::vector<unsigned int> coordinateMeshIndices;
+bool drawCoordinateMeshes = false;
 void renderObjects(Scene& scene, glm::mat4x4& viewMatrix, glm::mat4x4& projectionMatrix, glm::vec3& lightPos, glm::mat4& lightMatrix)
 {
 	std::vector<RenderState*>* objects = scene.objects;
@@ -77,9 +89,14 @@ void renderObjects(Scene& scene, glm::mat4x4& viewMatrix, glm::mat4x4& projectio
 	glm::mat4 modelMatrix = glm::mat4(1.0f);
 	#endif
 	
+	glPolygonMode(GL_FRONT_AND_BACK, (wireFrameMode ? GL_LINE : GL_FILL));
+
     check_gl_error();
 	for(int i = 0; i < objects->size(); i++)
 	{
+        if(!drawCoordinateMeshes && std::find(coordinateMeshIndices.begin(), coordinateMeshIndices.end(), i) != coordinateMeshIndices.end())
+            continue;
+        
 		RenderState* rs = (*objects)[i];
 		
 		unsigned int meshId = (*objects)[i]->meshId;
@@ -258,12 +275,12 @@ int main( void )
 
 	// Enable depth test
 	glEnable(GL_DEPTH_TEST);
-	glViewport(0, 0, SCREENWIDTH * 2, SCREENHEIGHT * 2);
+	glViewport(0, 0, SCREENWIDTH * RESOLUTION_SCALE, SCREENHEIGHT * RESOLUTION_SCALE);
 	//
 	// Accept fragment if it closer to the camera than the former one
 	glDepthFunc(GL_LESS);
 
-	//glEnable(GL_CULL_FACE);
+	glEnable(GL_CULL_FACE);
 
 	glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
 
@@ -295,6 +312,22 @@ int main( void )
     Mesh* sphereMesh = generateSphere(100, 7);
     sphereMesh->modelMatrix = glm::translate(glm::mat4(1.0), glm::vec3(0, 0, 0));
     meshes.push_back(sphereMesh);
+
+    coordinateMeshIndices.clear();
+	Mesh* xCoordinateMesh = generateSphere(10, 0);
+	xCoordinateMesh->modelMatrix = glm::translate(glm::mat4(), glm::vec3(200, 0, 0));
+    coordinateMeshIndices.push_back(meshes.size());
+	meshes.push_back(xCoordinateMesh);
+
+	Mesh* yCoordinateMesh = generateSphere(20, 0);
+	yCoordinateMesh->modelMatrix = glm::translate(glm::mat4(), glm::vec3(0, 200, 0));
+    coordinateMeshIndices.push_back(meshes.size());
+    meshes.push_back(yCoordinateMesh);
+
+	Mesh* zCoordinateMesh = generateSphere(30, 0);
+	zCoordinateMesh->modelMatrix = glm::translate(glm::mat4(), glm::vec3(0, 0, 200));
+    coordinateMeshIndices.push_back(meshes.size());
+	meshes.push_back(zCoordinateMesh);
     
 	for(int i = 0; i < meshes.size(); i++){
 		// DONE create a SimpleRenderstate for all objects which should cast shadows

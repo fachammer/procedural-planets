@@ -1,6 +1,8 @@
 // Include GLFW
 #include <glfw3.h>
-extern GLFWwindow* window; // The "extern" keyword here is to access the variable "window" declared in tutorialXXX.cpp. This is a hack to keep the tutorials simple. Please avoid this.
+extern GLFWwindow* window;
+extern bool wireFrameMode;
+extern bool drawCoordinateMeshes;
 
 // Include GLM
 #include <glm/glm.hpp>
@@ -19,22 +21,24 @@ glm::mat4 getProjectionMatrix(){
 	return ProjectionMatrix;
 }
 
-
-// Initial position : on +Z
-glm::vec3 position = glm::vec3( 0, 0, -500 );
-// Initial horizontal angle : toward -Z
-float horizontalAngle = 0;
-// Initial vertical angle : none
-float verticalAngle = 0.0f;
+glm::vec3 position;
 // Initial Field of View
 float initialFoV = 45.0f;
 
-float speed = 300.f; // 3 units / second
-float hRotateSpeed = 1.5f;
-float vRotateSpeed = 1.5f;
-float mouseSpeed = 0.005f;
+float defaultSpeed = 0.75f;
+float speed = 300.f;
+float defaultRotateSpeed = 0.003f;
+float rotateSpeed = 1.5f;
 
 glm::vec3 up = glm::vec3(0, 1, 0);
+glm::vec3 targetPos = glm::vec3(0, 0, 0);
+
+float rho = 500;
+float theta = 0;
+float phi = 0;
+
+bool canChangeWireframeMode = true;
+bool canChangeDrawCoordinateMeshes = true;
 
 void computeMatricesFromInputs(){
 
@@ -44,111 +48,66 @@ void computeMatricesFromInputs(){
 	// Compute time difference between current and last frame
 	double currentTime = glfwGetTime();
 	float deltaTime = float(currentTime - lastTime);
-
-	// Get mouse position
-	double xpos, ypos;
-	glfwGetCursorPos(window, &xpos, &ypos);
-
-	static double lastX =  xpos;
-	static double lastY = ypos;
-
-	// Reset mouse position for next frame
-	//glfwSetCursorPos(window, 1024/2, 768/2);
-	double dx = 0.0;
-	double dy = 0.0;
-	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS)
-	{
-		dx = lastX - xpos ;
-		dy = lastY - ypos ;
-	}
-
-	lastX = xpos;
-	lastY = ypos;
-
-	// Compute new orientation
-	horizontalAngle += mouseSpeed * float(dx);
-	verticalAngle   += mouseSpeed * float(dy );
-
-	// Direction : Spherical coordinates to Cartesian coordinates conversion
-	glm::vec3 direction(
-		cos(verticalAngle) * sin(horizontalAngle), 
-		sin(verticalAngle),
-		cos(verticalAngle) * cos(horizontalAngle)
-	);
 	
-	// Right vector
-	glm::vec3 right = glm::vec3(
-		sin(horizontalAngle - 3.14f/2.0f), 
-		0,
-		cos(horizontalAngle - 3.14f/2.0f)
-	);
+	//update move speed based on distance
+	rotateSpeed = defaultRotateSpeed * rho;
+	speed = defaultSpeed * rho;
+
+	// change latitude
+	if (glfwGetKey( window, GLFW_KEY_W ) == GLFW_PRESS)
+		phi += deltaTime * rotateSpeed;
+	if (glfwGetKey( window, GLFW_KEY_S ) == GLFW_PRESS)
+		phi -= deltaTime * rotateSpeed;
+
+	// change longitude
+	if (glfwGetKey( window, GLFW_KEY_D ) == GLFW_PRESS)
+		theta -= deltaTime * rotateSpeed;
+	if (glfwGetKey( window, GLFW_KEY_A ) == GLFW_PRESS)
+		theta += deltaTime * rotateSpeed;
+
+
+	//Move towards and away from planet
+	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+		rho -= speed * deltaTime;
+	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+		rho += speed * deltaTime;
+
+	//toggle wireframe mode
+	int changeMode = glfwGetKey(window, GLFW_KEY_F);
+	if (changeMode == GLFW_PRESS && canChangeWireframeMode) {
+		wireFrameMode = !wireFrameMode;
+		canChangeWireframeMode = false;
+	}
+	else if (changeMode == GLFW_RELEASE)
+		canChangeWireframeMode = true;
+    
+    changeMode = glfwGetKey(window, GLFW_KEY_C);
+    if (changeMode == GLFW_PRESS && canChangeDrawCoordinateMeshes) {
+        drawCoordinateMeshes = !drawCoordinateMeshes;
+        canChangeDrawCoordinateMeshes = false;
+    }
+    else if (changeMode == GLFW_RELEASE)
+        canChangeDrawCoordinateMeshes = true;
+    
+
+	//clamp distance and latitude
+	phi = min(1.57f, max(-1.57f, phi));
+	rho = min(1000.f, max(10.f, rho));
 	
-	// Up vector
-	glm::vec3 up = glm::cross( right, direction );
+	position = glm::vec3(
+		rho * cos(theta) * cos(phi), 
+		rho * sin(phi), 
+		rho * sin(theta) * cos(phi)
+	);
 
-	// Move forward
-	if (glfwGetKey( window, GLFW_KEY_W ) == GLFW_PRESS){
-		position += direction * deltaTime * speed;
-	}
-	// Move backward
-	if (glfwGetKey( window, GLFW_KEY_S ) == GLFW_PRESS){
-		position -= direction * deltaTime * speed;
-	}
-	// Strafe right
-	if (glfwGetKey( window, GLFW_KEY_D ) == GLFW_PRESS){
-		position += right * deltaTime * speed;
-	}
-	// Strafe left
-	if (glfwGetKey( window, GLFW_KEY_A ) == GLFW_PRESS){
-		position -= right * deltaTime * speed;
-	}
-	//Rotate left
-	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-		horizontalAngle += hRotateSpeed * deltaTime;
-	}
-	//Rotate right
-	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-		horizontalAngle -= hRotateSpeed * deltaTime;
-	}
-	//Rotate up
-	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-		verticalAngle += vRotateSpeed * deltaTime;
-	}
-	//Rotate down
-	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-		verticalAngle -= vRotateSpeed * deltaTime;
-	}
-	// Move up
-	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-		position += up * deltaTime * speed;
-	}
-	// Move down
-	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
-		position -= up * deltaTime * speed;
-	}
-
-	if (glfwGetKey (window, GLFW_KEY_R ) == GLFW_PRESS){
-		position = position = glm::vec3( 0, 0, 5 ); 
-		horizontalAngle = 3.14f;
-		verticalAngle = 0.0f;
-	}
-		
-	if (glfwGetKey (window, GLFW_KEY_I ) == GLFW_PRESS){
-		printf("up: %f/%f/%f, at: %f/%f/%f\n", up.x, up.y, up.z, direction.x, direction.y, direction.z);
-	}
-
-
-
-	float FoV = initialFoV;// - 5 * glfwGetMouseWheel(); // Now GLFW 3 requires setting up a callback for this. It's a bit too complicated for this beginner's tutorial, so it's disabled instead.
-
-	// Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
-	ProjectionMatrix = glm::perspective(FoV, 4.0f / 3.0f, 1.0f, 1000.0f);
-	// Camera matrix
-	ViewMatrix       = glm::lookAt(
-								position,           // Camera is here
-								position+direction, // and looks here : at the same position, plus "direction"
-								up                  // Head is up (set to 0,-1,0 to look upside-down)
-						   );
+	// Projection matrix
+	ProjectionMatrix = glm::perspective(initialFoV, 4.0f / 3.0f, 0.1f, 10000.0f);
+	// Camera matrix	
+	ViewMatrix = glm::lookAt(
+		position,
+		targetPos,
+		up
+	);
 
 	// For the next frame, the "last time" will be "now"
 	lastTime = currentTime;
