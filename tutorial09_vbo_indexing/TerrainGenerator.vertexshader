@@ -18,6 +18,8 @@ out vec3 normal_cameraspace;
 out vec3 eyeDirection_cameraspace;
 out vec3 lightDirection_cameraspace;
 out vec3 position_modelspace;
+out vec3 vertex_color;
+out float vertex_slope;
 
 uniform mat4 MVP;
 uniform mat4 V;
@@ -115,7 +117,7 @@ float elevation(vec3 position, float amplitude, float frequency, out vec3 gradie
 }
 
 float elevation(vec3 position, out vec3 gradient, out float totalAmplitude) {
-    float[] amplitudes = float[](12, 5, 2);
+    float[] amplitudes = float[](8, 5, 2);
     float[] frequencies = float[](0.01, 0.05, 0.1);
     
     float totalElevation = 0;
@@ -132,19 +134,26 @@ float elevation(vec3 position, out vec3 gradient, out float totalAmplitude) {
     return totalElevation;
 }
 
-void main() {
-    //vec3 g = gradient / (length(vertexPosition_modelspace) + elevation);
-    
+
+
+void main() {    
     vec3 gradient;
     float totalAmplitude;
-    float elevation = elevation(vertexPosition_modelspace, gradient, totalAmplitude);
-    gradient /= (length(vertexPosition_modelspace) + elevation);
+    float addedElevation = elevation(vertexPosition_modelspace, gradient, totalAmplitude);
+    float height = length(vertexPosition_modelspace) + addedElevation;
+   
+    vec3 modelPosition = vertexPosition_modelspace + addedElevation * vertexNormal_modelspace;
     
+    addedElevation = elevation(modelPosition, gradient, totalAmplitude);
+    vertex_color = vec3(1, 1, 1);
+    vertex_slope = length(gradient);
+    gradient /= height;
+   
     vec3 unitPosition = normalize(vertexPosition_modelspace);
     vec3 h = gradient - dot(gradient, unitPosition) * unitPosition;
     vec3 newNormal = normalize(unitPosition - totalAmplitude * h);
     
-    vec3 modelPosition = vertexPosition_modelspace + elevation * vertexNormal_modelspace;
+    modelPosition = vertexPosition_modelspace + addedElevation * vertexNormal_modelspace;
     position_modelspace = modelPosition;
     gl_Position =  MVP * vec4(modelPosition, 1);
     

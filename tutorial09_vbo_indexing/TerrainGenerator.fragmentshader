@@ -14,6 +14,8 @@ in vec3 Position_worldspace;
 in vec3 Normal_cameraspace;
 in vec3 EyeDirection_cameraspace;
 in vec3 LightDirection_cameraspace;
+in vec3 Vertex_color;
+in float Vertex_slope;
 
 // Ouput data
 out vec4 color;
@@ -22,6 +24,19 @@ uniform mat4 MV;
 uniform mat4 V;
 uniform vec3 LightPosition_worldspace;
 
+vec3 colorFromHeight(float height, float slope) {
+    if(height > 0 && height <= 100)
+        return vec3(0.11, 0.42, 0.63);
+    
+    if(height > 100 && height <= 103)
+        return vec3(0.92, 0.76, 0.53);
+    
+    if(height > 103 && height <= 108 && slope > 0.6)
+        return vec3(0.3, 0.3, 0.3);
+    
+    return vec3(0.95, 0.95, 0.95);
+}
+
 void main() {
     // Light emission properties
     // You probably want to put them as uniforms
@@ -29,7 +44,7 @@ void main() {
     float LightPower = 500000.0f;
     
     // Material properties
-    vec3 MaterialDiffuseColor = vec3(0, 1, 0);
+    vec3 MaterialDiffuseColor = colorFromHeight(length(Position_worldspace), Vertex_slope);
     vec3 MaterialAmbientColor = vec3(0.1, 0.1, 0.1) * MaterialDiffuseColor;
     
     vec3 position_cameraspace = (V * vec4(Position_worldspace, 1.0)).xyz;
