@@ -17,12 +17,16 @@ in vec3[] normal_cameraspace;
 in vec3[] eyeDirection_cameraspace;
 in vec3[] lightDirection_cameraspace;
 in vec3[] position_modelspace;
+in vec3[] vertex_color;
+in float[] vertex_slope;
 
 out vec2 UV;
 out vec3 Position_worldspace;
 out vec3 Normal_cameraspace;
 out vec3 EyeDirection_cameraspace;
 out vec3 LightDirection_cameraspace;
+out vec3 Vertex_color;
+out float Vertex_slope;
 
 uniform mat4 MVP;
 uniform mat4 M;
@@ -35,6 +39,8 @@ void main() {
         Normal_cameraspace = normal_cameraspace[i];
         EyeDirection_cameraspace = eyeDirection_cameraspace[i];
         LightDirection_cameraspace = lightDirection_cameraspace[i];
+        Vertex_color = vertex_color[i];
+        Vertex_slope = vertex_slope[i];
         gl_Position = MVP * vec4(position_modelspace[i], 1);
         EmitVertex();
     }
