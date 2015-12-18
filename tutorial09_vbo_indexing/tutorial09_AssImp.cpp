@@ -8,15 +8,18 @@
 #include <GL/glew.h>
 
 //#define MINGW_COMPILER
-#define SCREENWIDTH 1280
-#define SCREENHEIGHT 1024
+
 #ifdef __APPLE__
     #include "TargetConditionals.h"
     #ifdef TARGET_OS_MAC
         #define RESOLUTION_SCALE 2
+        #define SCREENWIDTH 1250
+        #define SCREENHEIGHT 1000
     #endif
 #else
     #define RESOLUTION_SCALE 1
+    #define SCREENWIDTH 1280
+    #define SCREENHEIGHT 1024
 #endif
 
 // Include GLFW
@@ -205,21 +208,6 @@ float calculateDist(glm::vec3 center)
 void initShaders(std::vector<ShaderEffect*>& shaderSets)
 {
 	// ########## load the shader programs ##########
-
-//	GLuint standardProgramID = LoadShaders("StandardShading2.vertexshader", "StandardShading.fragmentshader",  contentPath.c_str());
-//    SimpleShaderEffect* standardProgram = new SimpleShaderEffect(standardProgramID);
-//	shaderSets.push_back(standardProgram);
-//
-//	// DONE Load shaders for just drawing a quad on the screen
-//	GLuint screenQuadProgramID = LoadShaders("texturedQuad.vertexshader", "texturedQuad.fragmentshader", contentPath.c_str());
-//	SimpleShaderEffect* screenQuadProgram = new SimpleShaderEffect(screenQuadProgramID);
-//	shaderSets.push_back(screenQuadProgram);
-//
-//	// Load the shaders for the output of SSAO Render to texture
-//	GLuint SSAODepthProgramID = LoadShaders("justColor.vertexshader", "justColor.fragmentshader",  contentPath.c_str());
-//    SimpleShaderEffect* SSAODepthProgram = new SimpleShaderEffect(SSAODepthProgramID);
-//	shaderSets.push_back(SSAODepthProgram);
-    
     GLuint terrainGeneratorProgramId = LoadShaders("TerrainGenerator.vertexshader", "TerrainGenerator.geometryshader", "TerrainGenerator.fragmentshader", contentPath.c_str());
     SimpleShaderEffect* terrainGeneratorProgram = new SimpleShaderEffect(terrainGeneratorProgramId);
     shaderSets.push_back(terrainGeneratorProgram);
