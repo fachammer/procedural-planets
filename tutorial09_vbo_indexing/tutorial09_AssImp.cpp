@@ -27,6 +27,7 @@
 GLFWwindow* window;
 
 bool wireFrameMode = false;
+bool setLightToCamera = true;
 
 // Include GLM
 #include <glm/glm.hpp>
@@ -117,6 +118,9 @@ void renderObjects(Scene& scene, glm::mat4x4& viewMatrix, glm::mat4x4& projectio
 		glUniformMatrix4fv(effect->MVPId, 1, GL_FALSE, &MVP[0][0]);
 		glUniformMatrix4fv(effect->MId, 1, GL_FALSE, &modelMatrix[0][0]);
 		glUniformMatrix4fv(effect->VId, 1, GL_FALSE, &viewMatrix[0][0]);
+        glUniform1f(glGetUniformLocation(effect->programId, "maxNegativeHeight"), 10);
+        glUniform1f(glGetUniformLocation(effect->programId, "maxPositiveHeight"), 30);
+        glUniform1f(glGetUniformLocation(effect->programId, "baseRadius"), 100);
         check_gl_error();
 
         if (effect->lightMatrixId != 0xffffffff){
@@ -210,6 +214,7 @@ void initShaders(std::vector<ShaderEffect*>& shaderSets)
 	// ########## load the shader programs ##########
     GLuint terrainGeneratorProgramId = LoadShaders("TerrainGenerator.vertexshader", "TerrainGenerator.geometryshader", "TerrainGenerator.fragmentshader", contentPath.c_str());
     SimpleShaderEffect* terrainGeneratorProgram = new SimpleShaderEffect(terrainGeneratorProgramId);
+    terrainGeneratorProgram->textureSamplerId = glGetUniformLocation(terrainGeneratorProgramId, "heightSlopeBasedColorMap");
     shaderSets.push_back(terrainGeneratorProgram);
 }
 
@@ -248,7 +253,6 @@ int main( void )
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 	glfwSetCursorPos(window, SCREENWIDTH/2, SCREENHEIGHT/2);
 
-	glm::vec3 lightSpecularColor = glm::vec3(0.3, 0.3, 0.3);
 	glm::vec3 lightPos = glm::vec3(-464,670,-570);
 
 	// Set GLFW event callbacks. I removed glfwSetWindowSizeCallback for conciseness
@@ -292,7 +296,7 @@ int main( void )
 	check_gl_error();
 
 // ########### Load the textures ################
-	GLuint lichenStoneTextureId = loadSoil("lichenStone.dds", contentPath.c_str());
+    GLuint heightSlopeBasedColorMap = loadSoil("beachMountain.png", contentPath.c_str());
 	check_gl_error();
 
 // ############## Load the meshes ###############
@@ -322,7 +326,7 @@ int main( void )
 		SimpleRenderState* rtts = new SimpleRenderState();
 		rtts->meshId = i;
 		rtts->shaderEffectId = STANDARDSHADING; // the Render to texture shader effect
-		rtts->texId = lichenStoneTextureId;
+		rtts->texId = heightSlopeBasedColorMap;
 		objects.push_back(rtts);
 	}
 	
@@ -382,7 +386,9 @@ int main( void )
         glm::mat4 lightMVPMatrix = lightProjMatrix * lightViewMatrix;
 
 		// set the scene constant variales ( light position)
-		SimpleRenderState::lightPositionWorldSpace = lightPos;
+        if(setLightToCamera)
+            SimpleRenderState::lightPositionWorldSpace = getCameraPosition();
+        
 		// render to the screen buffer
 		renderObjects(scenes[0], ViewMatrix, ProjectionMatrix, lightPos, lightMVPMatrix);
 

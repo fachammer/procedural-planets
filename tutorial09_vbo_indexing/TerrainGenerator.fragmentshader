@@ -23,6 +23,48 @@ out vec4 color;
 uniform mat4 MV;
 uniform mat4 V;
 uniform vec3 LightPosition_worldspace;
+uniform sampler2D heightSlopeBasedColorMap;
+uniform float maxNegativeHeight;
+uniform float maxPositiveHeight;
+uniform float baseRadius;
+
+struct ColorStop {
+    float time;
+    vec4 color;
+};
+
+float map(float value, float inMin, float inMax, float outMin, float outMax) {
+    return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);
+}
+
+// Returns the linearly interpolated color from the given color stops and argument time
+// Assumes that colorStops is sorted
+// time and the colorStops time must be on the same scale
+vec4 colorFromTimeInColorStops(ColorStop[2] colorStops, float time) {
+    if(colorStops.length() == 0)
+        return vec4(0, 0, 0, 1);
+    
+    if(colorStops.length() == 1)
+        return colorStops[0].color;
+    
+    if(time <= colorStops[0].time)
+        return colorStops[0].color;
+    
+    if(time >= colorStops[colorStops.length() - 1].time)
+        return colorStops[colorStops.length() - 1].color;
+    
+    for(int i = 0; i < colorStops.length() - 1; i++) {
+        ColorStop stopA = colorStops[i];
+        ColorStop stopB = colorStops[i + 1];
+        
+        if(time >= stopA.time && time <= stopB.time) {
+            float mappedTime = map(time, stopA.time, stopB.time, 0, 1);
+            return mix(stopA.color, stopB.color, mappedTime);
+        }
+    }
+    
+    return vec4(0, 0, 0, 1);
+}
 
 vec3 colorFromHeight(float height, float slope) {
     if(height > 0 && height <= 100)
@@ -40,26 +82,32 @@ vec3 colorFromHeight(float height, float slope) {
 void main() {
     // Light emission properties
     // You probably want to put them as uniforms
-    vec3 LightColor = vec3(1,1,1);
+    vec3 LightColor = vec3(1, 1, 1);
     float LightPower = 500000.0f;
     
     // Material properties
-    vec3 MaterialDiffuseColor = colorFromHeight(length(Position_worldspace), Vertex_slope);
-    vec3 MaterialAmbientColor = vec3(0.1, 0.1, 0.1) * MaterialDiffuseColor;
+    vec2 heightSlopeBasedColorMapSize = textureSize(heightSlopeBasedColorMap, 0);
+    float heightCoordinate = clamp(map(length(Position_worldspace),
+                                       baseRadius - maxNegativeHeight,
+                                       baseRadius + maxPositiveHeight, 0, 1), 0, 1);
+    
+    float slopeCoordinate = clamp(map(log(Vertex_slope + 1), 0, log(1000), 0, 1), 0, 1);
+    vec2 textureCoordinates = vec2(heightCoordinate, slopeCoordinate);
+    vec4 MaterialDiffuseColor = texture(heightSlopeBasedColorMap, textureCoordinates);
+    vec4 MaterialAmbientColor = vec4(0.1, 0.1, 0.1, 1.0) * MaterialDiffuseColor;
     
     vec3 position_cameraspace = (V * vec4(Position_worldspace, 1.0)).xyz;
     
     // Distance to the light
-    float distance = length( LightPosition_worldspace - Position_worldspace );
+    float distance = length(LightPosition_worldspace - Position_worldspace);
     LightPower /= distance * distance;
     
     vec3 n = normalize( Normal_cameraspace );
     vec3 l = normalize( LightDirection_cameraspace );
     float ndotL = clamp( dot( n,l ), 0,1 );
 
-    vec3 diffuseLight = LightPower *  MaterialDiffuseColor * ndotL;
+    vec4 diffuseLight = LightPower * ndotL * vec4(LightColor, 1);
 
-    color.rgb = MaterialAmbientColor + diffuseLight;
-    color.a = 1;
+    color = MaterialAmbientColor + MaterialDiffuseColor * diffuseLight;
 }
 

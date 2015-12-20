@@ -3,6 +3,7 @@
 extern GLFWwindow* window;
 extern bool wireFrameMode;
 extern bool drawCoordinateMeshes;
+extern bool setLightToCamera;
 
 // Include GLM
 #include <glm/glm.hpp>
@@ -39,6 +40,10 @@ float phi = 0;
 
 bool canChangeWireframeMode = true;
 bool canChangeDrawCoordinateMeshes = true;
+
+glm::vec3 getCameraPosition() {
+    return position;
+}
 
 void computeMatricesFromInputs(){
 
@@ -89,6 +94,7 @@ void computeMatricesFromInputs(){
     else if (changeMode == GLFW_RELEASE)
         canChangeDrawCoordinateMeshes = true;
     
+    setLightToCamera = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
 
 	//clamp distance and latitude
 	phi = min(1.57f, max(-1.57f, phi));

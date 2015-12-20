@@ -25,6 +25,8 @@ uniform mat4 MVP;
 uniform mat4 V;
 uniform mat4 M;
 uniform vec3 LightPosition_worldspace;
+uniform float maxNegativeHeight;
+uniform float maxPositiveHeight;
 
 //  Simplex 3D Noise
 //  by Ian McEwan, Ashima Arts
@@ -113,49 +115,41 @@ float map(float value, float inMin, float inMax, float outMin, float outMax) {
     return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);
 }
 
-float power = 3;
-float scale = 2;
+float power = 1;
+float scale = 1;
 float noise(vec3 position, out vec3 gradient) {
-    vec3 innerGradient;
-    float innerNoise = map(snoise(position, innerGradient), -1, 1, 0, scale);
-    float totalNoise = pow(innerNoise, power);
-    gradient = power * pow(innerNoise, power - 1) * innerGradient * scale * 0.5;
-    float maxValue = pow(scale, power);
-    
-    return map(totalNoise, 0, maxValue, -1, 1);
+    return snoise(position, gradient);
 }
 
-float minElevation = -4;
-float maxElevation = 12;
-
 float elevation(vec3 position, float amplitude, float frequency, out vec3 gradient) {
-    float elevation = map(amplitude * noise(position * frequency, gradient), -amplitude, amplitude, minElevation, maxElevation);
-    float deltaElevation = maxElevation - minElevation;
-    gradient *= frequency * deltaElevation / 2;
+    float elevation = amplitude * noise(position * frequency, gradient);
+    gradient *= amplitude * frequency;
     return elevation;
 }
 
-float elevation(vec3 position, out vec3 gradient, out float totalAmplitude) {
-    float[] amplitudes = float[](1, 0.7, 0.5, 0.3, 0.2, 0.1);
-    float[] frequencies = float[](1 / 1000.0, 2 / 1000.0, 4 / 1000.0, 8 / 1000.0, 16 / 1000.0, 32 / 1000.0);
-    
+
+float[] amplitudes = float[](1, 4, 4, 3, 1, 1, 0.5);
+float[] frequencies = float[](4 / 1000.0, 8 / 1000.0, 16 / 1000.0, 32 / 1000.0, 64 / 1000.0, 128 / 1000.0, 256 / 1000.0);
+ 
+float totalElevation(vec3 position, float minElevation, float maxElevation, out vec3 gradient) {
     float totalElevation = 0;
     gradient = vec3(0, 0, 0);
-    totalAmplitude = 0;
+    float totalAmplitude = 0;
     for(int i = 0; i < amplitudes.length(); i++) {
-        vec3 noiseGradient;
-        totalElevation += elevation(position, amplitudes[i], frequencies[i], noiseGradient);
-        gradient += noiseGradient;
+        vec3 innerGradient;
+        totalElevation += elevation(position, amplitudes[i], frequencies[i], innerGradient);
+        gradient += innerGradient;
         totalAmplitude += amplitudes[i];
     }
     
-    return totalElevation;
+    gradient *= (maxElevation - minElevation) / totalAmplitude;
+    return map(totalElevation, -totalAmplitude / 2, totalAmplitude / 2, minElevation, maxElevation);
 }
 
-void main() {    
+void main() {
+    float maxElevation = maxPositiveHeight - maxNegativeHeight;
     vec3 gradient;
-    float totalAmplitude;
-    float addedElevation = elevation(vertexPosition_modelspace, gradient, totalAmplitude);
+    float addedElevation = totalElevation(vertexPosition_modelspace, -maxNegativeHeight, maxPositiveHeight, gradient);
     float height = length(vertexPosition_modelspace) + addedElevation;
    
     vec3 modelPosition = vertexPosition_modelspace + addedElevation * vertexNormal_modelspace;
@@ -165,7 +159,7 @@ void main() {
    
     vec3 unitPosition = normalize(vertexPosition_modelspace);
     vec3 h = gradient - dot(gradient, unitPosition) * unitPosition;
-    vec3 newNormal = normalize(unitPosition - totalAmplitude * h);
+    vec3 newNormal = normalize(unitPosition - maxElevation * h);
     
     modelPosition = vertexPosition_modelspace + addedElevation * vertexNormal_modelspace;
     position_modelspace = modelPosition;
