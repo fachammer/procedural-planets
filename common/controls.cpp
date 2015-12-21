@@ -107,7 +107,9 @@ void computeMatricesFromInputs(){
 	);
 
 	// Projection matrix
-	ProjectionMatrix = glm::perspective(initialFoV, 4.0f / 3.0f, 0.1f, 10000.0f);
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
+	ProjectionMatrix = glm::perspective(initialFoV, (float) width / height, 0.1f, 10000.0f);
 	// Camera matrix	
 	ViewMatrix = glm::lookAt(
 		position,

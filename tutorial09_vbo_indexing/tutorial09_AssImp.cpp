@@ -9,18 +9,23 @@
 
 //#define MINGW_COMPILER
 
+/*
 #ifdef __APPLE__
     #include "TargetConditionals.h"
     #ifdef TARGET_OS_MAC
         #define RESOLUTION_SCALE 2
-        #define SCREENWIDTH 1250
-        #define SCREENHEIGHT 1000
+        #define SCREENWIDTH 1280
+        #define SCREENHEIGHT 1024
     #endif
 #else
     #define RESOLUTION_SCALE 1
     #define SCREENWIDTH 1280
     #define SCREENHEIGHT 1024
 #endif
+*/
+#define RESOLUTION_SCALE 1
+#define SCREENWIDTH 1280
+#define SCREENHEIGHT 1024
 
 // Include GLFW
 #include <glfw3.h>
@@ -119,11 +124,11 @@ void renderObjects(Scene& scene, glm::mat4x4& viewMatrix, glm::mat4x4& projectio
 		glUniformMatrix4fv(effect->MId, 1, GL_FALSE, &modelMatrix[0][0]);
 		glUniformMatrix4fv(effect->VId, 1, GL_FALSE, &viewMatrix[0][0]);
         glUniform1f(glGetUniformLocation(effect->programId, "maxNegativeHeight"), 10);
-        glUniform1f(glGetUniformLocation(effect->programId, "maxPositiveHeight"), 30);
+        glUniform1f(glGetUniformLocation(effect->programId, "maxPositiveHeight"), 20);
         glUniform1f(glGetUniformLocation(effect->programId, "baseRadius"), 100);
         check_gl_error();
 
-        if (effect->lightMatrixId != 0xffffffff){
+        if (effect->lightMatrixId != 0xffffffff) {
 			glm::mat4 lm = lightMatrix * modelMatrix;
 			glUniformMatrix4fv(effect->lightMatrixId, 1, GL_FALSE, &lm[0][0]);
 		}
@@ -234,7 +239,7 @@ int main( void )
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	// Open a window and create its OpenGL context
-	window = glfwCreateWindow( SCREENWIDTH, SCREENHEIGHT, "Tutorial 09 - VBO Indexing", NULL, NULL);
+	window = glfwCreateWindow( SCREENHEIGHT, SCREENHEIGHT, "Tutorial 09 - VBO Indexing", NULL, NULL);
 	if( window == NULL ){
 		fprintf( stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n" );
 		glfwTerminate();
@@ -251,7 +256,7 @@ int main( void )
 
 	// Ensure we can capture the escape key being pressed below
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
-	glfwSetCursorPos(window, SCREENWIDTH/2, SCREENHEIGHT/2);
+	glfwSetCursorPos(window, SCREENHEIGHT/2, SCREENHEIGHT/2);
 
 	glm::vec3 lightPos = glm::vec3(-464,670,-570);
 
@@ -267,7 +272,6 @@ int main( void )
 
 	// Enable depth test
 	glEnable(GL_DEPTH_TEST);
-	glViewport(0, 0, SCREENWIDTH * RESOLUTION_SCALE, SCREENHEIGHT * RESOLUTION_SCALE);
 	//
 	// Accept fragment if it closer to the camera than the former one
 	glDepthFunc(GL_LESS);
