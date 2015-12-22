@@ -121,13 +121,7 @@ float noise(vec3 position, out vec3 gradient) {
     return snoise(position, gradient);
 }
 
-float elevation(vec3 position, float amplitude, float frequency, out vec3 gradient) {
-    float elevation = amplitude * noise(position * frequency, gradient);
-    gradient *= amplitude * frequency;
-    return elevation;
-}
-
-
+/*
 float[] amplitudes = float[](1, 4, 4, 3, 1, 1, 0.5);
 float[] frequencies = float[](4 / 1000.0, 8 / 1000.0, 16 / 1000.0, 32 / 1000.0, 64 / 1000.0, 128 / 1000.0, 256 / 1000.0);
  
@@ -145,35 +139,58 @@ float totalElevation(vec3 position, float minElevation, float maxElevation, out 
     gradient *= (maxElevation - minElevation) / totalAmplitude;
     return map(totalElevation, -totalAmplitude / 2, totalAmplitude / 2, minElevation, maxElevation);
 }
+ */
+
+float[] amplitudes = float[](1, 4, 4, 3, 1, 1, 0.5);
+float[] frequencies = float[](4 / 1000.0, 8 / 1000.0, 16 / 1000.0, 32 / 1000.0, 64 / 1000.0, 128 / 1000.0, 256 / 1000.0);
+float elevation(vec3 position, float minElevation, float maxElevation, out vec3 gradient) {
+    
+    float totalElevation = 0;
+    gradient = vec3(0, 0, 0);
+    float totalAmplitude = 0;
+    for(int i = 0; i < amplitudes.length(); i++) {
+        vec3 innerGradient;
+        totalElevation += amplitudes[i] * noise(position * frequencies[i], innerGradient);
+        gradient += amplitudes[i] * frequencies[i] * innerGradient;
+        totalAmplitude += amplitudes[i];
+    }
+    
+    gradient *= (maxElevation - minElevation) / (2 * totalAmplitude);
+    return map(totalElevation, -totalAmplitude, totalAmplitude, minElevation, maxElevation);
+}
+
+vec3 normal(vec3 position, vec3 gradient, float deltaElevation, out float slope) {
+    vec3 unitPosition = normalize(position);
+    float radialGradientComponent = dot(gradient, unitPosition);
+    slope = radialGradientComponent;
+    vec3 radialGradient = radialGradientComponent * unitPosition;
+    vec3 tangentialGradient = gradient - radialGradient;
+    vec3 unnormalizedNormal = position - deltaElevation / 2 * tangentialGradient;
+    return normalize(unnormalizedNormal);
+}
+
+vec3 displacedPosition(vec3 position, float minElevation, float maxElevation, out vec3 displacedNormal, out float slope) {
+    vec3 gradient;
+    vec3 newPosition = position * (1 + elevation(position, minElevation, maxElevation, gradient) / length(position));
+    displacedNormal = normal(position, gradient, maxElevation - minElevation, slope);
+    return newPosition;
+}
 
 void main() {
-    float maxElevation = maxPositiveHeight - maxNegativeHeight;
-    vec3 gradient;
-    float addedElevation = totalElevation(vertexPosition_modelspace, -maxNegativeHeight, maxPositiveHeight, gradient);
-    float height = length(vertexPosition_modelspace) + addedElevation;
-   
-    vec3 modelPosition = vertexPosition_modelspace + addedElevation * vertexNormal_modelspace;
     vertex_color = vec3(1, 1, 1);
-    vertex_slope = length(gradient);
-    gradient /= height;
-   
-    vec3 unitPosition = normalize(vertexPosition_modelspace);
-    vec3 h = gradient - dot(gradient, unitPosition) * unitPosition;
-    vec3 newNormal = normalize(unitPosition - maxElevation * h);
+    vec3 newNormal;
+    position_modelspace = displacedPosition(vertexPosition_modelspace, -maxNegativeHeight, maxPositiveHeight, newNormal, vertex_slope);
+    gl_Position =  MVP * vec4(position_modelspace, 1);
     
-    modelPosition = vertexPosition_modelspace + addedElevation * vertexNormal_modelspace;
-    position_modelspace = modelPosition;
-    gl_Position =  MVP * vec4(modelPosition, 1);
+    position_worldspace = (M * vec4(position_modelspace, 1)).xyz;
     
-    position_worldspace = (M * vec4(modelPosition, 1)).xyz;
-    
-    vec3 vertexPosition_cameraspace = ( V * M * vec4(modelPosition, 1)).xyz;
+    vec3 vertexPosition_cameraspace = (V * M * vec4(position_modelspace, 1)).xyz;
     eyeDirection_cameraspace = vec3(0,0,0) - vertexPosition_cameraspace;
     
-    vec3 LightPosition_cameraspace = ( V * vec4(LightPosition_worldspace,1)).xyz;
+    vec3 LightPosition_cameraspace = (V * vec4(LightPosition_worldspace,1)).xyz;
     lightDirection_cameraspace = LightPosition_cameraspace + eyeDirection_cameraspace;
     
-    normal_cameraspace = ( V * M * vec4(newNormal, 0)).xyz;
+    normal_cameraspace = (V * M * vec4(newNormal, 0)).xyz;
     
     uv = vertexUV;
 }

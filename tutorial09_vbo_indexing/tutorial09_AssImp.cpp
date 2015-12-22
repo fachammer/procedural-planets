@@ -123,9 +123,9 @@ void renderObjects(Scene& scene, glm::mat4x4& viewMatrix, glm::mat4x4& projectio
 		glUniformMatrix4fv(effect->MVPId, 1, GL_FALSE, &MVP[0][0]);
 		glUniformMatrix4fv(effect->MId, 1, GL_FALSE, &modelMatrix[0][0]);
 		glUniformMatrix4fv(effect->VId, 1, GL_FALSE, &viewMatrix[0][0]);
-        glUniform1f(glGetUniformLocation(effect->programId, "maxNegativeHeight"), 10);
-        glUniform1f(glGetUniformLocation(effect->programId, "maxPositiveHeight"), 20);
-        glUniform1f(glGetUniformLocation(effect->programId, "baseRadius"), 100);
+        glUniform1f(glGetUniformLocation(effect->programId, "maxNegativeHeight"), 5);
+        glUniform1f(glGetUniformLocation(effect->programId, "maxPositiveHeight"), 30);
+        glUniform1f(glGetUniformLocation(effect->programId, "baseRadius"), 50);
         check_gl_error();
 
         if (effect->lightMatrixId != 0xffffffff) {
@@ -305,7 +305,7 @@ int main( void )
 
 // ############## Load the meshes ###############
 	std::vector<Mesh *> meshes;
-    Mesh* sphereMesh = generateSphere(100, 7);
+    Mesh* sphereMesh = generateSphere(50, 7);
     sphereMesh->modelMatrix = glm::translate(glm::mat4(1.0), glm::vec3(0, 0, 0));
     meshes.push_back(sphereMesh);
 
