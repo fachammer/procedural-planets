@@ -10,6 +10,7 @@
 
 layout(triangles) in;
 layout(triangle_strip, max_vertices=3) out;
+//layout(line_strip, max_vertices=6) out;
 
 in vec2[] uv;
 in vec3[] position_worldspace;
@@ -19,6 +20,7 @@ in vec3[] lightDirection_cameraspace;
 in vec3[] position_modelspace;
 in vec3[] vertex_color;
 in float[] vertex_slope;
+in vec3[] normal_modelspace;
 
 out vec2 UV;
 out vec3 Position_worldspace;

@@ -20,6 +20,7 @@ out vec3 lightDirection_cameraspace;
 out vec3 position_modelspace;
 out vec3 vertex_color;
 out float vertex_slope;
+out vec3 normal_modelspace;
 
 uniform mat4 MVP;
 uniform mat4 V;
@@ -115,31 +116,9 @@ float map(float value, float inMin, float inMax, float outMin, float outMax) {
     return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);
 }
 
-float power = 1;
-float scale = 1;
 float noise(vec3 position, out vec3 gradient) {
     return snoise(position, gradient);
 }
-
-/*
-float[] amplitudes = float[](1, 4, 4, 3, 1, 1, 0.5);
-float[] frequencies = float[](4 / 1000.0, 8 / 1000.0, 16 / 1000.0, 32 / 1000.0, 64 / 1000.0, 128 / 1000.0, 256 / 1000.0);
- 
-float totalElevation(vec3 position, float minElevation, float maxElevation, out vec3 gradient) {
-    float totalElevation = 0;
-    gradient = vec3(0, 0, 0);
-    float totalAmplitude = 0;
-    for(int i = 0; i < amplitudes.length(); i++) {
-        vec3 innerGradient;
-        totalElevation += elevation(position, amplitudes[i], frequencies[i], innerGradient);
-        gradient += innerGradient;
-        totalAmplitude += amplitudes[i];
-    }
-    
-    gradient *= (maxElevation - minElevation) / totalAmplitude;
-    return map(totalElevation, -totalAmplitude / 2, totalAmplitude / 2, minElevation, maxElevation);
-}
- */
 
 float[] amplitudes = float[](1, 4, 4, 3, 1, 1, 0.5);
 float[] frequencies = float[](4 / 1000.0, 8 / 1000.0, 16 / 1000.0, 32 / 1000.0, 64 / 1000.0, 128 / 1000.0, 256 / 1000.0);
@@ -155,31 +134,31 @@ float elevation(vec3 position, float minElevation, float maxElevation, out vec3 
         totalAmplitude += amplitudes[i];
     }
     
-    gradient *= (maxElevation - minElevation) / (2 * totalAmplitude);
+    gradient *= (maxElevation - minElevation) / (4 * totalAmplitude);
     return map(totalElevation, -totalAmplitude, totalAmplitude, minElevation, maxElevation);
 }
 
-vec3 normal(vec3 position, vec3 gradient, float deltaElevation, out float slope) {
+vec3 normal(vec3 position, vec3 gradient, float elevation, out float slope) {
     vec3 unitPosition = normalize(position);
     float radialGradientComponent = dot(gradient, unitPosition);
     slope = radialGradientComponent;
     vec3 radialGradient = radialGradientComponent * unitPosition;
     vec3 tangentialGradient = gradient - radialGradient;
-    vec3 unnormalizedNormal = position - deltaElevation / 2 * tangentialGradient;
+    vec3 unnormalizedNormal = position - elevation * tangentialGradient;
     return normalize(unnormalizedNormal);
 }
 
 vec3 displacedPosition(vec3 position, float minElevation, float maxElevation, out vec3 displacedNormal, out float slope) {
     vec3 gradient;
-    vec3 newPosition = position * (1 + elevation(position, minElevation, maxElevation, gradient) / length(position));
-    displacedNormal = normal(position, gradient, maxElevation - minElevation, slope);
+    float elevation = elevation(position, minElevation, maxElevation, gradient);
+    vec3 newPosition = position * (1 + elevation / length(position));
+    displacedNormal = normal(position, gradient, (maxElevation - minElevation) / 2, slope);
     return newPosition;
 }
 
 void main() {
     vertex_color = vec3(1, 1, 1);
-    vec3 newNormal;
-    position_modelspace = displacedPosition(vertexPosition_modelspace, -maxNegativeHeight, maxPositiveHeight, newNormal, vertex_slope);
+    position_modelspace = displacedPosition(vertexPosition_modelspace, -maxNegativeHeight, maxPositiveHeight, normal_modelspace, vertex_slope);
     gl_Position =  MVP * vec4(position_modelspace, 1);
     
     position_worldspace = (M * vec4(position_modelspace, 1)).xyz;
@@ -190,7 +169,7 @@ void main() {
     vec3 LightPosition_cameraspace = (V * vec4(LightPosition_worldspace,1)).xyz;
     lightDirection_cameraspace = LightPosition_cameraspace + eyeDirection_cameraspace;
     
-    normal_cameraspace = (V * M * vec4(newNormal, 0)).xyz;
+    normal_cameraspace = (V * M * vec4(normal_modelspace, 0)).xyz;
     
     uv = vertexUV;
 }

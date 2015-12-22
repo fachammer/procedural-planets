@@ -5,6 +5,7 @@
 #include <common/GLError.h>
 #include <iostream>
 #include <glm/glm.hpp>
+#include <vector>
 //struct RenderState
 //{
 //	unsigned int meshId;
@@ -53,8 +54,7 @@
 struct RenderState
 {
 	unsigned int meshId;
-	unsigned int shaderEffectId;
-
+    std::vector<int> shaderEffectIds;
 	
 
 	virtual void setParameters(ShaderEffect* effect) 

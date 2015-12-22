@@ -70,7 +70,9 @@ const char *faceFile[6] = {
 float shadowMagicNumber = 0.003;
 unsigned char textureToShow = 0;
 unsigned char layerToShow = 0;
-
+float baseRadius = 50;
+float maxDepth = 10;
+float maxHeight = 20;
 
 struct Scene
 {
@@ -112,35 +114,38 @@ void renderObjects(Scene& scene, glm::mat4x4& viewMatrix, glm::mat4x4& projectio
 		Mesh* m = (*scene.meshes)[meshId];
 		modelMatrix = m->modelMatrix;
 		glm::mat4 MVP = projectionMatrix * viewMatrix * modelMatrix;
-		// Use our shader
-		unsigned int effectId = (*objects)[i]->shaderEffectId;
-		ShaderEffect* effect = (*scene.effects)[effectId];
-		glUseProgram(effect->programId);
-        check_gl_error();
-		rs->setParameters(effect);
-		// Send our transformation to the currently bound shader,
-		// in the "MVP" uniform
-		glUniformMatrix4fv(effect->MVPId, 1, GL_FALSE, &MVP[0][0]);
-		glUniformMatrix4fv(effect->MId, 1, GL_FALSE, &modelMatrix[0][0]);
-		glUniformMatrix4fv(effect->VId, 1, GL_FALSE, &viewMatrix[0][0]);
-        glUniform1f(glGetUniformLocation(effect->programId, "maxNegativeHeight"), 5);
-        glUniform1f(glGetUniformLocation(effect->programId, "maxPositiveHeight"), 30);
-        glUniform1f(glGetUniformLocation(effect->programId, "baseRadius"), 50);
-        check_gl_error();
-
-        if (effect->lightMatrixId != 0xffffffff) {
-			glm::mat4 lm = lightMatrix * modelMatrix;
-			glUniformMatrix4fv(effect->lightMatrixId, 1, GL_FALSE, &lm[0][0]);
-		}
-
-		m->bindBuffersAndDraw();
-
-		glDisableVertexAttribArray(0);
-		glDisableVertexAttribArray(1);
-		glDisableVertexAttribArray(2);
-		glDisableVertexAttribArray(3);
-		glDisableVertexAttribArray(4);
-		check_gl_error();
+        
+        for(int j = 0; j < ((*objects)[i])->shaderEffectIds.size(); j++) {
+            // Use our shader
+            unsigned int effectId = (*objects)[i]->shaderEffectIds[j];
+            ShaderEffect* effect = (*scene.effects)[effectId];
+            glUseProgram(effect->programId);
+            check_gl_error();
+            rs->setParameters(effect);
+            // Send our transformation to the currently bound shader,
+            // in the "MVP" uniform
+            glUniformMatrix4fv(effect->MVPId, 1, GL_FALSE, &MVP[0][0]);
+            glUniformMatrix4fv(effect->MId, 1, GL_FALSE, &modelMatrix[0][0]);
+            glUniformMatrix4fv(effect->VId, 1, GL_FALSE, &viewMatrix[0][0]);
+            glUniform1f(glGetUniformLocation(effect->programId, "maxNegativeHeight"), maxDepth);
+            glUniform1f(glGetUniformLocation(effect->programId, "maxPositiveHeight"), maxHeight);
+            glUniform1f(glGetUniformLocation(effect->programId, "baseRadius"), baseRadius);
+            check_gl_error();
+            
+            if (effect->lightMatrixId != 0xffffffff) {
+                glm::mat4 lm = lightMatrix * modelMatrix;
+                glUniformMatrix4fv(effect->lightMatrixId, 1, GL_FALSE, &lm[0][0]);
+            }
+            
+            m->bindBuffersAndDraw();
+            
+            glDisableVertexAttribArray(0);
+            glDisableVertexAttribArray(1);
+            glDisableVertexAttribArray(2);
+            glDisableVertexAttribArray(3);
+            glDisableVertexAttribArray(4);
+            check_gl_error();
+        }
 	}
 }
 
@@ -221,6 +226,11 @@ void initShaders(std::vector<ShaderEffect*>& shaderSets)
     SimpleShaderEffect* terrainGeneratorProgram = new SimpleShaderEffect(terrainGeneratorProgramId);
     terrainGeneratorProgram->textureSamplerId = glGetUniformLocation(terrainGeneratorProgramId, "heightSlopeBasedColorMap");
     shaderSets.push_back(terrainGeneratorProgram);
+    
+    GLuint terrainGeneratorNormalsProgramId = LoadShaders("TerrainGenerator.vertexshader", "TerrainGeneratorNormals.geometryshader", "TerrainGeneratorNormals.fragmentshader", contentPath.c_str());
+    SimpleShaderEffect* terrainGeneratorNormalsProgram = new SimpleShaderEffect(terrainGeneratorNormalsProgramId);
+    terrainGeneratorNormalsProgram->textureSamplerId = glGetUniformLocation(terrainGeneratorNormalsProgramId, "heightSlopeBasedColorMap");
+    shaderSets.push_back(terrainGeneratorNormalsProgram);
 }
 
 int main( void )
@@ -293,6 +303,7 @@ int main( void )
 
 	enum ShaderEffects {
 		STANDARDSHADING = 0,
+        NORMALS = 1,
 		TEXTURED_QUAD,
 		JUST_COLOR
 	};
@@ -305,7 +316,7 @@ int main( void )
 
 // ############## Load the meshes ###############
 	std::vector<Mesh *> meshes;
-    Mesh* sphereMesh = generateSphere(50, 7);
+    Mesh* sphereMesh = generateSphere(baseRadius, 7);
     sphereMesh->modelMatrix = glm::translate(glm::mat4(1.0), glm::vec3(0, 0, 0));
     meshes.push_back(sphereMesh);
 
@@ -329,7 +340,8 @@ int main( void )
 		// DONE create a SimpleRenderstate for all objects which should cast shadows
 		SimpleRenderState* rtts = new SimpleRenderState();
 		rtts->meshId = i;
-		rtts->shaderEffectId = STANDARDSHADING; // the Render to texture shader effect
+		rtts->shaderEffectIds.push_back(STANDARDSHADING); // the Render to texture shader effect
+        //rtts->shaderEffectIds.push_back(NORMALS);
 		rtts->texId = heightSlopeBasedColorMap;
 		objects.push_back(rtts);
 	}
