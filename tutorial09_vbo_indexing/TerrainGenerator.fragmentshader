@@ -27,6 +27,7 @@ uniform sampler2D heightSlopeBasedColorMap;
 uniform float maxNegativeHeight;
 uniform float maxPositiveHeight;
 uniform float baseRadius;
+uniform vec3 lightColor;
 
 struct ColorStop {
     float time;
@@ -38,9 +39,6 @@ float map(float value, float inMin, float inMax, float outMin, float outMax) {
 }
 
 void main() {
-    // Light emission properties
-    // You probably want to put them as uniforms
-    vec3 LightColor = vec3(1, 1, 1);
     float LightPower = 500000.0f;
     
     // Material properties
@@ -64,7 +62,7 @@ void main() {
     vec3 l = normalize( LightDirection_cameraspace );
     float ndotL = clamp( dot( n,l ), 0,1 );
 
-    vec4 diffuseLight = LightPower * ndotL * vec4(LightColor, 1);
+    vec4 diffuseLight = LightPower * ndotL * vec4(lightColor, 1);
 
     color = MaterialAmbientColor + MaterialDiffuseColor * diffuseLight;
 }

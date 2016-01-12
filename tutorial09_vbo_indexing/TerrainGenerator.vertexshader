@@ -28,6 +28,9 @@ uniform mat4 M;
 uniform vec3 LightPosition_worldspace;
 uniform float maxNegativeHeight;
 uniform float maxPositiveHeight;
+uniform float baseRadius;
+uniform vec3 cameraPosition;
+uniform vec3 lightColor;
 
 //  Simplex 3D Noise
 //  by Ian McEwan, Ashima Arts
@@ -168,6 +171,8 @@ void main() {
     
     vec3 LightPosition_cameraspace = (V * vec4(LightPosition_worldspace,1)).xyz;
     lightDirection_cameraspace = LightPosition_cameraspace + eyeDirection_cameraspace;
+    
+    
     
     normal_cameraspace = (V * M * vec4(normal_modelspace, 0)).xyz;
     

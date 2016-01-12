@@ -71,8 +71,8 @@ float shadowMagicNumber = 0.003;
 unsigned char textureToShow = 0;
 unsigned char layerToShow = 0;
 float baseRadius = 50;
-float maxDepth = 10;
-float maxHeight = 20;
+float maxDepth = 40;
+float maxHeight = 40;
 
 struct Scene
 {
@@ -102,6 +102,7 @@ void renderObjects(Scene& scene, glm::mat4x4& viewMatrix, glm::mat4x4& projectio
 	
 	glPolygonMode(GL_FRONT_AND_BACK, (wireFrameMode ? GL_LINE : GL_FILL));
 
+    glm::vec3 cameraPosition = getCameraPosition();
     check_gl_error();
 	for(int i = 0; i < objects->size(); i++)
 	{
@@ -130,6 +131,8 @@ void renderObjects(Scene& scene, glm::mat4x4& viewMatrix, glm::mat4x4& projectio
             glUniform1f(glGetUniformLocation(effect->programId, "maxNegativeHeight"), maxDepth);
             glUniform1f(glGetUniformLocation(effect->programId, "maxPositiveHeight"), maxHeight);
             glUniform1f(glGetUniformLocation(effect->programId, "baseRadius"), baseRadius);
+            glUniform3f(glGetUniformLocation(effect->programId, "cameraPosition"), cameraPosition.x, cameraPosition.y, cameraPosition.z);
+            glUniform3f(glGetUniformLocation(effect->programId, "lightColor"), 1, 1, 1);
             check_gl_error();
             
             if (effect->lightMatrixId != 0xffffffff) {
@@ -286,7 +289,7 @@ int main( void )
 	// Accept fragment if it closer to the camera than the former one
 	glDepthFunc(GL_LESS);
 
-	glEnable(GL_CULL_FACE);
+	//glEnable(GL_CULL_FACE);
 
 	glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
 

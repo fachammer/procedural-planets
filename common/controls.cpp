@@ -23,6 +23,7 @@ glm::mat4 getProjectionMatrix(){
 }
 
 glm::vec3 position;
+
 // Initial Field of View
 float initialFoV = 45.0f;
 
