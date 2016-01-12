@@ -140,8 +140,6 @@ void renderObjects(Scene& scene, glm::mat4x4& viewMatrix, glm::mat4x4& projectio
             glUniform1f(glGetUniformLocation(effect->programId, "atmosphereRadius"), atmospherePlanetRatio * (baseRadius + maxHeight));
             glUniform3f(glGetUniformLocation(effect->programId, "cameraPosition"), cameraPosition.x, cameraPosition.y, cameraPosition.z);
             glUniform3f(glGetUniformLocation(effect->programId, "lightColor"), 1, 1, 1);
-            glUniform2f(glGetUniformLocation(effect->programId, "resolution"), width, height);
-            glUniform1f(glGetUniformLocation(effect->programId, "fieldOfView"), getFieldOfView());
             
             check_gl_error();
             
@@ -240,11 +238,6 @@ void initShaders(std::vector<ShaderEffect*>& shaderSets)
     terrainGeneratorProgram->textureSamplerId = glGetUniformLocation(terrainGeneratorProgramId, "heightSlopeBasedColorMap");
     shaderSets.push_back(terrainGeneratorProgram);
     
-    GLuint terrainGeneratorNormalsProgramId = LoadShaders("TerrainGenerator.vertexshader", "TerrainGeneratorNormals.geometryshader", "TerrainGeneratorNormals.fragmentshader", contentPath.c_str());
-    SimpleShaderEffect* terrainGeneratorNormalsProgram = new SimpleShaderEffect(terrainGeneratorNormalsProgramId);
-    terrainGeneratorNormalsProgram->textureSamplerId = glGetUniformLocation(terrainGeneratorNormalsProgramId, "heightSlopeBasedColorMap");
-    shaderSets.push_back(terrainGeneratorNormalsProgram);
-    
     GLuint atmosphericScatteringProgramId = LoadShaders("AtmosphericScattering.vertexshader", "AtmosphericScattering.fragmentshader", contentPath.c_str());
     SimpleShaderEffect* atmosphericScatteringProgram = new SimpleShaderEffect(atmosphericScatteringProgramId);
     shaderSets.push_back(atmosphericScatteringProgram);
@@ -320,10 +313,7 @@ int main( void )
 
 	enum ShaderEffects {
 		STANDARDSHADING = 0,
-        NORMALS = 1,
-        ATMOSPHERIC_SCATTERING = 2,
-		TEXTURED_QUAD,
-		JUST_COLOR
+        ATMOSPHERIC_SCATTERING = 1
 	};
 
 	check_gl_error();

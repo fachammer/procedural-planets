@@ -9,11 +9,8 @@
 #version 330 core
 
 in vec3 position_worldspace;
-in vec3 normal_cameraspace;
-in vec3 eyeDirection_cameraspace;
 in vec3 lightDirection_cameraspace;
 in vec3 position_modelspace;
-in vec3 normal_modelspace;
 
 // Ouput data
 out vec4 color;
@@ -25,6 +22,7 @@ uniform float atmosphereRadius;
 uniform float maxNegativeHeight;
 uniform float baseRadius;
 
+// adapted code from: https://www.shadertoy.com/view/lslXDr
 // Written by GLtracy
 
 // math const
@@ -49,18 +47,6 @@ const float FNUM_OUT_SCATTER = 2.0;
 
 const int NUM_IN_SCATTER = 2;
 const float FNUM_IN_SCATTER = 2.0;
-
-// angle : pitch, yaw
-mat3 rot3xy( vec2 angle ) {
-    vec2 c = cos( angle );
-    vec2 s = sin( angle );
-    
-    return mat3(
-                c.y      ,  0.0, -s.y,
-                s.y * s.x,  c.x,  c.y * s.x,
-                s.y * c.x, -s.x,  c.y * c.x
-                );
-}
 
 // ray intersects sphere
 // e = -b +/- sqrt( b^2 - c )

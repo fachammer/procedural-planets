@@ -28,10 +28,7 @@ uniform float maxNegativeHeight;
 uniform float maxPositiveHeight;
 uniform float baseRadius;
 uniform vec3 lightColor;
-uniform float fieldOfView;
 uniform vec3 cameraPosition;
-uniform vec2 resolution;
-
 
 float map(float value, float inMin, float inMax, float outMin, float outMax) {
     return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);
