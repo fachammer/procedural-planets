@@ -28,11 +28,10 @@ uniform float maxNegativeHeight;
 uniform float maxPositiveHeight;
 uniform float baseRadius;
 uniform vec3 lightColor;
+uniform float fieldOfView;
+uniform vec3 cameraPosition;
+uniform vec2 resolution;
 
-struct ColorStop {
-    float time;
-    vec4 color;
-};
 
 float map(float value, float inMin, float inMax, float outMin, float outMax) {
     return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);
@@ -40,7 +39,6 @@ float map(float value, float inMin, float inMax, float outMin, float outMax) {
 
 void main() {
     float LightPower = 500000.0f;
-    
     // Material properties
     vec2 heightSlopeBasedColorMapSize = textureSize(heightSlopeBasedColorMap, 0);
     float heightCoordinate = clamp(map(length(Position_worldspace),
@@ -52,10 +50,9 @@ void main() {
     vec4 MaterialDiffuseColor = texture(heightSlopeBasedColorMap, textureCoordinates);
     vec4 MaterialAmbientColor = vec4(0.1, 0.1, 0.1, 1.0) * MaterialDiffuseColor;
     
-    vec3 position_cameraspace = (V * vec4(Position_worldspace, 1.0)).xyz;
-    
     // Distance to the light
-    float distance = length(LightPosition_worldspace - Position_worldspace);
+    vec3 lightDirection = LightPosition_worldspace - Position_worldspace;
+    float distance = length(lightDirection);
     LightPower /= distance * distance;
     
     vec3 n = normalize( Normal_cameraspace );
@@ -66,4 +63,3 @@ void main() {
 
     color = MaterialAmbientColor + MaterialDiffuseColor * diffuseLight;
 }
-

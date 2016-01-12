@@ -71,8 +71,11 @@ float shadowMagicNumber = 0.003;
 unsigned char textureToShow = 0;
 unsigned char layerToShow = 0;
 float baseRadius = 50;
-float maxDepth = 40;
-float maxHeight = 40;
+float maxDepth = 10;
+float maxHeight = 20;
+float atmospherePlanetRatio = 1.3;
+int planetMeshId;
+int atmosphereMeshId;
 
 struct Scene
 {
@@ -102,6 +105,9 @@ void renderObjects(Scene& scene, glm::mat4x4& viewMatrix, glm::mat4x4& projectio
 	
 	glPolygonMode(GL_FRONT_AND_BACK, (wireFrameMode ? GL_LINE : GL_FILL));
 
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
+    
     glm::vec3 cameraPosition = getCameraPosition();
     check_gl_error();
 	for(int i = 0; i < objects->size(); i++)
@@ -131,8 +137,12 @@ void renderObjects(Scene& scene, glm::mat4x4& viewMatrix, glm::mat4x4& projectio
             glUniform1f(glGetUniformLocation(effect->programId, "maxNegativeHeight"), maxDepth);
             glUniform1f(glGetUniformLocation(effect->programId, "maxPositiveHeight"), maxHeight);
             glUniform1f(glGetUniformLocation(effect->programId, "baseRadius"), baseRadius);
+            glUniform1f(glGetUniformLocation(effect->programId, "atmosphereRadius"), atmospherePlanetRatio * (baseRadius + maxHeight));
             glUniform3f(glGetUniformLocation(effect->programId, "cameraPosition"), cameraPosition.x, cameraPosition.y, cameraPosition.z);
             glUniform3f(glGetUniformLocation(effect->programId, "lightColor"), 1, 1, 1);
+            glUniform2f(glGetUniformLocation(effect->programId, "resolution"), width, height);
+            glUniform1f(glGetUniformLocation(effect->programId, "fieldOfView"), getFieldOfView());
+            
             check_gl_error();
             
             if (effect->lightMatrixId != 0xffffffff) {
@@ -234,6 +244,10 @@ void initShaders(std::vector<ShaderEffect*>& shaderSets)
     SimpleShaderEffect* terrainGeneratorNormalsProgram = new SimpleShaderEffect(terrainGeneratorNormalsProgramId);
     terrainGeneratorNormalsProgram->textureSamplerId = glGetUniformLocation(terrainGeneratorNormalsProgramId, "heightSlopeBasedColorMap");
     shaderSets.push_back(terrainGeneratorNormalsProgram);
+    
+    GLuint atmosphericScatteringProgramId = LoadShaders("AtmosphericScattering.vertexshader", "AtmosphericScattering.fragmentshader", contentPath.c_str());
+    SimpleShaderEffect* atmosphericScatteringProgram = new SimpleShaderEffect(atmosphericScatteringProgramId);
+    shaderSets.push_back(atmosphericScatteringProgram);
 }
 
 int main( void )
@@ -289,7 +303,7 @@ int main( void )
 	// Accept fragment if it closer to the camera than the former one
 	glDepthFunc(GL_LESS);
 
-	//glEnable(GL_CULL_FACE);
+	glEnable(GL_CULL_FACE);
 
 	glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
 
@@ -307,6 +321,7 @@ int main( void )
 	enum ShaderEffects {
 		STANDARDSHADING = 0,
         NORMALS = 1,
+        ATMOSPHERIC_SCATTERING = 2,
 		TEXTURED_QUAD,
 		JUST_COLOR
 	};
@@ -319,22 +334,27 @@ int main( void )
 
 // ############## Load the meshes ###############
 	std::vector<Mesh *> meshes;
-    Mesh* sphereMesh = generateSphere(baseRadius, 7);
-    sphereMesh->modelMatrix = glm::translate(glm::mat4(1.0), glm::vec3(0, 0, 0));
+    
+    Mesh* atmosphereMesh = generateSphere(atmospherePlanetRatio * (baseRadius + maxHeight), 7, true);
+    atmosphereMeshId = meshes.size();
+    meshes.push_back(atmosphereMesh);
+    
+    Mesh* sphereMesh = generateSphere(baseRadius, 7, false);
+    planetMeshId = meshes.size();
     meshes.push_back(sphereMesh);
-
+    
     coordinateMeshIndices.clear();
-	Mesh* xCoordinateMesh = generateSphere(10, 0);
+	Mesh* xCoordinateMesh = generateSphere(10, 0, false);
 	xCoordinateMesh->modelMatrix = glm::translate(glm::mat4(), glm::vec3(200, 0, 0));
     coordinateMeshIndices.push_back(meshes.size());
 	meshes.push_back(xCoordinateMesh);
 
-	Mesh* yCoordinateMesh = generateSphere(20, 0);
+	Mesh* yCoordinateMesh = generateSphere(20, 0, false);
 	yCoordinateMesh->modelMatrix = glm::translate(glm::mat4(), glm::vec3(0, 200, 0));
     coordinateMeshIndices.push_back(meshes.size());
     meshes.push_back(yCoordinateMesh);
 
-	Mesh* zCoordinateMesh = generateSphere(30, 0);
+	Mesh* zCoordinateMesh = generateSphere(30, 0, false);
 	zCoordinateMesh->modelMatrix = glm::translate(glm::mat4(), glm::vec3(0, 0, 200));
     coordinateMeshIndices.push_back(meshes.size());
 	meshes.push_back(zCoordinateMesh);
@@ -343,7 +363,10 @@ int main( void )
 		// DONE create a SimpleRenderstate for all objects which should cast shadows
 		SimpleRenderState* rtts = new SimpleRenderState();
 		rtts->meshId = i;
-		rtts->shaderEffectIds.push_back(STANDARDSHADING); // the Render to texture shader effect
+        if(i == atmosphereMeshId)
+            rtts->shaderEffectIds.push_back(ATMOSPHERIC_SCATTERING);
+        else
+            rtts->shaderEffectIds.push_back(STANDARDSHADING); // the Render to texture shader effect
         //rtts->shaderEffectIds.push_back(NORMALS);
 		rtts->texId = heightSlopeBasedColorMap;
 		objects.push_back(rtts);
@@ -365,12 +388,14 @@ int main( void )
 	scenes.push_back(Scene(&objects, &meshes, &shaderSets));
 
 	check_gl_error();
-
+    
+    computeMatricesFromInputs();
+    SimpleRenderState::lightPositionWorldSpace = getCameraPosition();
 
 	// For speed computation
 	double lastTime = glfwGetTime();
 	int nbFrames = 0;
-
+    
 	do{ 
 		// Apply the scene depth map to the textured quad object to debug.
 		// With the gui we can change which texture we see.
@@ -389,7 +414,7 @@ int main( void )
 
 		check_gl_error();
 		// Clear the screen
-		glClearColor(0.5, 0.5, 0.5, 1.0);
+		glClearColor(0.0, 0.0, 0.0, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
 		// Compute the MVP matrix from keyboard and mouse input

@@ -9,7 +9,7 @@
 #version 330 core
 
 layout(triangles) in;
-layout(triangle_strip, max_vertices=3) out;
+layout(triangle_strip, max_vertices=6) out;
 //layout(line_strip, max_vertices=6) out;
 
 in vec2[] uv;
@@ -33,6 +33,7 @@ out float Vertex_slope;
 uniform mat4 MVP;
 uniform mat4 M;
 uniform mat4 V;
+uniform float atmosphereRadius;
 
 void main() {
     for(int i = 0; i < 3; i++) {

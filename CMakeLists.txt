@@ -80,6 +80,8 @@ add_executable(tutorial09_AssImp
     tutorial09_vbo_indexing/TerrainGenerator.fragmentshader
     tutorial09_vbo_indexing/TerrainGeneratorNormals.geometryshader
     tutorial09_vbo_indexing/TerrainGeneratorNormals.fragmentshader
+    tutorial09_vbo_indexing/AtmosphericScattering.vertexshader
+    tutorial09_vbo_indexing/AtmosphericScattering.fragmentshader
 )
 target_link_libraries(tutorial09_AssImp
 	${ALL_LIBS}

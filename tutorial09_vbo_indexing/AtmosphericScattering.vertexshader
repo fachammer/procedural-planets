@@ -1,0 +1,52 @@
+//
+//  TerrainGenerator.vertexshader
+//  Tutorials
+//
+//  Created by Fabian Achammer on 10.12.15.
+//
+//
+
+#version 330 core
+
+layout(location = 0) in vec3 vertexPosition_modelspace;
+layout(location = 1) in vec2 vertexUV;
+layout(location = 2) in vec3 vertexNormal_modelspace;
+
+out vec2 uv;
+out vec3 position_worldspace;
+out vec3 normal_cameraspace;
+out vec3 eyeDirection_cameraspace;
+out vec3 lightDirection_cameraspace;
+out vec3 position_modelspace;
+out vec3 vertex_color;
+out float vertex_slope;
+out vec3 normal_modelspace;
+
+uniform mat4 MVP;
+uniform mat4 V;
+uniform mat4 M;
+uniform vec3 LightPosition_worldspace;
+uniform float maxNegativeHeight;
+uniform float maxPositiveHeight;
+uniform float baseRadius;
+uniform vec3 cameraPosition;
+uniform vec3 lightColor;
+
+void main() {
+    vertex_color = vec3(1, 1, 1);
+    position_modelspace = vertexPosition_modelspace;
+    
+    gl_Position =  MVP * vec4(vertexPosition_modelspace, 1);
+    
+    position_worldspace = (M * vec4(position_modelspace, 1)).xyz;
+    
+    vec3 vertexPosition_cameraspace = (V * M * vec4(position_modelspace, 1)).xyz;
+    eyeDirection_cameraspace = vec3(0,0,0) - vertexPosition_cameraspace;
+    
+    vec3 LightPosition_cameraspace = (V * vec4(LightPosition_worldspace,1)).xyz;
+    lightDirection_cameraspace = LightPosition_cameraspace + eyeDirection_cameraspace;
+    
+    normal_cameraspace = (V * M * vec4(normal_modelspace, 0)).xyz;
+    
+    uv = vertexUV;
+}
