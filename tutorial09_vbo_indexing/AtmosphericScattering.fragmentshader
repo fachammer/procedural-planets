@@ -132,7 +132,7 @@ vec3 in_scatter( vec3 o, vec3 dir, vec2 e, vec3 l ) {
 
 void main()
 {
-    float lightPower = 20000;
+    float lightPower = 50000;
     R = atmosphereRadius;
     R_INNER = baseRadius - maxNegativeHeight;
     SCALE_H = 4.0 / (R - R_INNER);
@@ -152,7 +152,7 @@ void main()
     
     vec3 I = in_scatter( eye, dir, e, normalize(lightDirection));
 
-    I = 1.0 - exp(-0.75 * I);
+    I = 1.0 - exp(-0.5 * I);
     
     color = vec4(I, 1.0);
 }
