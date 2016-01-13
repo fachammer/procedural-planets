@@ -14,6 +14,7 @@ in vec3 Position_worldspace;
 in vec3 Normal_cameraspace;
 in vec3 EyeDirection_cameraspace;
 in vec3 LightDirection_cameraspace;
+in vec3 LightDirection2_cameraspace;
 in vec3 Vertex_color;
 in float Vertex_slope;
 
@@ -23,43 +24,50 @@ out vec4 color;
 uniform mat4 MV;
 uniform mat4 V;
 uniform vec3 LightPosition_worldspace;
+uniform vec3 LightPosition2_worldspace;
+uniform sampler2D heightSlopeBasedColorMap;
+uniform float maxNegativeHeight;
+uniform float maxPositiveHeight;
+uniform float baseRadius;
+uniform vec3 cameraPosition;
 
-vec3 colorFromHeight(float height, float slope) {
-    if(height > 0 && height <= 100)
-        return vec3(0.11, 0.42, 0.63);
+const vec3 lightColor = vec3(1, 1, 1);
+const vec3 lightColor2 = vec3(0.5, 0.2, 0.2);
+
+const float LightPower = 50000.0f;
+const float LightPower2 = 80000.0f;
+
+float map(float value, float inMin, float inMax, float outMin, float outMax) {
+    return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);
+}
+
+vec3 calcLight(vec3 position, float power, vec3 color, vec3 lightDirection_cameraSpace){
+	vec3 lightDirection = Position_worldspace - position;
+    float distance = length(lightDirection);
+    power /= distance * distance;
     
-    if(height > 100 && height <= 103)
-        return vec3(0.92, 0.76, 0.53);
-    
-    if(height > 103 && height <= 108 && slope > 0.6)
-        return vec3(0.3, 0.3, 0.3);
-    
-    return vec3(0.95, 0.95, 0.95);
+    vec3 n = normalize( Normal_cameraspace );
+    vec3 l = normalize( lightDirection_cameraSpace );
+    float ndotL = clamp( dot( n,l ), 0,1 );
+
+    return power * ndotL * color;
 }
 
 void main() {
-    // Light emission properties
-    // You probably want to put them as uniforms
-    vec3 LightColor = vec3(1,1,1);
-    float LightPower = 500000.0f;
-    
     // Material properties
-    vec3 MaterialDiffuseColor = colorFromHeight(length(Position_worldspace), Vertex_slope);
-    vec3 MaterialAmbientColor = vec3(0.1, 0.1, 0.1) * MaterialDiffuseColor;
+    vec2 heightSlopeBasedColorMapSize = textureSize(heightSlopeBasedColorMap, 0);
+    float heightCoordinate = clamp(map(length(Position_worldspace),
+                                       40,
+                                       80, 0, 1), 0, 1);
     
-    vec3 position_cameraspace = (V * vec4(Position_worldspace, 1.0)).xyz;
+    float slopeCoordinate = clamp(map(log(Vertex_slope + 1), 0, log(3.0), 0, 1), 0, 1);
+    vec2 textureCoordinates = vec2(heightCoordinate, slopeCoordinate);
+    vec4 MaterialDiffuseColor = texture(heightSlopeBasedColorMap, textureCoordinates);
+    vec4 MaterialAmbientColor = vec4(0.0, 0.0, 0.0, 1.0) * MaterialDiffuseColor;
     
-    // Distance to the light
-    float distance = length( LightPosition_worldspace - Position_worldspace );
-    LightPower /= distance * distance;
-    
-    vec3 n = normalize( Normal_cameraspace );
-    vec3 l = normalize( LightDirection_cameraspace );
-    float ndotL = clamp( dot( n,l ), 0,1 );
 
-    vec3 diffuseLight = LightPower *  MaterialDiffuseColor * ndotL;
+    vec3 diffuseLight = calcLight(LightPosition_worldspace, LightPower, lightColor, LightDirection_cameraspace);
+	diffuseLight += calcLight(LightPosition2_worldspace, LightPower2, lightColor2, LightDirection2_cameraspace);
 
-    color.rgb = MaterialAmbientColor + diffuseLight;
-    color.a = 1;
+    color = MaterialAmbientColor + MaterialDiffuseColor * vec4(diffuseLight, 1);
 }
-

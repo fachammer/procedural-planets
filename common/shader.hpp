@@ -48,6 +48,7 @@ struct SimpleShaderEffect : public ShaderEffect
 	SimpleShaderEffect(unsigned int programId);
 	unsigned int textureSamplerId;
 	unsigned int lightPositionId;
+	unsigned int lightPosition2Id;
 };
 
 struct VolumeRenderingShaderEffect : public ShaderEffect

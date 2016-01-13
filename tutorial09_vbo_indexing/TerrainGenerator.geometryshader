@@ -9,37 +9,32 @@
 #version 330 core
 
 layout(triangles) in;
-layout(triangle_strip, max_vertices=3) out;
+layout(triangle_strip, max_vertices = 3) out;
 
-in vec2[] uv;
 in vec3[] position_worldspace;
 in vec3[] normal_cameraspace;
-in vec3[] eyeDirection_cameraspace;
 in vec3[] lightDirection_cameraspace;
+in vec3[] lightDirection2_cameraspace;
 in vec3[] position_modelspace;
-in vec3[] vertex_color;
 in float[] vertex_slope;
 
-out vec2 UV;
 out vec3 Position_worldspace;
 out vec3 Normal_cameraspace;
-out vec3 EyeDirection_cameraspace;
 out vec3 LightDirection_cameraspace;
-out vec3 Vertex_color;
+out vec3 LightDirection2_cameraspace;
 out float Vertex_slope;
 
 uniform mat4 MVP;
 uniform mat4 M;
 uniform mat4 V;
+uniform float atmosphereRadius;
 
 void main() {
     for(int i = 0; i < 3; i++) {
-        UV = uv[i];
         Position_worldspace = position_worldspace[i];
         Normal_cameraspace = normal_cameraspace[i];
-        EyeDirection_cameraspace = eyeDirection_cameraspace[i];
         LightDirection_cameraspace = lightDirection_cameraspace[i];
-        Vertex_color = vertex_color[i];
+        LightDirection2_cameraspace = lightDirection2_cameraspace[i];
         Vertex_slope = vertex_slope[i];
         gl_Position = MVP * vec4(position_modelspace[i], 1);
         EmitVertex();

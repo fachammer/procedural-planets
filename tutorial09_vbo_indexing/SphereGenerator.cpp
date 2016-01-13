@@ -58,14 +58,14 @@ static const unsigned int ICOSAHEDRON_INDICES[60] = {
 };
 
 static int addSphereVertex(Mesh* mesh, vec3 vertex, GLfloat radius) {
-    vec3 normalizedVertex = normalize(vertex);
+    vec3 normalizedVertex = normalize(vertex * radius);
     mesh->indexed_vertices.push_back(normalizedVertex * radius);
     mesh->indexed_normals.push_back(normalizedVertex);
     mesh->indexed_uvs.push_back(glm::vec2(0.5f, 0.5f));
     return mesh->indexed_vertices.size() - 1;
 }
 
-Mesh* generateSphere(GLfloat radius, int subdivisions){
+Mesh* generateSphere(GLfloat radius, int subdivisions, bool reversedFaces){
     Mesh* sphere = new Mesh();
     
     for(int i = 0; i < 12; i++){
@@ -114,6 +114,18 @@ Mesh* generateSphere(GLfloat radius, int subdivisions){
         
         sphere->indices = subdividedSphereIndices;
     }
+    
+    if(reversedFaces){
+        std::vector<unsigned int> reversedIndices;
         
+        for(int i = 0; i < sphere->indices.size(); i += 3){
+            for(int j = 2; j >= 0; j--){
+                reversedIndices.push_back(sphere->indices[i + j]);
+            }
+        }
+        
+        sphere->indices = reversedIndices;
+    }
+    
     return sphere;
 }

@@ -5,6 +5,7 @@
 #include <common/GLError.h>
 #include <iostream>
 #include <glm/glm.hpp>
+#include <vector>
 //struct RenderState
 //{
 //	unsigned int meshId;
@@ -53,9 +54,8 @@
 struct RenderState
 {
 	unsigned int meshId;
-	unsigned int shaderEffectId;
-
-	
+    std::vector<int> shaderEffectIds;
+	unsigned int texId;
 
 	virtual void setParameters(ShaderEffect* effect) 
 	{
@@ -66,8 +66,9 @@ struct RenderState
 struct SimpleRenderState : public RenderState
 {
 	public: 
-	unsigned int texId;
+	
 	static glm::vec3 lightPositionWorldSpace;
+	static glm::vec3 lightPositionWorldSpace2;
 
 	virtual void setParameters(ShaderEffect* e)
 	{
@@ -79,6 +80,7 @@ struct SimpleRenderState : public RenderState
 		glUniform1i(effect->textureSamplerId, 0);
 		check_gl_error();
 		glUniform3f(effect->lightPositionId, lightPositionWorldSpace.x, lightPositionWorldSpace.y, lightPositionWorldSpace.z );
+		glUniform3f(effect->lightPosition2Id, lightPositionWorldSpace2.x, lightPositionWorldSpace2.y, lightPositionWorldSpace2.z);
 	}
 };
 

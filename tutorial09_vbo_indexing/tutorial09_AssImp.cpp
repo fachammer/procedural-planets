@@ -3,30 +3,38 @@
 #include <stdlib.h>
 #include <vector>
 #include <string>
+#include <time.h>
 
 // Include GLEW
 #include <GL/glew.h>
 
 //#define MINGW_COMPILER
 
+/*
 #ifdef __APPLE__
     #include "TargetConditionals.h"
     #ifdef TARGET_OS_MAC
         #define RESOLUTION_SCALE 2
-        #define SCREENWIDTH 1250
-        #define SCREENHEIGHT 1000
+        #define SCREENWIDTH 1280
+        #define SCREENHEIGHT 1024
     #endif
 #else
     #define RESOLUTION_SCALE 1
     #define SCREENWIDTH 1280
     #define SCREENHEIGHT 1024
 #endif
+*/
+#define RESOLUTION_SCALE 1
+#define SCREENWIDTH 1280
+#define SCREENHEIGHT 1024
 
 // Include GLFW
 #include <glfw3.h>
 GLFWwindow* window;
 
 bool wireFrameMode = false;
+bool setLightToCamera = true;
+const int textureCount = 4;
 
 // Include GLM
 #include <glm/glm.hpp>
@@ -64,7 +72,23 @@ const char *faceFile[6] = {
 float shadowMagicNumber = 0.003;
 unsigned char textureToShow = 0;
 unsigned char layerToShow = 0;
+float baseRadius = 50;
+float maxDepth = 30;
+float maxHeight = 40;
+float seaLevelFromBaseRadius = 10;
+float atmospherePlanetRatio = 0.9;
+int planetMeshId;
+int atmosphereMeshId;
+vec3 noiseOffset = vec3(0, 0, 0);
 
+GLuint textures[textureCount];
+const char* textureNames[4] = {
+	"beachMountain.png",
+	"volcano.png",
+	"ice.png",
+	"tropic.png"
+};
+int textureIndex = 0;
 
 struct Scene
 {
@@ -94,6 +118,10 @@ void renderObjects(Scene& scene, glm::mat4x4& viewMatrix, glm::mat4x4& projectio
 	
 	glPolygonMode(GL_FRONT_AND_BACK, (wireFrameMode ? GL_LINE : GL_FILL));
 
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
+    
+    glm::vec3 cameraPosition = getCameraPosition();
     check_gl_error();
 	for(int i = 0; i < objects->size(); i++)
 	{
@@ -101,37 +129,48 @@ void renderObjects(Scene& scene, glm::mat4x4& viewMatrix, glm::mat4x4& projectio
             continue;
         
 		RenderState* rs = (*objects)[i];
-		
+		rs->texId = textures[textureIndex];
 		unsigned int meshId = (*objects)[i]->meshId;
 		Mesh* m = (*scene.meshes)[meshId];
 		modelMatrix = m->modelMatrix;
 		glm::mat4 MVP = projectionMatrix * viewMatrix * modelMatrix;
-		// Use our shader
-		unsigned int effectId = (*objects)[i]->shaderEffectId;
-		ShaderEffect* effect = (*scene.effects)[effectId];
-		glUseProgram(effect->programId);
-        check_gl_error();
-		rs->setParameters(effect);
-		// Send our transformation to the currently bound shader,
-		// in the "MVP" uniform
-		glUniformMatrix4fv(effect->MVPId, 1, GL_FALSE, &MVP[0][0]);
-		glUniformMatrix4fv(effect->MId, 1, GL_FALSE, &modelMatrix[0][0]);
-		glUniformMatrix4fv(effect->VId, 1, GL_FALSE, &viewMatrix[0][0]);
-        check_gl_error();
+        
+        for(int j = 0; j < ((*objects)[i])->shaderEffectIds.size(); j++) {
+            // Use our shader
+            unsigned int effectId = (*objects)[i]->shaderEffectIds[j];
+            ShaderEffect* effect = (*scene.effects)[effectId];
+            glUseProgram(effect->programId);
+            check_gl_error();
+            rs->setParameters(effect);
+            // Send our transformation to the currently bound shader,
+            // in the "MVP" uniform
+            glUniformMatrix4fv(effect->MVPId, 1, GL_FALSE, &MVP[0][0]);
+            glUniformMatrix4fv(effect->MId, 1, GL_FALSE, &modelMatrix[0][0]);
+            glUniformMatrix4fv(effect->VId, 1, GL_FALSE, &viewMatrix[0][0]);
+            glUniform1f(glGetUniformLocation(effect->programId, "maxNegativeHeight"), maxDepth);
+            glUniform1f(glGetUniformLocation(effect->programId, "maxPositiveHeight"), maxHeight);
+            glUniform1f(glGetUniformLocation(effect->programId, "baseRadius"), baseRadius);
+            glUniform1f(glGetUniformLocation(effect->programId, "atmosphereRadius"), atmospherePlanetRatio * (baseRadius + maxHeight));
+            glUniform3f(glGetUniformLocation(effect->programId, "cameraPosition"), cameraPosition.x, cameraPosition.y, cameraPosition.z);
+            glUniform3f(glGetUniformLocation(effect->programId, "lightColor"), 1, 1, 1);
+			glUniform3f(glGetUniformLocation(effect->programId, "noiseOffset"), noiseOffset.x, noiseOffset.y, noiseOffset.z);
 
-        if (effect->lightMatrixId != 0xffffffff){
-			glm::mat4 lm = lightMatrix * modelMatrix;
-			glUniformMatrix4fv(effect->lightMatrixId, 1, GL_FALSE, &lm[0][0]);
-		}
-
-		m->bindBuffersAndDraw();
-
-		glDisableVertexAttribArray(0);
-		glDisableVertexAttribArray(1);
-		glDisableVertexAttribArray(2);
-		glDisableVertexAttribArray(3);
-		glDisableVertexAttribArray(4);
-		check_gl_error();
+            check_gl_error();
+            
+            if (effect->lightMatrixId != 0xffffffff) {
+                glm::mat4 lm = lightMatrix * modelMatrix;
+                glUniformMatrix4fv(effect->lightMatrixId, 1, GL_FALSE, &lm[0][0]);
+            }
+            
+            m->bindBuffersAndDraw();
+            
+            glDisableVertexAttribArray(0);
+            glDisableVertexAttribArray(1);
+            glDisableVertexAttribArray(2);
+            glDisableVertexAttribArray(3);
+            glDisableVertexAttribArray(4);
+            check_gl_error();
+        }
 	}
 }
 
@@ -210,28 +249,33 @@ void initShaders(std::vector<ShaderEffect*>& shaderSets)
 	// ########## load the shader programs ##########
     GLuint terrainGeneratorProgramId = LoadShaders("TerrainGenerator.vertexshader", "TerrainGenerator.geometryshader", "TerrainGenerator.fragmentshader", contentPath.c_str());
     SimpleShaderEffect* terrainGeneratorProgram = new SimpleShaderEffect(terrainGeneratorProgramId);
+    terrainGeneratorProgram->textureSamplerId = glGetUniformLocation(terrainGeneratorProgramId, "heightSlopeBasedColorMap");
     shaderSets.push_back(terrainGeneratorProgram);
+    
+    GLuint atmosphericScatteringProgramId = LoadShaders("AtmosphericScattering.vertexshader", "AtmosphericScattering.fragmentshader", contentPath.c_str());
+    SimpleShaderEffect* atmosphericScatteringProgram = new SimpleShaderEffect(atmosphericScatteringProgramId);
+    shaderSets.push_back(atmosphericScatteringProgram);
 }
 
-int main( void )
+int main(void)
 {
 	// Initialise GLFW
-	if( !glfwInit() )
+	if (!glfwInit())
 	{
-		fprintf( stderr, "Failed to initialize GLFW\n" );
+		fprintf(stderr, "Failed to initialize GLFW\n");
 		return -1;
 	}
 
 	glfwWindowHint(GLFW_SAMPLES, 8);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	// Open a window and create its OpenGL context
-	window = glfwCreateWindow( SCREENWIDTH, SCREENHEIGHT, "Tutorial 09 - VBO Indexing", NULL, NULL);
-	if( window == NULL ){
-		fprintf( stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n" );
+	window = glfwCreateWindow(SCREENHEIGHT, SCREENHEIGHT, "Tutorial 09 - VBO Indexing", NULL, NULL);
+	if (window == NULL) {
+		fprintf(stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n");
 		glfwTerminate();
 		return -1;
 	}
@@ -246,10 +290,9 @@ int main( void )
 
 	// Ensure we can capture the escape key being pressed below
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
-	glfwSetCursorPos(window, SCREENWIDTH/2, SCREENHEIGHT/2);
+	glfwSetCursorPos(window, SCREENHEIGHT / 2, SCREENHEIGHT / 2);
 
-	glm::vec3 lightSpecularColor = glm::vec3(0.3, 0.3, 0.3);
-	glm::vec3 lightPos = glm::vec3(-464,670,-570);
+	glm::vec3 lightPos = glm::vec3(-464, 670, -570);
 
 	// Set GLFW event callbacks. I removed glfwSetWindowSizeCallback for conciseness
 	glfwSetMouseButtonCallback(window, (GLFWmousebuttonfun)TwEventMouseButtonGLFW); // - Directly redirect GLFW mouse button events to AntTweakBar
@@ -263,13 +306,12 @@ int main( void )
 
 	// Enable depth test
 	glEnable(GL_DEPTH_TEST);
-	glViewport(0, 0, SCREENWIDTH * RESOLUTION_SCALE, SCREENHEIGHT * RESOLUTION_SCALE);
 	//
 	// Accept fragment if it closer to the camera than the former one
 	glDepthFunc(GL_LESS);
 
 	glEnable(GL_CULL_FACE);
-
+    
 	glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
 
 	GLuint VertexArrayID;
@@ -285,34 +327,40 @@ int main( void )
 
 	enum ShaderEffects {
 		STANDARDSHADING = 0,
-		TEXTURED_QUAD,
-		JUST_COLOR
+		ATMOSPHERIC_SCATTERING = 1
 	};
 
 	check_gl_error();
 
-// ########### Load the textures ################
-	GLuint lichenStoneTextureId = loadSoil("lichenStone.dds", contentPath.c_str());
+	// ########### Load the textures ################
+	for (int i = 0; i < textureCount; i++) {
+		textures[i] = loadSoil(textureNames[i], contentPath.c_str());
+	}
 	check_gl_error();
 
 // ############## Load the meshes ###############
 	std::vector<Mesh *> meshes;
-    Mesh* sphereMesh = generateSphere(100, 7);
-    sphereMesh->modelMatrix = glm::translate(glm::mat4(1.0), glm::vec3(0, 0, 0));
+    
+    Mesh* atmosphereMesh = generateSphere(atmospherePlanetRatio * (baseRadius + maxHeight), 7, true);
+    atmosphereMeshId = meshes.size();
+    meshes.push_back(atmosphereMesh);
+    
+    Mesh* sphereMesh = generateSphere(baseRadius, 7, false);
+    planetMeshId = meshes.size();
     meshes.push_back(sphereMesh);
-
+    
     coordinateMeshIndices.clear();
-	Mesh* xCoordinateMesh = generateSphere(10, 0);
+	Mesh* xCoordinateMesh = generateSphere(10, 0, false);
 	xCoordinateMesh->modelMatrix = glm::translate(glm::mat4(), glm::vec3(200, 0, 0));
     coordinateMeshIndices.push_back(meshes.size());
 	meshes.push_back(xCoordinateMesh);
 
-	Mesh* yCoordinateMesh = generateSphere(20, 0);
+	Mesh* yCoordinateMesh = generateSphere(20, 0, false);
 	yCoordinateMesh->modelMatrix = glm::translate(glm::mat4(), glm::vec3(0, 200, 0));
     coordinateMeshIndices.push_back(meshes.size());
     meshes.push_back(yCoordinateMesh);
 
-	Mesh* zCoordinateMesh = generateSphere(30, 0);
+	Mesh* zCoordinateMesh = generateSphere(30, 0, false);
 	zCoordinateMesh->modelMatrix = glm::translate(glm::mat4(), glm::vec3(0, 0, 200));
     coordinateMeshIndices.push_back(meshes.size());
 	meshes.push_back(zCoordinateMesh);
@@ -321,8 +369,12 @@ int main( void )
 		// DONE create a SimpleRenderstate for all objects which should cast shadows
 		SimpleRenderState* rtts = new SimpleRenderState();
 		rtts->meshId = i;
-		rtts->shaderEffectId = STANDARDSHADING; // the Render to texture shader effect
-		rtts->texId = lichenStoneTextureId;
+        if(i == atmosphereMeshId)
+            rtts->shaderEffectIds.push_back(ATMOSPHERIC_SCATTERING);
+        else
+            rtts->shaderEffectIds.push_back(STANDARDSHADING); // the Render to texture shader effect
+        //rtts->shaderEffectIds.push_back(NORMALS);
+		rtts->texId = textures[textureIndex];
 		objects.push_back(rtts);
 	}
 	
@@ -342,12 +394,17 @@ int main( void )
 	scenes.push_back(Scene(&objects, &meshes, &shaderSets));
 
 	check_gl_error();
-
+    
+    computeMatricesFromInputs();
+    SimpleRenderState::lightPositionWorldSpace = getCameraPosition();
+	SimpleRenderState::lightPositionWorldSpace2 = glm::vec3(0, 0, 0) - (3.0f * getCameraPosition());
 
 	// For speed computation
 	double lastTime = glfwGetTime();
 	int nbFrames = 0;
 
+	srand(time(NULL));
+    
 	do{ 
 		// Apply the scene depth map to the textured quad object to debug.
 		// With the gui we can change which texture we see.
@@ -366,7 +423,7 @@ int main( void )
 
 		check_gl_error();
 		// Clear the screen
-		glClearColor(0.5, 0.5, 0.5, 1.0);
+		glClearColor(0.0, 0.0, 0.0, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
 		// Compute the MVP matrix from keyboard and mouse input
@@ -382,7 +439,11 @@ int main( void )
         glm::mat4 lightMVPMatrix = lightProjMatrix * lightViewMatrix;
 
 		// set the scene constant variales ( light position)
-		SimpleRenderState::lightPositionWorldSpace = lightPos;
+		if (setLightToCamera) {
+			SimpleRenderState::lightPositionWorldSpace = getCameraPosition();
+			SimpleRenderState::lightPositionWorldSpace2 = glm::vec3(0, 0, 0) - (3.0f * getCameraPosition());
+		}
+        
 		// render to the screen buffer
 		renderObjects(scenes[0], ViewMatrix, ProjectionMatrix, lightPos, lightMVPMatrix);
 
