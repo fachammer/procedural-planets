@@ -294,6 +294,7 @@ SimpleShaderEffect::SimpleShaderEffect(unsigned int _programId) : ShaderEffect(_
 	textureSamplerId = glGetUniformLocation(_programId, "myTextureSampler");
 	printf("SimpleShaderEffect created, texid %i\n", textureSamplerId);
 	lightPositionId = glGetUniformLocation(_programId, "LightPosition_worldspace");
+	lightPosition2Id = glGetUniformLocation(_programId, "LightPosition2_worldspace");
 }
 
 VolumeRenderingShaderEffect::VolumeRenderingShaderEffect(unsigned int _programId) : ShaderEffect(_programId)

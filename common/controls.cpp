@@ -4,6 +4,7 @@ extern GLFWwindow* window;
 extern bool wireFrameMode;
 extern bool drawCoordinateMeshes;
 extern bool setLightToCamera;
+extern int textureIndex;
 
 // Include GLM
 #include <glm/glm.hpp>
@@ -24,6 +25,9 @@ glm::mat4 getProjectionMatrix(){
 
 glm::vec3 position;
 
+//noise offset
+extern glm::vec3 noiseOffset;
+
 // Initial Field of View
 float initialFoV = 45.0f;
 
@@ -41,6 +45,7 @@ float phi = 0;
 
 bool canChangeWireframeMode = true;
 bool canChangeDrawCoordinateMeshes = true;
+bool canGenerateNewNoise = true;
 
 glm::vec3 getCameraPosition() {
     return position;
@@ -99,6 +104,19 @@ void computeMatricesFromInputs(){
     else if (changeMode == GLFW_RELEASE)
         canChangeDrawCoordinateMeshes = true;
     
+	int newNoiseOffset = glfwGetKey(window, GLFW_KEY_R);
+	if (newNoiseOffset == GLFW_PRESS && canGenerateNewNoise) {
+		noiseOffset = glm::vec3(rand() % 99, rand() % 99, rand() % 99);
+		canGenerateNewNoise = false;
+	}
+	else if (newNoiseOffset == GLFW_RELEASE)
+		canGenerateNewNoise = true;
+
+	for (int i = 0; i < 4; i++) {
+		if (glfwGetKey(window, GLFW_KEY_1 + i) == GLFW_PRESS)
+			textureIndex = i;
+	}
+
     setLightToCamera = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
 
 	//clamp distance and latitude

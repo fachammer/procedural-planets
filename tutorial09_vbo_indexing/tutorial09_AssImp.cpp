@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <vector>
 #include <string>
+#include <time.h>
 
 // Include GLEW
 #include <GL/glew.h>
@@ -33,6 +34,7 @@ GLFWwindow* window;
 
 bool wireFrameMode = false;
 bool setLightToCamera = true;
+const int textureCount = 4;
 
 // Include GLM
 #include <glm/glm.hpp>
@@ -71,11 +73,22 @@ float shadowMagicNumber = 0.003;
 unsigned char textureToShow = 0;
 unsigned char layerToShow = 0;
 float baseRadius = 50;
-float maxDepth = 10;
-float maxHeight = 20;
-float atmospherePlanetRatio = 1.3;
+float maxDepth = 30;
+float maxHeight = 40;
+float seaLevelFromBaseRadius = 10;
+float atmospherePlanetRatio = .9;
 int planetMeshId;
 int atmosphereMeshId;
+vec3 noiseOffset = vec3(0, 0, 0);
+
+GLuint textures[textureCount];
+const char* textureNames[4] = {
+	"beachMountain.png",
+	"volcano.png",
+	"ice.png",
+	"tropic.png"
+};
+int textureIndex = 0;
 
 struct Scene
 {
@@ -116,7 +129,7 @@ void renderObjects(Scene& scene, glm::mat4x4& viewMatrix, glm::mat4x4& projectio
             continue;
         
 		RenderState* rs = (*objects)[i];
-		
+		rs->texId = textures[textureIndex];
 		unsigned int meshId = (*objects)[i]->meshId;
 		Mesh* m = (*scene.meshes)[meshId];
 		modelMatrix = m->modelMatrix;
@@ -140,7 +153,8 @@ void renderObjects(Scene& scene, glm::mat4x4& viewMatrix, glm::mat4x4& projectio
             glUniform1f(glGetUniformLocation(effect->programId, "atmosphereRadius"), atmospherePlanetRatio * (baseRadius + maxHeight));
             glUniform3f(glGetUniformLocation(effect->programId, "cameraPosition"), cameraPosition.x, cameraPosition.y, cameraPosition.z);
             glUniform3f(glGetUniformLocation(effect->programId, "lightColor"), 1, 1, 1);
-            
+			glUniform3f(glGetUniformLocation(effect->programId, "noiseOffset"), noiseOffset.x, noiseOffset.y, noiseOffset.z);
+
             check_gl_error();
             
             if (effect->lightMatrixId != 0xffffffff) {
@@ -243,25 +257,25 @@ void initShaders(std::vector<ShaderEffect*>& shaderSets)
     shaderSets.push_back(atmosphericScatteringProgram);
 }
 
-int main( void )
+int main(void)
 {
 	// Initialise GLFW
-	if( !glfwInit() )
+	if (!glfwInit())
 	{
-		fprintf( stderr, "Failed to initialize GLFW\n" );
+		fprintf(stderr, "Failed to initialize GLFW\n");
 		return -1;
 	}
 
 	glfwWindowHint(GLFW_SAMPLES, 8);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	// Open a window and create its OpenGL context
-	window = glfwCreateWindow( SCREENHEIGHT, SCREENHEIGHT, "Tutorial 09 - VBO Indexing", NULL, NULL);
-	if( window == NULL ){
-		fprintf( stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n" );
+	window = glfwCreateWindow(SCREENHEIGHT, SCREENHEIGHT, "Tutorial 09 - VBO Indexing", NULL, NULL);
+	if (window == NULL) {
+		fprintf(stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n");
 		glfwTerminate();
 		return -1;
 	}
@@ -276,9 +290,9 @@ int main( void )
 
 	// Ensure we can capture the escape key being pressed below
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
-	glfwSetCursorPos(window, SCREENHEIGHT/2, SCREENHEIGHT/2);
+	glfwSetCursorPos(window, SCREENHEIGHT / 2, SCREENHEIGHT / 2);
 
-	glm::vec3 lightPos = glm::vec3(-464,670,-570);
+	glm::vec3 lightPos = glm::vec3(-464, 670, -570);
 
 	// Set GLFW event callbacks. I removed glfwSetWindowSizeCallback for conciseness
 	glfwSetMouseButtonCallback(window, (GLFWmousebuttonfun)TwEventMouseButtonGLFW); // - Directly redirect GLFW mouse button events to AntTweakBar
@@ -313,13 +327,15 @@ int main( void )
 
 	enum ShaderEffects {
 		STANDARDSHADING = 0,
-        ATMOSPHERIC_SCATTERING = 1
+		ATMOSPHERIC_SCATTERING = 1
 	};
 
 	check_gl_error();
 
-// ########### Load the textures ################
-    GLuint heightSlopeBasedColorMap = loadSoil("beachMountain.png", contentPath.c_str());
+	// ########### Load the textures ################
+	for (int i = 0; i < textureCount; i++) {
+		textures[i] = loadSoil(textureNames[i], contentPath.c_str());
+	}
 	check_gl_error();
 
 // ############## Load the meshes ###############
@@ -358,7 +374,7 @@ int main( void )
         else
             rtts->shaderEffectIds.push_back(STANDARDSHADING); // the Render to texture shader effect
         //rtts->shaderEffectIds.push_back(NORMALS);
-		rtts->texId = heightSlopeBasedColorMap;
+		rtts->texId = textures[textureIndex];
 		objects.push_back(rtts);
 	}
 	
@@ -381,10 +397,13 @@ int main( void )
     
     computeMatricesFromInputs();
     SimpleRenderState::lightPositionWorldSpace = getCameraPosition();
+	SimpleRenderState::lightPositionWorldSpace2 = glm::vec3(0, 0, 0) - (3.0f * getCameraPosition());
 
 	// For speed computation
 	double lastTime = glfwGetTime();
 	int nbFrames = 0;
+
+	srand(time(NULL));
     
 	do{ 
 		// Apply the scene depth map to the textured quad object to debug.
@@ -420,8 +439,10 @@ int main( void )
         glm::mat4 lightMVPMatrix = lightProjMatrix * lightViewMatrix;
 
 		// set the scene constant variales ( light position)
-        if(setLightToCamera)
-            SimpleRenderState::lightPositionWorldSpace = getCameraPosition();
+		if (setLightToCamera) {
+			SimpleRenderState::lightPositionWorldSpace = getCameraPosition();
+			SimpleRenderState::lightPositionWorldSpace2 = glm::vec3(0, 0, 0) - (3.0f * getCameraPosition());
+		}
         
 		// render to the screen buffer
 		renderObjects(scenes[0], ViewMatrix, ProjectionMatrix, lightPos, lightMVPMatrix);

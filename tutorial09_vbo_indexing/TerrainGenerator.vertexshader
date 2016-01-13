@@ -15,6 +15,7 @@ layout(location = 2) in vec3 vertexNormal_modelspace;
 out vec3 position_worldspace;
 out vec3 normal_cameraspace;
 out vec3 lightDirection_cameraspace;
+out vec3 lightDirection2_cameraspace;
 out vec3 position_modelspace;
 out float vertex_slope;
 
@@ -22,11 +23,13 @@ uniform mat4 MVP;
 uniform mat4 V;
 uniform mat4 M;
 uniform vec3 LightPosition_worldspace;
+uniform vec3 LightPosition2_worldspace;
 uniform float maxNegativeHeight;
 uniform float maxPositiveHeight;
 uniform float baseRadius;
 uniform vec3 cameraPosition;
 uniform vec3 lightColor;
+uniform vec3 noiseOffset;
 
 //  Simplex 3D Noise
 //  by Ian McEwan, Ashima Arts
@@ -37,10 +40,12 @@ vec4 taylorInvSqrt(vec4 r){return 1.79284291400159 - 0.85373472095314 * r;}
 float snoise(vec3 v, out vec3 gradient){
     const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
     const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
+
+	v += noiseOffset;
     
     // First corner
     vec3 i  = floor(v + dot(v, C.yyy) );
-    vec3 x0 =   v - i + dot(i, C.xxx) ;
+    vec3 x0 = v - i + dot(i, C.xxx) ;
     
     // Other corners
     vec3 g = step(x0.yzx, x0.xyz);
@@ -119,6 +124,14 @@ float noise(vec3 position, out vec3 gradient) {
     return snoise(position, gradient);
 }
 
+float smax( float a, float b, float k, out float h)
+{
+    float res = exp( k*a ) + exp( k*b );
+	float result = log( res )/k;
+	h = clamp( 0.5+0.5*(a-b)/5, 0.0, 1.0 );
+	return result;
+}
+
 float[] amplitudes = float[](1, 4, 4, 3, 1, 1, 0.5);
 float[] frequencies = float[](4 / 1000.0, 8 / 1000.0, 16 / 1000.0, 32 / 1000.0, 64 / 1000.0, 128 / 1000.0, 256 / 1000.0);
 float elevation(vec3 position, float minElevation, float maxElevation, out vec3 gradient) {
@@ -134,12 +147,18 @@ float elevation(vec3 position, float minElevation, float maxElevation, out vec3 
     }
     
     gradient *= (maxElevation - minElevation) / (4 * totalAmplitude);
-    return map(totalElevation, -totalAmplitude, totalAmplitude, minElevation, maxElevation);
+    float elevationValue = map(totalElevation, -totalAmplitude, totalAmplitude, minElevation, maxElevation);
+
+	float threshold = 0;
+	float interpolationFactor;
+	elevationValue = smax(elevationValue, threshold, 3, interpolationFactor);
+	gradient = mix(vec3(0, 0, 0), gradient, interpolationFactor);
+	return elevationValue;
 }
 
 vec3 normal(vec3 position, vec3 gradient, float elevation, out float slope) {
     vec3 unitPosition = normalize(position);
-    float radialGradientComponent = dot(gradient, unitPosition);
+    float radialGradientComponent = length(gradient);
     slope = radialGradientComponent;
     vec3 radialGradient = radialGradientComponent * unitPosition;
     vec3 tangentialGradient = gradient - radialGradient;
@@ -168,6 +187,8 @@ void main() {
     vec3 LightPosition_cameraspace = (V * vec4(LightPosition_worldspace,1)).xyz;
     lightDirection_cameraspace = LightPosition_cameraspace + eyeDirection_cameraspace;
     
-    normal_cameraspace = (V * M * vec4(normal_modelspace, 0)).xyz;
+    vec3 LightPosition2_cameraspace = (V * vec4(LightPosition2_worldspace,1)).xyz;
+    lightDirection2_cameraspace = LightPosition2_cameraspace + eyeDirection_cameraspace;
     
+    normal_cameraspace = (V * M * vec4(normal_modelspace, 0)).xyz;
 }

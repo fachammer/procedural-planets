@@ -42,11 +42,11 @@ float R_INNER = 50.0;
 float SCALE_H = 4.0 / ( R - R_INNER );
 float SCALE_L = 1.0 / ( R - R_INNER );
 
-const int NUM_OUT_SCATTER = 2;
-const float FNUM_OUT_SCATTER = 2.0;
+const int NUM_OUT_SCATTER = 3;
+const float FNUM_OUT_SCATTER = 3.0;
 
-const int NUM_IN_SCATTER = 2;
-const float FNUM_IN_SCATTER = 2.0;
+const int NUM_IN_SCATTER = 3;
+const float FNUM_IN_SCATTER = 3.0;
 
 // ray intersects sphere
 // e = -b +/- sqrt( b^2 - c )
