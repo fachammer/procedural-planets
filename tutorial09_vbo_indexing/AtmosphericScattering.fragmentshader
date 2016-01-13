@@ -152,5 +152,7 @@ void main()
     
     vec3 I = in_scatter( eye, dir, e, normalize(lightDirection));
 
+    I = 1.0 - exp(-0.75 * I);
+    
     color = vec4(I, 1.0);
 }

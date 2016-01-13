@@ -76,7 +76,7 @@ float baseRadius = 50;
 float maxDepth = 30;
 float maxHeight = 40;
 float seaLevelFromBaseRadius = 10;
-float atmospherePlanetRatio = .9;
+float atmospherePlanetRatio = 0.9;
 int planetMeshId;
 int atmosphereMeshId;
 vec3 noiseOffset = vec3(0, 0, 0);
@@ -311,7 +311,7 @@ int main(void)
 	glDepthFunc(GL_LESS);
 
 	glEnable(GL_CULL_FACE);
-
+    
 	glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
 
 	GLuint VertexArrayID;
