@@ -39,7 +39,7 @@ include_directories(
 
 set(ALL_LIBS
 	${OPENGL_LIBRARY}
-	GLFW_303
+	glfw
 	GLEW_190
 )
 
