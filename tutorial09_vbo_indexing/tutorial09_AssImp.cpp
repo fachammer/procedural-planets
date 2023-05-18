@@ -273,14 +273,13 @@ int main(void)
 
     for (int i = 0; i < meshes.size(); i++)
     {
-        // DONE create a SimpleRenderstate for all objects which should cast shadows
-        SimpleRenderState *rtts = new SimpleRenderState();
+        // DONE create a Renderstate for all objects which should cast shadows
+        RenderState *rtts = new RenderState();
         rtts->meshId = i;
         if (i == atmosphereMeshId)
             rtts->shaderEffectIds.push_back(ATMOSPHERIC_SCATTERING);
         else
-            rtts->shaderEffectIds.push_back(STANDARDSHADING); // the Render to texture shader effect
-                                                              // rtts->shaderEffectIds.push_back(NORMALS);
+            rtts->shaderEffectIds.push_back(STANDARDSHADING);
         rtts->texId = textures[textureIndex];
         objects.push_back(rtts);
     }
@@ -292,11 +291,6 @@ int main(void)
     check_gl_error();
 
     // create the scenes
-    enum Scenes
-    {
-        STANDARD_PASS
-    };
-
     std::vector<Scene> scenes;
     // one scene for the standard rendering
     scenes.push_back(Scene(&objects, &meshes, &shaderSets));
@@ -304,8 +298,8 @@ int main(void)
     check_gl_error();
 
     computeMatricesFromInputs();
-    SimpleRenderState::lightPositionWorldSpace = getCameraPosition();
-    SimpleRenderState::lightPositionWorldSpace2 = glm::vec3(0, 0, 0) - (3.0f * getCameraPosition());
+    RenderState::lightPositionWorldSpace = getCameraPosition();
+    RenderState::lightPositionWorldSpace2 = glm::vec3(0, 0, 0) - (3.0f * getCameraPosition());
 
     // For speed computation
     double lastTime = glfwGetTime();
@@ -317,7 +311,7 @@ int main(void)
     {
         // Apply the scene depth map to the textured quad object to debug.
         // With the gui we can change which texture we see.
-        SimpleRenderState *quadObj = static_cast<SimpleRenderState *>(objects[objects.size() - 1]);
+        RenderState *quadObj = static_cast<RenderState *>(objects[objects.size() - 1]);
         quadObj->texId = textureToShow;
 
         // Measure speed
@@ -351,8 +345,8 @@ int main(void)
         // set the scene constant variales ( light position)
         if (setLightToCamera)
         {
-            SimpleRenderState::lightPositionWorldSpace = getCameraPosition();
-            SimpleRenderState::lightPositionWorldSpace2 = glm::vec3(0, 0, 0) - (3.0f * getCameraPosition());
+            RenderState::lightPositionWorldSpace = getCameraPosition();
+            RenderState::lightPositionWorldSpace2 = glm::vec3(0, 0, 0) - (3.0f * getCameraPosition());
         }
 
         // render to the screen buffer
