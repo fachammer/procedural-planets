@@ -227,42 +227,32 @@ int main(void)
 
     check_gl_error();
 
-    // ########### Load the textures ################
     for (int i = 0; i < textureCount; i++)
     {
         textures[i] = loadSoil(textureNames[i], "../textures/");
     }
     check_gl_error();
 
-    // ############## Load the meshes ###############
     std::vector<Mesh *> meshes;
 
     Mesh *atmosphereMesh = generateSphere(atmospherePlanetRatio * (baseRadius + maxHeight), 4, true);
     atmosphereMeshId = meshes.size();
+    atmosphereMesh->generateVBOs();
     meshes.push_back(atmosphereMesh);
+    RenderState *atmosphereRenderState = new RenderState();
+    atmosphereRenderState->meshId = 0;
+    atmosphereRenderState->shaderEffectIds.push_back(ATMOSPHERIC_SCATTERING);
+    atmosphereRenderState->texId = textures[textureIndex];
+    objects.push_back(atmosphereRenderState);
 
     Mesh *sphereMesh = generateSphere(baseRadius, 7, false);
-    planetMeshId = meshes.size();
+    sphereMesh->generateVBOs();
     meshes.push_back(sphereMesh);
-
-    for (int i = 0; i < meshes.size(); i++)
-    {
-        // DONE create a Renderstate for all objects which should cast shadows
-        RenderState *rtts = new RenderState();
-        rtts->meshId = i;
-        if (i == atmosphereMeshId)
-            rtts->shaderEffectIds.push_back(ATMOSPHERIC_SCATTERING);
-        else
-            rtts->shaderEffectIds.push_back(STANDARDSHADING);
-        rtts->texId = textures[textureIndex];
-        objects.push_back(rtts);
-    }
-
-    for (int i = 0; i < meshes.size(); i++)
-    {
-        meshes[i]->generateVBOs();
-    }
-    check_gl_error();
+    RenderState *sphereRenderState = new RenderState();
+    sphereRenderState->meshId = 1;
+    sphereRenderState->shaderEffectIds.push_back(STANDARDSHADING);
+    sphereRenderState->texId = textures[textureIndex];
+    objects.push_back(sphereRenderState);
 
     Scene scene(&objects, &meshes, &shaderSets);
 
