@@ -54,18 +54,18 @@ add_executable(PlanetGenerator
 	src/PlanetGenerator.cpp
 	src/SphereGenerator.hpp
 	src/SphereGenerator.cpp
-	common/shader.cpp
-	common/shader.hpp
-	common/controls.cpp
-	common/controls.hpp
-	common/texture.cpp
-	common/texture.hpp
-	common/Mesh.hpp
-	common/Mesh.cpp
-	common/GLError.h
-	common/GLError.cpp
-	common/RenderState.hpp
-	common/RenderState.cpp
+	src/shader.cpp
+	src/shader.hpp
+	src/controls.cpp
+	src/controls.hpp
+	src/texture.cpp
+	src/texture.hpp
+	src/Mesh.hpp
+	src/Mesh.cpp
+	src/GLError.h
+	src/GLError.cpp
+	src/RenderState.hpp
+	src/RenderState.cpp
 	
     src/TerrainGenerator.vertexshader
     src/TerrainGenerator.geometryshader
@@ -89,7 +89,7 @@ set_target_properties(PlanetGenerator
 	XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "/System/Library/Frameworks/OpenGL.framework/Versions/Current/")
 create_target_launcher(PlanetGenerator WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/src/")
 
-SOURCE_GROUP(common REGULAR_EXPRESSION ".*/common/.*" )
+SOURCE_GROUP(src REGULAR_EXPRESSION ".*/src/.*" )
 SOURCE_GROUP(shaders REGULAR_EXPRESSION ".*/.*shader$" )
 
 if (NOT ${CMAKE_GENERATOR} MATCHES "Xcode" )

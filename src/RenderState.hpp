@@ -1,7 +1,7 @@
 #pragma once
 
 #include "shader.hpp"
-#include <common/GLError.h>
+#include "GLError.h"
 #include <iostream>
 #include <glm/glm.hpp>
 #include <vector>

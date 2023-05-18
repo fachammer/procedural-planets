@@ -7,7 +7,7 @@
 //
 
 #include "SphereGenerator.hpp"
-#include <common/mesh.hpp>
+#include "Mesh.hpp"
 #include <GL/glew.h>
 #include <math.h>
 
