@@ -270,10 +270,6 @@ int main(void)
 
     computeMatricesFromInputs();
     RenderState::lightPositionWorldSpace = getCameraPosition();
-    // RenderState::lightPositionWorldSpace2 = glm::vec3(0, 0, 0) - (3.0f * getCameraPosition());
-
-    // For speed computation
-    double lastTime = glfwGetTime();
 
     srand(time(NULL));
 
