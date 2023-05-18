@@ -19,12 +19,6 @@ GLuint loadSoil(const char *imagename, const char *contentPath)
         SOIL_LOAD_AUTO,
         SOIL_CREATE_NEW_ID,
         SOIL_FLAG_POWER_OF_TWO | SOIL_FLAG_MIPMAPS
-        //| SOIL_FLAG_MULTIPLY_ALPHA
-        //| SOIL_FLAG_COMPRESS_TO_DXT
-        //| SOIL_FLAG_DDS_LOAD_DIRECT
-        //| SOIL_FLAG_NTSC_SAFE_RGB
-        //| SOIL_FLAG_CoCg_Y
-        //| SOIL_FLAG_TEXTURE_RECTANGLE
     );
     check_gl_error();
     glBindTexture(GL_TEXTURE_2D, tex_ID);
