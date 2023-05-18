@@ -30,7 +30,6 @@ include_directories(
 	external/glfw-3.3.8/include/GLFW/
 	external/glm-0.9.4.0/
 	external/glew-1.9.0/include/
-	external/assimp-3.0.1270/include/
 	external/Soil/src/
 	#external/bullet-2.81-rev2613/src/
 	.
@@ -82,7 +81,6 @@ add_executable(tutorial09_AssImp
 )
 target_link_libraries(tutorial09_AssImp
 	${ALL_LIBS}
-	assimp
 	SOIL
 )
 set_target_properties(tutorial09_AssImp PROPERTIES COMPILE_DEFINITIONS "USE_ASSIMP")
