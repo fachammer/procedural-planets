@@ -101,15 +101,6 @@ void computeMatricesFromInputs()
     else if (changeMode == GLFW_RELEASE)
         canChangeWireframeMode = true;
 
-    changeMode = glfwGetKey(window, GLFW_KEY_C);
-    if (changeMode == GLFW_PRESS && canChangeDrawCoordinateMeshes)
-    {
-        drawCoordinateMeshes = !drawCoordinateMeshes;
-        canChangeDrawCoordinateMeshes = false;
-    }
-    else if (changeMode == GLFW_RELEASE)
-        canChangeDrawCoordinateMeshes = true;
-
     int newNoiseOffset = glfwGetKey(window, GLFW_KEY_R);
     if (newNoiseOffset == GLFW_PRESS && canGenerateNewNoise)
     {

@@ -71,8 +71,6 @@ struct Scene
     }
 };
 
-std::vector<unsigned int> coordinateMeshIndices;
-bool drawCoordinateMeshes = false;
 void renderObjects(Scene &scene, glm::mat4x4 &viewMatrix, glm::mat4x4 &projectionMatrix, glm::vec3 &lightPos, glm::mat4 &lightMatrix)
 {
     std::vector<RenderState *> *objects = scene.objects;
@@ -91,9 +89,6 @@ void renderObjects(Scene &scene, glm::mat4x4 &viewMatrix, glm::mat4x4 &projectio
     check_gl_error();
     for (int i = 0; i < objects->size(); i++)
     {
-        if (!drawCoordinateMeshes && std::find(coordinateMeshIndices.begin(), coordinateMeshIndices.end(), i) != coordinateMeshIndices.end())
-            continue;
-
         RenderState *rs = (*objects)[i];
         rs->texId = textures[textureIndex];
         unsigned int meshId = (*objects)[i]->meshId;
@@ -186,6 +181,7 @@ int main(void)
         return -1;
     }
     glfwMakeContextCurrent(window);
+    check_gl_error();
 
     // Initialize GLEW
     glewExperimental = true; // Needed for core profile
