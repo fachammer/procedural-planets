@@ -50,8 +50,8 @@ add_definitions(
 )
 
 # Tutorial 9 - AssImp model loading
-add_executable(tutorial09_AssImp
-	src/tutorial09_AssImp.cpp
+add_executable(PlanetGenerator
+	src/PlanetGenerator.cpp
 	src/SphereGenerator.hpp
 	src/SphereGenerator.cpp
 	common/shader.cpp
@@ -75,19 +75,19 @@ add_executable(tutorial09_AssImp
     src/AtmosphericScattering.vertexshader
     src/AtmosphericScattering.fragmentshader
 )
-target_link_libraries(tutorial09_AssImp
+target_link_libraries(PlanetGenerator
 	${ALL_LIBS}
 	SOIL
 )
-set_target_properties(tutorial09_AssImp PROPERTIES COMPILE_DEFINITIONS "USE_ASSIMP")
+set_target_properties(PlanetGenerator PROPERTIES COMPILE_DEFINITIONS "USE_ASSIMP")
 # Xcode and Visual working directories
-set_target_properties(tutorial09_AssImp PROPERTIES
+set_target_properties(PlanetGenerator PROPERTIES
 	XCODE_ATTRIBUTE_CONFIGURATION_BUILD_DIR
 	"${CMAKE_CURRENT_SOURCE_DIR}/src/")
-set_target_properties(tutorial09_AssImp
+set_target_properties(PlanetGenerator
 	PROPERTIES
 	XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "/System/Library/Frameworks/OpenGL.framework/Versions/Current/")
-create_target_launcher(tutorial09_AssImp WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/src/")
+create_target_launcher(PlanetGenerator WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/src/")
 
 SOURCE_GROUP(common REGULAR_EXPRESSION ".*/common/.*" )
 SOURCE_GROUP(shaders REGULAR_EXPRESSION ".*/.*shader$" )
@@ -95,8 +95,8 @@ SOURCE_GROUP(shaders REGULAR_EXPRESSION ".*/.*shader$" )
 if (NOT ${CMAKE_GENERATOR} MATCHES "Xcode" )
 
 add_custom_command(
-   TARGET tutorial09_AssImp POST_BUILD
-   COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/tutorial09_AssImp${CMAKE_EXECUTABLE_SUFFIX}" "${CMAKE_CURRENT_SOURCE_DIR}/src/"
+   TARGET PlanetGenerator POST_BUILD
+   COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/PlanetGenerator${CMAKE_EXECUTABLE_SUFFIX}" "${CMAKE_CURRENT_SOURCE_DIR}/src/"
 )
 
 elseif (${CMAKE_GENERATOR} MATCHES "Xcode" )
