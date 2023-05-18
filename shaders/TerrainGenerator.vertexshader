@@ -15,7 +15,6 @@ layout(location = 2) in vec3 vertexNormal_modelspace;
 out vec3 position_worldspace;
 out vec3 normal_cameraspace;
 out vec3 lightDirection_cameraspace;
-out vec3 lightDirection2_cameraspace;
 out vec3 position_modelspace;
 out float vertex_slope;
 
@@ -186,9 +185,6 @@ void main() {
     
     vec3 LightPosition_cameraspace = (V * vec4(LightPosition_worldspace,1)).xyz;
     lightDirection_cameraspace = LightPosition_cameraspace + eyeDirection_cameraspace;
-    
-    vec3 LightPosition2_cameraspace = (V * vec4(LightPosition2_worldspace,1)).xyz;
-    lightDirection2_cameraspace = LightPosition2_cameraspace + eyeDirection_cameraspace;
     
     normal_cameraspace = (V * M * vec4(normal_modelspace, 0)).xyz;
 }

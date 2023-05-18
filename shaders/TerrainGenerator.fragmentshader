@@ -14,7 +14,6 @@ in vec3 Position_worldspace;
 in vec3 Normal_cameraspace;
 in vec3 EyeDirection_cameraspace;
 in vec3 LightDirection_cameraspace;
-in vec3 LightDirection2_cameraspace;
 in vec3 Vertex_color;
 in float Vertex_slope;
 
@@ -31,7 +30,6 @@ uniform float baseRadius;
 uniform vec3 cameraPosition;
 
 const vec3 lightColor = vec3(1, 1, 1);
-const vec3 lightColor2 = vec3(0.5, 0.2, 0.2);
 
 const float LightPower = 50000.0f;
 
@@ -62,7 +60,6 @@ void main() {
     vec2 textureCoordinates = vec2(heightCoordinate, slopeCoordinate);
     vec4 MaterialDiffuseColor = texture(heightSlopeBasedColorMap, textureCoordinates);
     vec4 MaterialAmbientColor = vec4(0.0, 0.0, 0.0, 1.0) * MaterialDiffuseColor;
-    
 
     vec3 diffuseLight = calcLight(LightPosition_worldspace, LightPower, lightColor, LightDirection_cameraspace);
 

@@ -14,14 +14,12 @@ layout(triangle_strip, max_vertices = 3) out;
 in vec3[] position_worldspace;
 in vec3[] normal_cameraspace;
 in vec3[] lightDirection_cameraspace;
-in vec3[] lightDirection2_cameraspace;
 in vec3[] position_modelspace;
 in float[] vertex_slope;
 
 out vec3 Position_worldspace;
 out vec3 Normal_cameraspace;
 out vec3 LightDirection_cameraspace;
-out vec3 LightDirection2_cameraspace;
 out float Vertex_slope;
 
 uniform mat4 MVP;
@@ -34,7 +32,6 @@ void main() {
         Position_worldspace = position_worldspace[i];
         Normal_cameraspace = normal_cameraspace[i];
         LightDirection_cameraspace = lightDirection_cameraspace[i];
-        LightDirection2_cameraspace = lightDirection2_cameraspace[i];
         Vertex_slope = vertex_slope[i];
         gl_Position = MVP * vec4(position_modelspace[i], 1);
         EmitVertex();
