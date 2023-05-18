@@ -27,7 +27,6 @@ if(INCLUDE_DISTRIB)
 endif(INCLUDE_DISTRIB)
 
 include_directories(
-	external/AntTweakBar-1.16/include/
 	external/glfw-3.0.3/include/GLFW/
 	external/glm-0.9.4.0/
 	external/glew-1.9.0/include/
@@ -86,7 +85,6 @@ add_executable(tutorial09_AssImp
 target_link_libraries(tutorial09_AssImp
 	${ALL_LIBS}
 	assimp
-	ANTTWEAKBAR_116_OGLCORE_GLFW
 	SOIL
 )
 set_target_properties(tutorial09_AssImp PROPERTIES COMPILE_DEFINITIONS "USE_ASSIMP")
@@ -105,16 +103,8 @@ SOURCE_GROUP(shaders REGULAR_EXPRESSION ".*/.*shader$" )
 if (NOT ${CMAKE_GENERATOR} MATCHES "Xcode" )
 
 add_custom_command(
-   TARGET SpongeBob POST_BUILD
-   COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/tutorial09_vbo_indexing${CMAKE_EXECUTABLE_SUFFIX}" "${CMAKE_CURRENT_SOURCE_DIR}/tutorial09_vbo_indexing/"
-)
-add_custom_command(
    TARGET tutorial09_AssImp POST_BUILD
    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/tutorial09_AssImp${CMAKE_EXECUTABLE_SUFFIX}" "${CMAKE_CURRENT_SOURCE_DIR}/tutorial09_vbo_indexing/"
-)
-add_custom_command(
-   TARGET tutorial09_several_objects POST_BUILD
-   COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/tutorial09_several_objects${CMAKE_EXECUTABLE_SUFFIX}" "${CMAKE_CURRENT_SOURCE_DIR}/tutorial09_vbo_indexing/"
 )
 
 elseif (${CMAKE_GENERATOR} MATCHES "Xcode" )
