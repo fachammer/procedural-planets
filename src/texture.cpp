@@ -18,8 +18,7 @@ GLuint loadSoil(const char *imagename, const char *contentPath)
         imagePath.c_str(),
         SOIL_LOAD_AUTO,
         SOIL_CREATE_NEW_ID,
-        SOIL_FLAG_POWER_OF_TWO | SOIL_FLAG_MIPMAPS
-    );
+        SOIL_FLAG_POWER_OF_TWO | SOIL_FLAG_MIPMAPS);
     check_gl_error();
     glBindTexture(GL_TEXTURE_2D, tex_ID);
     check_gl_error();

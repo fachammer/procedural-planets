@@ -203,13 +203,13 @@ int main(void)
     glfwMakeContextCurrent(window);
     check_gl_error();
 
-    // Initialize GLEW
-    glewExperimental = true; // Needed for core profile
+    glewExperimental = true;
     if (glewInit() != GLEW_OK)
     {
         fprintf(stderr, "Failed to initialize GLEW\n");
         return -1;
     }
+    check_gl_error();
 
     // Ensure we can capture the escape key being pressed below
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
@@ -219,6 +219,8 @@ int main(void)
 
     // Dark blue background
     glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
+
+    check_gl_error();
 
     // Enable depth test
     glEnable(GL_DEPTH_TEST);
