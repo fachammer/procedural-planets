@@ -37,8 +37,6 @@ using namespace glm;
 std::string contentPath = "../shaders/";
 
 float shadowMagicNumber = 0.003;
-unsigned char textureToShow = 0;
-unsigned char layerToShow = 0;
 float baseRadius = 50;
 float maxDepth = 30;
 float maxHeight = 40;
@@ -239,7 +237,7 @@ int main(void)
     // ############## Load the meshes ###############
     std::vector<Mesh *> meshes;
 
-    Mesh *atmosphereMesh = generateSphere(atmospherePlanetRatio * (baseRadius + maxHeight), 7, true);
+    Mesh *atmosphereMesh = generateSphere(atmospherePlanetRatio * (baseRadius + maxHeight), 4, true);
     atmosphereMeshId = meshes.size();
     meshes.push_back(atmosphereMesh);
 
@@ -266,41 +264,21 @@ int main(void)
     }
     check_gl_error();
 
-    // create the scenes
-    std::vector<Scene> scenes;
-    // one scene for the standard rendering
-    scenes.push_back(Scene(&objects, &meshes, &shaderSets));
+    Scene scene(&objects, &meshes, &shaderSets);
 
     check_gl_error();
 
     computeMatricesFromInputs();
     RenderState::lightPositionWorldSpace = getCameraPosition();
-    RenderState::lightPositionWorldSpace2 = glm::vec3(0, 0, 0) - (3.0f * getCameraPosition());
+    // RenderState::lightPositionWorldSpace2 = glm::vec3(0, 0, 0) - (3.0f * getCameraPosition());
 
     // For speed computation
     double lastTime = glfwGetTime();
-    int nbFrames = 0;
 
     srand(time(NULL));
 
     do
     {
-        // Apply the scene depth map to the textured quad object to debug.
-        // With the gui we can change which texture we see.
-        RenderState *quadObj = static_cast<RenderState *>(objects[objects.size() - 1]);
-        quadObj->texId = textureToShow;
-
-        // Measure speed
-        double currentTime = glfwGetTime();
-        nbFrames++;
-        if (currentTime - lastTime >= 1.0)
-        { // If last prinf() was more than 1sec ago
-            // printf and reset
-            printf("%f ms/frame\n", 1000.0 / double(nbFrames));
-            nbFrames = 0;
-            lastTime += 1.0;
-        }
-
         check_gl_error();
         // Clear the screen
         glClearColor(0.0, 0.0, 0.0, 1.0);
@@ -318,28 +296,20 @@ int main(void)
         glm::mat4 lightProjMatrix = glm::perspective(90.0f, 1.0f, 2.5f, 100.0f);
         glm::mat4 lightMVPMatrix = lightProjMatrix * lightViewMatrix;
 
-        // set the scene constant variales ( light position)
         if (setLightToCamera)
         {
             RenderState::lightPositionWorldSpace = getCameraPosition();
-            RenderState::lightPositionWorldSpace2 = glm::vec3(0, 0, 0) - (3.0f * getCameraPosition());
         }
 
-        // render to the screen buffer
-        renderObjects(scenes[0], ViewMatrix, ProjectionMatrix, lightPos, lightMVPMatrix);
+        renderObjects(scene, ViewMatrix, ProjectionMatrix, lightPos, lightMVPMatrix);
 
-        // Swap buffers
         glfwSwapBuffers(window);
         glfwPollEvents();
+    } while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
+             glfwWindowShouldClose(window) == 0);
 
-    } // Check if the ESC key was pressed or the window was closed
-    while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
-           glfwWindowShouldClose(window) == 0);
-
-    // Cleanup VBO and shader
     glDeleteVertexArrays(1, &VertexArrayID);
 
-    // Close OpenGL window and terminate GLFW
     glfwTerminate();
 
     return 0;

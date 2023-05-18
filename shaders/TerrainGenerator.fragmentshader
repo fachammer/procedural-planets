@@ -24,7 +24,6 @@ out vec4 color;
 uniform mat4 MV;
 uniform mat4 V;
 uniform vec3 LightPosition_worldspace;
-uniform vec3 LightPosition2_worldspace;
 uniform sampler2D heightSlopeBasedColorMap;
 uniform float maxNegativeHeight;
 uniform float maxPositiveHeight;
@@ -35,7 +34,6 @@ const vec3 lightColor = vec3(1, 1, 1);
 const vec3 lightColor2 = vec3(0.5, 0.2, 0.2);
 
 const float LightPower = 50000.0f;
-const float LightPower2 = 80000.0f;
 
 float map(float value, float inMin, float inMax, float outMin, float outMax) {
     return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);
@@ -67,7 +65,6 @@ void main() {
     
 
     vec3 diffuseLight = calcLight(LightPosition_worldspace, LightPower, lightColor, LightDirection_cameraspace);
-	diffuseLight += calcLight(LightPosition2_worldspace, LightPower2, lightColor2, LightDirection2_cameraspace);
 
     color = MaterialAmbientColor + MaterialDiffuseColor * vec4(diffuseLight, 1);
 }
