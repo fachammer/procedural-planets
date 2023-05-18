@@ -134,13 +134,6 @@ void renderObjects(Scene &scene, glm::mat4x4 &viewMatrix, glm::mat4x4 &projectio
     }
 }
 
-float calculateDist(glm::vec3 center)
-{
-    glm::vec3 temp = center * center;
-    float distance = sqrt(temp.x + temp.y + temp.z);
-    return distance;
-}
-
 void initShaders(std::vector<ShaderEffect *> &shaderSets)
 {
     // ########## load the shader programs ##########
