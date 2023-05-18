@@ -155,6 +155,36 @@ void initShaders(std::vector<ShaderEffect *> &shaderSets)
     shaderSets.push_back(atmosphericScatteringProgram);
 }
 
+Scene generateScene(std::vector<Mesh *> *meshes, std::vector<RenderState *> *objects, std::vector<ShaderEffect *> *shaders)
+{
+    enum ShaderEffects
+    {
+        STANDARDSHADING = 0,
+        ATMOSPHERIC_SCATTERING = 1
+    };
+
+    Mesh *atmosphereMesh = generateSphere(atmospherePlanetRatio * (baseRadius + maxHeight), 4, true);
+    atmosphereMeshId = meshes->size();
+    atmosphereMesh->generateVBOs();
+    meshes->push_back(atmosphereMesh);
+    RenderState *atmosphereRenderState = new RenderState();
+    atmosphereRenderState->meshId = 0;
+    atmosphereRenderState->shaderEffectIds.push_back(ATMOSPHERIC_SCATTERING);
+    atmosphereRenderState->texId = textures[textureIndex];
+    objects->push_back(atmosphereRenderState);
+
+    Mesh *sphereMesh = generateSphere(baseRadius, 7, false);
+    sphereMesh->generateVBOs();
+    meshes->push_back(sphereMesh);
+    RenderState *sphereRenderState = new RenderState();
+    sphereRenderState->meshId = 1;
+    sphereRenderState->shaderEffectIds.push_back(STANDARDSHADING);
+    sphereRenderState->texId = textures[textureIndex];
+    objects->push_back(sphereRenderState);
+
+    return Scene(objects, meshes, shaders);
+}
+
 int main(void)
 {
     // Initialise GLFW
@@ -171,10 +201,10 @@ int main(void)
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     // Open a window and create its OpenGL context
-    window = glfwCreateWindow(SCREENHEIGHT, SCREENHEIGHT, "Tutorial 09 - VBO Indexing", NULL, NULL);
+    window = glfwCreateWindow(SCREENHEIGHT, SCREENHEIGHT, "Procedural Planets", NULL, NULL);
     if (window == NULL)
     {
-        fprintf(stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n");
+        fprintf(stderr, "Failed to open GLFW window.\n");
         glfwTerminate();
         return -1;
     }
@@ -212,18 +242,10 @@ int main(void)
     glGenVertexArrays(1, &VertexArrayID);
     glBindVertexArray(VertexArrayID);
 
-    std::vector<ShaderEffect *> shaderSets;
-    std::vector<RenderState *> objects;
-
     check_gl_error();
 
-    initShaders(shaderSets);
-
-    enum ShaderEffects
-    {
-        STANDARDSHADING = 0,
-        ATMOSPHERIC_SCATTERING = 1
-    };
+    std::vector<ShaderEffect *> shaders;
+    initShaders(shaders);
 
     check_gl_error();
 
@@ -233,28 +255,15 @@ int main(void)
     }
     check_gl_error();
 
+    std::vector<RenderState *> objects;
     std::vector<Mesh *> meshes;
+    enum ShaderEffects
+    {
+        STANDARDSHADING = 0,
+        ATMOSPHERIC_SCATTERING = 1
+    };
 
-    Mesh *atmosphereMesh = generateSphere(atmospherePlanetRatio * (baseRadius + maxHeight), 4, true);
-    atmosphereMeshId = meshes.size();
-    atmosphereMesh->generateVBOs();
-    meshes.push_back(atmosphereMesh);
-    RenderState *atmosphereRenderState = new RenderState();
-    atmosphereRenderState->meshId = 0;
-    atmosphereRenderState->shaderEffectIds.push_back(ATMOSPHERIC_SCATTERING);
-    atmosphereRenderState->texId = textures[textureIndex];
-    objects.push_back(atmosphereRenderState);
-
-    Mesh *sphereMesh = generateSphere(baseRadius, 7, false);
-    sphereMesh->generateVBOs();
-    meshes.push_back(sphereMesh);
-    RenderState *sphereRenderState = new RenderState();
-    sphereRenderState->meshId = 1;
-    sphereRenderState->shaderEffectIds.push_back(STANDARDSHADING);
-    sphereRenderState->texId = textures[textureIndex];
-    objects.push_back(sphereRenderState);
-
-    Scene scene(&objects, &meshes, &shaderSets);
+    Scene scene = generateScene(&meshes, &objects, &shaders);
 
     check_gl_error();
 
