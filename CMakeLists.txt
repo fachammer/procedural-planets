@@ -67,13 +67,13 @@ add_executable(PlanetGenerator
 	src/RenderState.hpp
 	src/RenderState.cpp
 	
-    src/TerrainGenerator.vertexshader
-    src/TerrainGenerator.geometryshader
-    src/TerrainGenerator.fragmentshader
-    src/TerrainGeneratorNormals.geometryshader
-    src/TerrainGeneratorNormals.fragmentshader
-    src/AtmosphericScattering.vertexshader
-    src/AtmosphericScattering.fragmentshader
+    shaders/TerrainGenerator.vertexshader
+    shaders/TerrainGenerator.geometryshader
+    shaders/TerrainGenerator.fragmentshader
+    shaders/TerrainGeneratorNormals.geometryshader
+    shaders/TerrainGeneratorNormals.fragmentshader
+    shaders/AtmosphericScattering.vertexshader
+    shaders/AtmosphericScattering.fragmentshader
 )
 target_link_libraries(PlanetGenerator
 	${ALL_LIBS}
