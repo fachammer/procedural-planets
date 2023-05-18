@@ -11,8 +11,6 @@
 // Include GLFW
 #include <glfw3.h>
 
-#include "tangentspace.hpp"
-
 struct PackedVertexWithTangents2
 {
     glm::vec3 position;

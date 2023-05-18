@@ -66,8 +66,6 @@ add_executable(tutorial09_AssImp
 	common/Mesh.cpp
 	common/GLError.h
 	common/GLError.cpp
-        common/tangentspace.cpp
-        common/tangentspace.hpp
 	common/RenderState.hpp
 	common/RenderState.cpp
 	
