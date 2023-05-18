@@ -34,10 +34,7 @@ using namespace glm;
 
 #include "SphereGenerator.hpp"
 
-#define PATHTOCONTENT "../shaders/"
-
-// Create and compile our GLSL program from the shaders
-std::string contentPath = PATHTOCONTENT;
+std::string contentPath = "../shaders/";
 
 float shadowMagicNumber = 0.003;
 unsigned char textureToShow = 0;
