@@ -49,7 +49,6 @@ add_definitions(
 	-D_CRT_SECURE_NO_WARNINGS
 )
 
-# Tutorial 9 - AssImp model loading
 add_executable(PlanetGenerator
 	src/PlanetGenerator.cpp
 	src/SphereGenerator.hpp
@@ -87,17 +86,12 @@ set_target_properties(PlanetGenerator PROPERTIES
 set_target_properties(PlanetGenerator
 	PROPERTIES
 	XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "/System/Library/Frameworks/OpenGL.framework/Versions/Current/")
-create_target_launcher(PlanetGenerator WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/src/")
+create_target_launcher(PlanetGenerator WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/")
 
 SOURCE_GROUP(src REGULAR_EXPRESSION ".*/src/.*" )
 SOURCE_GROUP(shaders REGULAR_EXPRESSION ".*/.*shader$" )
 
 if (NOT ${CMAKE_GENERATOR} MATCHES "Xcode" )
-
-add_custom_command(
-   TARGET PlanetGenerator POST_BUILD
-   COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/PlanetGenerator${CMAKE_EXECUTABLE_SUFFIX}" "${CMAKE_CURRENT_SOURCE_DIR}/src/"
-)
 
 elseif (${CMAKE_GENERATOR} MATCHES "Xcode" )
 endif (NOT ${CMAKE_GENERATOR} MATCHES "Xcode" )
