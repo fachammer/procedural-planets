@@ -53,12 +53,12 @@ add_executable(PlanetGenerator
 	src/PlanetGenerator.cpp
 	src/SphereGenerator.hpp
 	src/SphereGenerator.cpp
-	src/shader.cpp
-	src/shader.hpp
-	src/controls.cpp
-	src/controls.hpp
-	src/texture.cpp
-	src/texture.hpp
+	src/Shader.cpp
+	src/Shader.hpp
+	src/Controls.cpp
+	src/Controls.hpp
+	src/Texture.cpp
+	src/Texture.hpp
 	src/Mesh.hpp
 	src/Mesh.cpp
 	src/GLError.h
