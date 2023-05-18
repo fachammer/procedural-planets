@@ -18,13 +18,10 @@ struct RenderState
 
     static glm::vec3 lightPositionWorldSpace;
 
-    virtual void setParameters(ShaderEffect *e)
+    virtual void setParameters(ShaderEffect *effect)
     {
-        SimpleShaderEffect *effect = static_cast<SimpleShaderEffect *>(e);
-        // Bind our texture in Texture Unit 0
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texId);
-        // Set our "myTextureSampler" sampler to user Texture Unit 0
         glUniform1i(effect->textureSamplerId, 0);
         check_gl_error();
         glUniform3f(effect->lightPositionId, lightPositionWorldSpace.x, lightPositionWorldSpace.y, lightPositionWorldSpace.z);

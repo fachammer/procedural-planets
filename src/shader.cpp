@@ -265,11 +265,6 @@ ShaderEffect::ShaderEffect(unsigned int _programId)
     MVPId = glGetUniformLocation(programId, "MVP");
     VId = glGetUniformLocation(programId, "V");
     MId = glGetUniformLocation(programId, "M");
-}
-
-SimpleShaderEffect::SimpleShaderEffect(unsigned int _programId) : ShaderEffect(_programId)
-{
     textureSamplerId = glGetUniformLocation(_programId, "myTextureSampler");
-    printf("SimpleShaderEffect created, texid %i\n", textureSamplerId);
     lightPositionId = glGetUniformLocation(_programId, "LightPosition_worldspace");
 }

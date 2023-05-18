@@ -145,12 +145,12 @@ void initShaders(std::vector<ShaderEffect *> &shaderSets)
 {
     // ########## load the shader programs ##########
     GLuint terrainGeneratorProgramId = LoadShaders("TerrainGenerator.vertexshader", "TerrainGenerator.geometryshader", "TerrainGenerator.fragmentshader", contentPath.c_str());
-    SimpleShaderEffect *terrainGeneratorProgram = new SimpleShaderEffect(terrainGeneratorProgramId);
+    ShaderEffect *terrainGeneratorProgram = new ShaderEffect(terrainGeneratorProgramId);
     terrainGeneratorProgram->textureSamplerId = glGetUniformLocation(terrainGeneratorProgramId, "heightSlopeBasedColorMap");
     shaderSets.push_back(terrainGeneratorProgram);
 
     GLuint atmosphericScatteringProgramId = LoadShaders("AtmosphericScattering.vertexshader", "AtmosphericScattering.fragmentshader", contentPath.c_str());
-    SimpleShaderEffect *atmosphericScatteringProgram = new SimpleShaderEffect(atmosphericScatteringProgramId);
+    ShaderEffect *atmosphericScatteringProgram = new ShaderEffect(atmosphericScatteringProgramId);
     shaderSets.push_back(atmosphericScatteringProgram);
 }
 
