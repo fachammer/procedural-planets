@@ -257,33 +257,6 @@ GLuint LoadShaders(const char *vertex_file_name, const char *geometry_file_name,
     return ProgramID;
 }
 
-// AllShaderEffect::AllShaderEffect(unsigned int _programId)
-//{
-//	programId = _programId;
-//	glUseProgram(programId);
-//	// Get a handle for our matrix uniforms
-//
-//	MVPId = glGetUniformLocation(programId, "MVP");
-//	VId = glGetUniformLocation(programId, "V");
-//	MId = glGetUniformLocation(programId, "M");
-//	textureSamplerId = glGetUniformLocation(programId, "myTextureSampler");
-//	ndotl_ndotvSamplerId = glGetUniformLocation(programId, "ndotvSampler");
-//	ndotl_ndothSamplerId = glGetUniformLocation(programId, "ndothSampler");
-//	ndotl_vdotlSamplerId = glGetUniformLocation(programId, "vdotlSampler");
-//	volumeSamplerId = glGetUniformLocation(programId, "volumeSampler");
-//	fluxId = glGetUniformLocation(programId, "fluxSampler");
-//
-//	cubeSamplerId = glGetUniformLocation(programId, "cubeSampler");
-//	lightPositionId = glGetUniformLocation(programId, "LightPosition_worldspace");
-//	specColorId = glGetUniformLocation(programId, "MaterialSpecularColor");
-//	shininessId = glGetUniformLocation(programId, "shininess");
-//	metalnessId = glGetUniformLocation(programId, "metalness");
-//	specularityId = glGetUniformLocation(programId, "specularity");
-//     lightMatrixId = glGetUniformLocation(programId, "modelToLightProjectionMatrix");
-//     isShadowCasterId = glGetUniformLocation(programId, "isShadowCaster");
-//	shadowMagicNumberId = glGetUniformLocation(programId, "shadowMagicNumber");
-// }
-
 ShaderEffect::ShaderEffect(unsigned int _programId)
 {
     lightMatrixId = 0xffffffff;
@@ -299,20 +272,4 @@ SimpleShaderEffect::SimpleShaderEffect(unsigned int _programId) : ShaderEffect(_
     textureSamplerId = glGetUniformLocation(_programId, "myTextureSampler");
     printf("SimpleShaderEffect created, texid %i\n", textureSamplerId);
     lightPositionId = glGetUniformLocation(_programId, "LightPosition_worldspace");
-    lightPosition2Id = glGetUniformLocation(_programId, "LightPosition2_worldspace");
-}
-
-VolumeRenderingShaderEffect::VolumeRenderingShaderEffect(unsigned int _programId) : ShaderEffect(_programId)
-{
-    volumeSamplerId = glGetUniformLocation(_programId, "volumeSampler");
-    layerId = glGetUniformLocation(_programId, "layer");
-}
-
-// DONE Implementation of a shadow mapping Shader Effet
-ShadowMappingShaderEffect::ShadowMappingShaderEffect(unsigned int _programId) : SimpleShaderEffect(_programId)
-{
-    depthTextureSamplerId = glGetUniformLocation(_programId, "depthSampler");
-    ssaoResultSamplerId = glGetUniformLocation(_programId, "SSAOResultSampler");
-    lightMatrixId = glGetUniformLocation(programId, "modelToLightProjectionMatrix");
-    shadowMagicNumberId = glGetUniformLocation(programId, "shadowMagicNumber");
 }

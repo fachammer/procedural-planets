@@ -36,7 +36,6 @@ using namespace glm;
 
 std::string contentPath = "../shaders/";
 
-float shadowMagicNumber = 0.003;
 float baseRadius = 50;
 float maxDepth = 30;
 float maxHeight = 40;
@@ -243,26 +242,19 @@ int main(void)
     glBindVertexArray(VertexArrayID);
 
     check_gl_error();
-
-    std::vector<ShaderEffect *> shaders;
-    initShaders(shaders);
-
-    check_gl_error();
-
     for (int i = 0; i < textureCount; i++)
     {
         textures[i] = loadSoil(textureNames[i], "../textures/");
     }
     check_gl_error();
 
+    std::vector<ShaderEffect *> shaders;
+    initShaders(shaders);
+
+    check_gl_error();
+
     std::vector<RenderState *> objects;
     std::vector<Mesh *> meshes;
-    enum ShaderEffects
-    {
-        STANDARDSHADING = 0,
-        ATMOSPHERIC_SCATTERING = 1
-    };
-
     Scene scene = generateScene(&meshes, &objects, &shaders);
 
     check_gl_error();
@@ -279,14 +271,11 @@ int main(void)
         glClearColor(0.0, 0.0, 0.0, 1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Compute the MVP matrix from keyboard and mouse input
         computeMatricesFromInputs();
         glm::mat4 ProjectionMatrix = getProjectionMatrix();
         glm::mat4 ViewMatrix = getViewMatrix();
         check_gl_error();
 
-        // compute the MVP matrix for the light
-        // worldToView first
         glm::mat4 lightViewMatrix = glm::lookAt(lightPos, lightPos + glm::vec3(0.5, -1.0, 0.5), glm::vec3(0.0, 0.0, 1.0));
         glm::mat4 lightProjMatrix = glm::perspective(90.0f, 1.0f, 2.5f, 100.0f);
         glm::mat4 lightMVPMatrix = lightProjMatrix * lightViewMatrix;
