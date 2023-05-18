@@ -30,7 +30,6 @@ public:
     unsigned int biTangentBuffer;
     unsigned int elementBuffer;
 
-    ShaderEffect *shaderProgram;
     std::vector<unsigned int> textureIds;
 
     bool load(const char *path);

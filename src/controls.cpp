@@ -54,11 +54,6 @@ glm::vec3 getCameraPosition()
     return position;
 }
 
-float getFieldOfView()
-{
-    return initialFoV;
-}
-
 void computeMatricesFromInputs()
 {
 

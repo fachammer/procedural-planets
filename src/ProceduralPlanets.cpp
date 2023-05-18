@@ -68,7 +68,7 @@ struct Scene
     }
 };
 
-void renderObjects(Scene &scene, glm::mat4x4 &viewMatrix, glm::mat4x4 &projectionMatrix, glm::vec3 &lightPos, glm::mat4 &lightMatrix)
+void renderObjects(Scene &scene, glm::mat4x4 &viewMatrix, const glm::mat4x4 &projectionMatrix, glm::vec3 &lightPos, const glm::mat4 &lightMatrix)
 {
     std::vector<RenderState *> *objects = scene.objects;
 #ifdef MINGW_COMPILER
