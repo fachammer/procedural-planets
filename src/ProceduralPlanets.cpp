@@ -25,9 +25,9 @@ const int textureCount = 4;
 #include <glm/gtc/matrix_transform.hpp>
 using namespace glm;
 
-#include "shader.hpp"
-#include "texture.hpp"
-#include "controls.hpp"
+#include "Shader.hpp"
+#include "Texture.hpp"
+#include "Controls.hpp"
 #include "Mesh.hpp"
 #include "GLError.h"
 #include "RenderState.hpp"

@@ -11,7 +11,7 @@ extern int textureIndex;
 #include <glm/gtc/matrix_transform.hpp>
 using namespace glm;
 
-#include "controls.hpp"
+#include "Controls.hpp"
 
 glm::mat4 ViewMatrix;
 glm::mat4 ProjectionMatrix;

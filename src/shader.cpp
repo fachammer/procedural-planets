@@ -11,7 +11,7 @@ using namespace std;
 
 #include <GL/glew.h>
 
-#include "shader.hpp"
+#include "Shader.hpp"
 #include "GLError.h"
 
 GLuint LoadShaders(const char *vertex_file_name, const char *fragment_file_name, const char *contentPath)
