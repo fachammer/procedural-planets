@@ -239,7 +239,7 @@ int main(void)
     // ########### Load the textures ################
     for (int i = 0; i < textureCount; i++)
     {
-        textures[i] = loadSoil(textureNames[i], contentPath.c_str());
+        textures[i] = loadSoil(textureNames[i], "../textures/");
     }
     check_gl_error();
 
