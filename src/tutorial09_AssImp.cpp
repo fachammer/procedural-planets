@@ -34,7 +34,7 @@ using namespace glm;
 
 #include "SphereGenerator.hpp"
 
-#define PATHTOCONTENT "../tutorial09_vbo_indexing/"
+#define PATHTOCONTENT "../src/"
 
 // Create and compile our GLSL program from the shaders
 std::string contentPath = PATHTOCONTENT;

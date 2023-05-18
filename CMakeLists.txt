@@ -51,9 +51,9 @@ add_definitions(
 
 # Tutorial 9 - AssImp model loading
 add_executable(tutorial09_AssImp
-	tutorial09_vbo_indexing/tutorial09_AssImp.cpp
-	tutorial09_vbo_indexing/SphereGenerator.hpp
-	tutorial09_vbo_indexing/SphereGenerator.cpp
+	src/tutorial09_AssImp.cpp
+	src/SphereGenerator.hpp
+	src/SphereGenerator.cpp
 	common/shader.cpp
 	common/shader.hpp
 	common/controls.cpp
@@ -67,13 +67,13 @@ add_executable(tutorial09_AssImp
 	common/RenderState.hpp
 	common/RenderState.cpp
 	
-    tutorial09_vbo_indexing/TerrainGenerator.vertexshader
-    tutorial09_vbo_indexing/TerrainGenerator.geometryshader
-    tutorial09_vbo_indexing/TerrainGenerator.fragmentshader
-    tutorial09_vbo_indexing/TerrainGeneratorNormals.geometryshader
-    tutorial09_vbo_indexing/TerrainGeneratorNormals.fragmentshader
-    tutorial09_vbo_indexing/AtmosphericScattering.vertexshader
-    tutorial09_vbo_indexing/AtmosphericScattering.fragmentshader
+    src/TerrainGenerator.vertexshader
+    src/TerrainGenerator.geometryshader
+    src/TerrainGenerator.fragmentshader
+    src/TerrainGeneratorNormals.geometryshader
+    src/TerrainGeneratorNormals.fragmentshader
+    src/AtmosphericScattering.vertexshader
+    src/AtmosphericScattering.fragmentshader
 )
 target_link_libraries(tutorial09_AssImp
 	${ALL_LIBS}
@@ -83,11 +83,11 @@ set_target_properties(tutorial09_AssImp PROPERTIES COMPILE_DEFINITIONS "USE_ASSI
 # Xcode and Visual working directories
 set_target_properties(tutorial09_AssImp PROPERTIES
 	XCODE_ATTRIBUTE_CONFIGURATION_BUILD_DIR
-	"${CMAKE_CURRENT_SOURCE_DIR}/tutorial09_vbo_indexing/")
+	"${CMAKE_CURRENT_SOURCE_DIR}/src/")
 set_target_properties(tutorial09_AssImp
 	PROPERTIES
 	XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "/System/Library/Frameworks/OpenGL.framework/Versions/Current/")
-create_target_launcher(tutorial09_AssImp WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/tutorial09_vbo_indexing/")
+create_target_launcher(tutorial09_AssImp WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/src/")
 
 SOURCE_GROUP(common REGULAR_EXPRESSION ".*/common/.*" )
 SOURCE_GROUP(shaders REGULAR_EXPRESSION ".*/.*shader$" )
@@ -96,7 +96,7 @@ if (NOT ${CMAKE_GENERATOR} MATCHES "Xcode" )
 
 add_custom_command(
    TARGET tutorial09_AssImp POST_BUILD
-   COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/tutorial09_AssImp${CMAKE_EXECUTABLE_SUFFIX}" "${CMAKE_CURRENT_SOURCE_DIR}/tutorial09_vbo_indexing/"
+   COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/tutorial09_AssImp${CMAKE_EXECUTABLE_SUFFIX}" "${CMAKE_CURRENT_SOURCE_DIR}/src/"
 )
 
 elseif (${CMAKE_GENERATOR} MATCHES "Xcode" )
