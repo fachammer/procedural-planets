@@ -61,8 +61,6 @@ add_executable(tutorial09_AssImp
 	common/controls.hpp
 	common/texture.cpp
 	common/texture.hpp
-	common/objloader.cpp
-	common/objloader.hpp
 	common/vboindexer.cpp
 	common/vboindexer.hpp
 	common/Mesh.hpp
