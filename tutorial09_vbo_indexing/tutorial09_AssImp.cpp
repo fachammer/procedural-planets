@@ -28,7 +28,6 @@ using namespace glm;
 #include <common/shader.hpp>
 #include <common/texture.hpp>
 #include <common/controls.hpp>
-#include <common/vboindexer.hpp>
 #include <common/Mesh.hpp>
 #include <common/GLError.h>
 #include <common/RenderState.hpp>
@@ -254,22 +253,6 @@ int main(void)
     Mesh *sphereMesh = generateSphere(baseRadius, 7, false);
     planetMeshId = meshes.size();
     meshes.push_back(sphereMesh);
-
-    coordinateMeshIndices.clear();
-    Mesh *xCoordinateMesh = generateSphere(10, 0, false);
-    xCoordinateMesh->modelMatrix = glm::translate(glm::mat4(), glm::vec3(200, 0, 0));
-    coordinateMeshIndices.push_back(meshes.size());
-    meshes.push_back(xCoordinateMesh);
-
-    Mesh *yCoordinateMesh = generateSphere(20, 0, false);
-    yCoordinateMesh->modelMatrix = glm::translate(glm::mat4(), glm::vec3(0, 200, 0));
-    coordinateMeshIndices.push_back(meshes.size());
-    meshes.push_back(yCoordinateMesh);
-
-    Mesh *zCoordinateMesh = generateSphere(30, 0, false);
-    zCoordinateMesh->modelMatrix = glm::translate(glm::mat4(), glm::vec3(0, 0, 200));
-    coordinateMeshIndices.push_back(meshes.size());
-    meshes.push_back(zCoordinateMesh);
 
     for (int i = 0; i < meshes.size(); i++)
     {

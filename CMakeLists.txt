@@ -60,8 +60,6 @@ add_executable(tutorial09_AssImp
 	common/controls.hpp
 	common/texture.cpp
 	common/texture.hpp
-	common/vboindexer.cpp
-	common/vboindexer.hpp
 	common/Mesh.hpp
 	common/Mesh.cpp
 	common/GLError.h

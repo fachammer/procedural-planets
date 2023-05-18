@@ -36,7 +36,6 @@ public:
     bool load(const char *path);
     // only works for non-indexed meshes
     void calculateTangents();
-    void indexMesh();
     void generateVBOs();
     void bindBuffersAndDraw();
     void createQuad(glm::vec2 ll, glm::vec2 ur);

@@ -2,7 +2,6 @@
 
 #include <common/GLError.h>
 
-#include <common/vboindexer.hpp>
 // Include GLEW
 #include <GL/glew.h>
 
@@ -23,7 +22,6 @@ struct PackedVertexWithTangents2
         double count = position.x + position.y + position.z + uv.x + uv.y;
         double countThat = that.position.x + that.position.y + that.position.z + that.uv.x + that.uv.y;
         return count < countThat;
-        // return memcmp((void*)this, (void*)&that, sizeof(glm::vec3) + sizeof(glm::vec2))>0;
     };
 };
 
@@ -165,11 +163,6 @@ void Mesh::createCube(glm::vec3 dimensions, bool frontFacing)
         indices.push_back(base + 2);
         indices.push_back(base + 3);
     }
-}
-
-void Mesh::indexMesh()
-{
-    indexVBOWithTangents(vertices, uvs, normals, tangents, biTangents, indices, indexed_vertices, indexed_uvs, indexed_normals, indexed_tangents, indexed_biTangents);
 }
 
 void Mesh::generateVBOs()
@@ -318,7 +311,6 @@ void Mesh::calculateTangents()
     unsigned int triangleCount = indices.size() / 3;
     for (unsigned int i = 0; i < triangleCount; i++)
     {
-
         vec3 tangent;
         vec3 bitangent;
         vec3 normal;
