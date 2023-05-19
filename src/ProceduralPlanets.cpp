@@ -50,36 +50,31 @@ const char *textureNames[textureCount] = {
     "tropic.png"};
 int textureIndex = 0;
 
-struct RenderState
+struct RenderObject
 {
     unsigned int meshId;
-    std::vector<int> shaderEffectIds;
+    std::vector<int> shaderIds;
     unsigned int texId;
 };
 
 struct Scene
 {
-    std::vector<RenderState *> *objects;
+    std::vector<RenderObject *> *objects;
     std::vector<Mesh *> *meshes;
-    std::vector<ShaderEffect *> *effects;
+    std::vector<ShaderEffect *> *shaders;
 
-    Scene(std::vector<RenderState *> *_obj,
+    Scene(std::vector<RenderObject *> *_obj,
           std::vector<Mesh *> *_meshes,
-          std::vector<ShaderEffect *> *_effects) : objects(_obj),
+          std::vector<ShaderEffect *> *_shaders) : objects(_obj),
                                                    meshes(_meshes),
-                                                   effects(_effects)
+                                                   shaders(_shaders)
     {
     }
 };
 
-void renderObjects(Scene &scene, glm::mat4x4 &viewMatrix, const glm::mat4x4 &projectionMatrix, const glm::vec3 &lightPositionWorldSpace)
+void renderObjects(const Scene &scene, glm::mat4x4 &viewMatrix, const glm::mat4x4 &projectionMatrix, const glm::vec3 &lightPositionWorldSpace)
 {
-    std::vector<RenderState *> *objects = scene.objects;
-#ifdef MINGW_COMPILER
-    glm::mat4 modelMatrix = glm::rotate(glm::mat4(1.0f), -90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
-#else
-    glm::mat4 modelMatrix = glm::mat4(1.0f);
-#endif
+    std::vector<RenderObject *> *objects = scene.objects;
 
     glPolygonMode(GL_FRONT_AND_BACK, (wireFrameMode ? GL_LINE : GL_FILL));
 
@@ -90,18 +85,18 @@ void renderObjects(Scene &scene, glm::mat4x4 &viewMatrix, const glm::mat4x4 &pro
     check_gl_error();
     for (int i = 0; i < objects->size(); i++)
     {
-        RenderState *rs = (*objects)[i];
+        RenderObject *rs = (*objects)[i];
         rs->texId = textures[textureIndex];
-        unsigned int meshId = (*objects)[i]->meshId;
+        unsigned int meshId = rs->meshId;
         Mesh *m = (*scene.meshes)[meshId];
-        modelMatrix = m->modelMatrix;
+        glm::mat4 modelMatrix = m->modelMatrix;
         glm::mat4 MVP = projectionMatrix * viewMatrix * modelMatrix;
 
-        for (int j = 0; j < ((*objects)[i])->shaderEffectIds.size(); j++)
+        for (int j = 0; j < rs->shaderIds.size(); j++)
         {
             // Use our shader
-            unsigned int effectId = (*objects)[i]->shaderEffectIds[j];
-            ShaderEffect *effect = (*scene.effects)[effectId];
+            unsigned int effectId = rs->shaderIds[j];
+            ShaderEffect *effect = (*scene.shaders)[effectId];
             glUseProgram(effect->programId);
             check_gl_error();
 
@@ -152,7 +147,7 @@ ShaderEffect *initializeAtmosphericScatteringShader()
     return atmosphericScatteringProgram;
 }
 
-Scene generateScene(std::vector<Mesh *> *meshes, std::vector<RenderState *> *objects, std::vector<ShaderEffect *> *shaders)
+Scene generateScene(std::vector<Mesh *> *meshes, std::vector<RenderObject *> *objects, std::vector<ShaderEffect *> *shaders)
 {
     ShaderEffect *atmosphereShader = initializeAtmosphericScatteringShader();
     shaders->push_back(atmosphereShader);
@@ -160,9 +155,9 @@ Scene generateScene(std::vector<Mesh *> *meshes, std::vector<RenderState *> *obj
     atmosphereMesh->reverseFaces();
     atmosphereMesh->generateVBOs();
     meshes->push_back(atmosphereMesh);
-    RenderState *atmosphereRenderState = new RenderState();
+    RenderObject *atmosphereRenderState = new RenderObject();
     atmosphereRenderState->meshId = meshes->size() - 1;
-    atmosphereRenderState->shaderEffectIds.push_back(shaders->size() - 1);
+    atmosphereRenderState->shaderIds.push_back(shaders->size() - 1);
     atmosphereRenderState->texId = textures[textureIndex];
     objects->push_back(atmosphereRenderState);
 
@@ -171,9 +166,9 @@ Scene generateScene(std::vector<Mesh *> *meshes, std::vector<RenderState *> *obj
     Mesh *sphereMesh = generateSphere(baseRadius, 7);
     sphereMesh->generateVBOs();
     meshes->push_back(sphereMesh);
-    RenderState *sphereRenderState = new RenderState();
+    RenderObject *sphereRenderState = new RenderObject();
     sphereRenderState->meshId = meshes->size() - 1;
-    sphereRenderState->shaderEffectIds.push_back(shaders->size() - 1);
+    sphereRenderState->shaderIds.push_back(shaders->size() - 1);
     sphereRenderState->texId = textures[textureIndex];
     objects->push_back(sphereRenderState);
 
@@ -245,7 +240,7 @@ int main(void)
     check_gl_error();
 
     std::vector<Mesh *> meshes;
-    std::vector<RenderState *> objects;
+    std::vector<RenderObject *> objects;
     std::vector<ShaderEffect *> shaders;
     Scene scene = generateScene(&meshes, &objects, &shaders);
 
