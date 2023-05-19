@@ -71,7 +71,3 @@ void Mesh::reverseFaces()
 Mesh::Mesh() : modelMatrix(glm::mat4(1.0))
 {
 }
-
-Mesh::~Mesh()
-{
-}

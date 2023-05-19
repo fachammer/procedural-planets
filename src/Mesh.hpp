@@ -22,6 +22,5 @@ public:
     void bindBuffersAndDraw();
     void reverseFaces();
 
-    ~Mesh();
     Mesh();
 };
