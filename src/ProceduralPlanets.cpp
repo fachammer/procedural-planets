@@ -134,26 +134,27 @@ void renderObjects(Scene &scene, glm::mat4x4 &viewMatrix, const glm::mat4x4 &pro
     }
 }
 
-void initShaders(std::vector<ShaderEffect *> &shaderSets)
+ShaderEffect *initializeTerrainGeneratorShader()
 {
-    // ########## load the shader programs ##########
     GLuint terrainGeneratorProgramId = LoadShaders("TerrainGenerator.vertexshader", "TerrainGenerator.geometryshader", "TerrainGenerator.fragmentshader", contentPath.c_str());
     ShaderEffect *terrainGeneratorProgram = new ShaderEffect(terrainGeneratorProgramId);
     terrainGeneratorProgram->textureSamplerId = glGetUniformLocation(terrainGeneratorProgramId, "heightSlopeBasedColorMap");
-    shaderSets.push_back(terrainGeneratorProgram);
+    return terrainGeneratorProgram;
+}
 
+ShaderEffect *initializeAtmosphericScatteringShader()
+{
     GLuint atmosphericScatteringProgramId = LoadShaders("AtmosphericScattering.vertexshader", "AtmosphericScattering.fragmentshader", contentPath.c_str());
     ShaderEffect *atmosphericScatteringProgram = new ShaderEffect(atmosphericScatteringProgramId);
-    shaderSets.push_back(atmosphericScatteringProgram);
+    return atmosphericScatteringProgram;
 }
 
 Scene generateScene(std::vector<Mesh *> *meshes, std::vector<RenderState *> *objects, std::vector<ShaderEffect *> *shaders)
 {
-    enum ShaderEffects
-    {
-        STANDARDSHADING = 0,
-        ATMOSPHERIC_SCATTERING = 1
-    };
+    ShaderEffect *atmosphereShader = initializeAtmosphericScatteringShader();
+    shaders->push_back(atmosphereShader);
+    ShaderEffect *terrainGeneratorShader = initializeTerrainGeneratorShader();
+    shaders->push_back(terrainGeneratorShader);
 
     Mesh *atmosphereMesh = generateSphere(atmospherePlanetRatio * (baseRadius + maxHeight), 4);
     atmosphereMesh->reverseFaces();
@@ -162,7 +163,7 @@ Scene generateScene(std::vector<Mesh *> *meshes, std::vector<RenderState *> *obj
     meshes->push_back(atmosphereMesh);
     RenderState *atmosphereRenderState = new RenderState();
     atmosphereRenderState->meshId = 0;
-    atmosphereRenderState->shaderEffectIds.push_back(ATMOSPHERIC_SCATTERING);
+    atmosphereRenderState->shaderEffectIds.push_back(0);
     atmosphereRenderState->texId = textures[textureIndex];
     objects->push_back(atmosphereRenderState);
 
@@ -171,7 +172,7 @@ Scene generateScene(std::vector<Mesh *> *meshes, std::vector<RenderState *> *obj
     meshes->push_back(sphereMesh);
     RenderState *sphereRenderState = new RenderState();
     sphereRenderState->meshId = 1;
-    sphereRenderState->shaderEffectIds.push_back(STANDARDSHADING);
+    sphereRenderState->shaderEffectIds.push_back(1);
     sphereRenderState->texId = textures[textureIndex];
     objects->push_back(sphereRenderState);
 
@@ -244,13 +245,9 @@ int main(void)
     }
     check_gl_error();
 
-    std::vector<ShaderEffect *> shaders;
-    initShaders(shaders);
-
-    check_gl_error();
-
-    std::vector<RenderState *> objects;
     std::vector<Mesh *> meshes;
+    std::vector<RenderState *> objects;
+    std::vector<ShaderEffect *> shaders;
     Scene scene = generateScene(&meshes, &objects, &shaders);
 
     check_gl_error();
