@@ -18,7 +18,6 @@ GLFWwindow *window;
 
 bool wireFrameMode = false;
 bool setLightToCamera = true;
-const int textureCount = 4;
 
 // Include GLM
 #include <glm/glm.hpp>
@@ -36,17 +35,16 @@ using namespace glm;
 
 std::string contentPath = "../shaders/";
 
-float baseRadius = 50;
-float maxDepth = 30;
-float maxHeight = 40;
-float seaLevelFromBaseRadius = 10;
-float atmospherePlanetRatio = 0.9;
-int planetMeshId;
-int atmosphereMeshId;
+const float baseRadius = 50;
+const float maxDepth = 30;
+const float maxHeight = 40;
+const float seaLevelFromBaseRadius = 10;
+const float atmospherePlanetRatio = 0.9;
 vec3 noiseOffset = vec3(0, 0, 0);
 
+const int textureCount = 4;
 GLuint textures[textureCount];
-const char *textureNames[4] = {
+const char *textureNames[textureCount] = {
     "beachMountain.png",
     "volcano.png",
     "ice.png",
@@ -153,26 +151,24 @@ Scene generateScene(std::vector<Mesh *> *meshes, std::vector<RenderState *> *obj
 {
     ShaderEffect *atmosphereShader = initializeAtmosphericScatteringShader();
     shaders->push_back(atmosphereShader);
-    ShaderEffect *terrainGeneratorShader = initializeTerrainGeneratorShader();
-    shaders->push_back(terrainGeneratorShader);
-
     Mesh *atmosphereMesh = generateSphere(atmospherePlanetRatio * (baseRadius + maxHeight), 4);
     atmosphereMesh->reverseFaces();
-    atmosphereMeshId = meshes->size();
     atmosphereMesh->generateVBOs();
     meshes->push_back(atmosphereMesh);
     RenderState *atmosphereRenderState = new RenderState();
-    atmosphereRenderState->meshId = 0;
-    atmosphereRenderState->shaderEffectIds.push_back(0);
+    atmosphereRenderState->meshId = meshes->size() - 1;
+    atmosphereRenderState->shaderEffectIds.push_back(shaders->size() - 1);
     atmosphereRenderState->texId = textures[textureIndex];
     objects->push_back(atmosphereRenderState);
 
+    ShaderEffect *terrainGeneratorShader = initializeTerrainGeneratorShader();
+    shaders->push_back(terrainGeneratorShader);
     Mesh *sphereMesh = generateSphere(baseRadius, 7);
     sphereMesh->generateVBOs();
     meshes->push_back(sphereMesh);
     RenderState *sphereRenderState = new RenderState();
-    sphereRenderState->meshId = 1;
-    sphereRenderState->shaderEffectIds.push_back(1);
+    sphereRenderState->meshId = meshes->size() - 1;
+    sphereRenderState->shaderEffectIds.push_back(shaders->size() - 1);
     sphereRenderState->texId = textures[textureIndex];
     objects->push_back(sphereRenderState);
 
