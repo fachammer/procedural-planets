@@ -59,8 +59,6 @@ static int addSphereVertex(Mesh *mesh, vec3 vertex, GLfloat radius)
 {
     vec3 normalizedVertex = normalize(vertex * radius);
     mesh->indexed_vertices.push_back(normalizedVertex * radius);
-    mesh->indexed_normals.push_back(normalizedVertex);
-    mesh->indexed_uvs.push_back(glm::vec2(0.5f, 0.5f));
     return mesh->indexed_vertices.size() - 1;
 }
 
