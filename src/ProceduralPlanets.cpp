@@ -59,22 +59,22 @@ struct RenderObject
 
 struct Scene
 {
-    std::vector<RenderObject *> *objects;
-    std::vector<Mesh *> *meshes;
-    std::vector<ShaderEffect *> *shaders;
+    std::vector<RenderObject> objects;
+    std::vector<Mesh> meshes;
+    std::vector<ShaderEffect> shaders;
 
-    Scene(std::vector<RenderObject *> *_obj,
-          std::vector<Mesh *> *_meshes,
-          std::vector<ShaderEffect *> *_shaders) : objects(_obj),
-                                                   meshes(_meshes),
-                                                   shaders(_shaders)
+    Scene(std::vector<RenderObject> _obj,
+          std::vector<Mesh> _meshes,
+          std::vector<ShaderEffect> _shaders) : objects(_obj),
+                                                meshes(_meshes),
+                                                shaders(_shaders)
     {
     }
 };
 
 void renderObjects(const Scene &scene, glm::mat4x4 &viewMatrix, const glm::mat4x4 &projectionMatrix, const glm::vec3 &lightPositionWorldSpace)
 {
-    std::vector<RenderObject *> *objects = scene.objects;
+    std::vector<RenderObject> objects = scene.objects;
 
     glPolygonMode(GL_FRONT_AND_BACK, (wireFrameMode ? GL_LINE : GL_FILL));
 
@@ -83,44 +83,44 @@ void renderObjects(const Scene &scene, glm::mat4x4 &viewMatrix, const glm::mat4x
 
     glm::vec3 cameraPosition = getCameraPosition();
     check_gl_error();
-    for (int i = 0; i < objects->size(); i++)
+    for (int i = 0; i < objects.size(); i++)
     {
-        RenderObject *rs = (*objects)[i];
-        rs->texId = textures[textureIndex];
-        unsigned int meshId = rs->meshId;
-        Mesh *m = (*scene.meshes)[meshId];
-        glm::mat4 modelMatrix = m->modelMatrix;
+        RenderObject rs = objects.at(i);
+        rs.texId = textures[textureIndex];
+        unsigned int meshId = rs.meshId;
+        Mesh m = scene.meshes.at(meshId);
+        glm::mat4 modelMatrix = m.modelMatrix;
         glm::mat4 MVP = projectionMatrix * viewMatrix * modelMatrix;
 
-        for (int j = 0; j < rs->shaderIds.size(); j++)
+        for (int j = 0; j < rs.shaderIds.size(); j++)
         {
             // Use our shader
-            unsigned int effectId = rs->shaderIds[j];
-            ShaderEffect *effect = (*scene.shaders)[effectId];
-            glUseProgram(effect->programId);
+            unsigned int effectId = rs.shaderIds.at(j);
+            ShaderEffect effect = scene.shaders.at(effectId);
+            glUseProgram(effect.programId);
             check_gl_error();
 
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, rs->texId);
-            glUniform1i(effect->textureSamplerId, 0);
+            glBindTexture(GL_TEXTURE_2D, rs.texId);
+            glUniform1i(effect.textureSamplerId, 0);
             check_gl_error();
-            glUniform3f(effect->lightPositionId, lightPositionWorldSpace.x, lightPositionWorldSpace.y, lightPositionWorldSpace.z);
+            glUniform3f(effect.lightPositionId, lightPositionWorldSpace.x, lightPositionWorldSpace.y, lightPositionWorldSpace.z);
 
-            glUniformMatrix4fv(effect->MVPId, 1, GL_FALSE, &MVP[0][0]);
-            glUniformMatrix4fv(effect->MId, 1, GL_FALSE, &modelMatrix[0][0]);
-            glUniformMatrix4fv(effect->VId, 1, GL_FALSE, &viewMatrix[0][0]);
+            glUniformMatrix4fv(effect.MVPId, 1, GL_FALSE, &MVP[0][0]);
+            glUniformMatrix4fv(effect.MId, 1, GL_FALSE, &modelMatrix[0][0]);
+            glUniformMatrix4fv(effect.VId, 1, GL_FALSE, &viewMatrix[0][0]);
 
-            glUniform1f(glGetUniformLocation(effect->programId, "maxNegativeHeight"), maxDepth);
-            glUniform1f(glGetUniformLocation(effect->programId, "maxPositiveHeight"), maxHeight);
-            glUniform1f(glGetUniformLocation(effect->programId, "baseRadius"), baseRadius);
-            glUniform1f(glGetUniformLocation(effect->programId, "atmosphereRadius"), atmospherePlanetRatio * (baseRadius + maxHeight));
-            glUniform3f(glGetUniformLocation(effect->programId, "cameraPosition"), cameraPosition.x, cameraPosition.y, cameraPosition.z);
-            glUniform3f(glGetUniformLocation(effect->programId, "lightColor"), 1, 1, 1);
-            glUniform3f(glGetUniformLocation(effect->programId, "noiseOffset"), noiseOffset.x, noiseOffset.y, noiseOffset.z);
+            glUniform1f(glGetUniformLocation(effect.programId, "maxNegativeHeight"), maxDepth);
+            glUniform1f(glGetUniformLocation(effect.programId, "maxPositiveHeight"), maxHeight);
+            glUniform1f(glGetUniformLocation(effect.programId, "baseRadius"), baseRadius);
+            glUniform1f(glGetUniformLocation(effect.programId, "atmosphereRadius"), atmospherePlanetRatio * (baseRadius + maxHeight));
+            glUniform3f(glGetUniformLocation(effect.programId, "cameraPosition"), cameraPosition.x, cameraPosition.y, cameraPosition.z);
+            glUniform3f(glGetUniformLocation(effect.programId, "lightColor"), 1, 1, 1);
+            glUniform3f(glGetUniformLocation(effect.programId, "noiseOffset"), noiseOffset.x, noiseOffset.y, noiseOffset.z);
 
             check_gl_error();
 
-            m->bindBuffersAndDraw();
+            m.bindBuffersAndDraw();
 
             glDisableVertexAttribArray(0);
             glDisableVertexAttribArray(1);
@@ -132,45 +132,45 @@ void renderObjects(const Scene &scene, glm::mat4x4 &viewMatrix, const glm::mat4x
     }
 }
 
-ShaderEffect *initializeTerrainGeneratorShader()
+ShaderEffect initializeTerrainGeneratorShader()
 {
     GLuint terrainGeneratorProgramId = LoadShaders("TerrainGenerator.vertexshader", "TerrainGenerator.geometryshader", "TerrainGenerator.fragmentshader", contentPath.c_str());
-    ShaderEffect *terrainGeneratorProgram = new ShaderEffect(terrainGeneratorProgramId);
-    terrainGeneratorProgram->textureSamplerId = glGetUniformLocation(terrainGeneratorProgramId, "heightSlopeBasedColorMap");
+    ShaderEffect terrainGeneratorProgram = ShaderEffect(terrainGeneratorProgramId);
+    terrainGeneratorProgram.textureSamplerId = glGetUniformLocation(terrainGeneratorProgramId, "heightSlopeBasedColorMap");
     return terrainGeneratorProgram;
 }
 
-ShaderEffect *initializeAtmosphericScatteringShader()
+ShaderEffect initializeAtmosphericScatteringShader()
 {
     GLuint atmosphericScatteringProgramId = LoadShaders("AtmosphericScattering.vertexshader", "AtmosphericScattering.fragmentshader", contentPath.c_str());
-    ShaderEffect *atmosphericScatteringProgram = new ShaderEffect(atmosphericScatteringProgramId);
+    ShaderEffect atmosphericScatteringProgram = ShaderEffect(atmosphericScatteringProgramId);
     return atmosphericScatteringProgram;
 }
 
-Scene generateScene(std::vector<Mesh *> *meshes, std::vector<RenderObject *> *objects, std::vector<ShaderEffect *> *shaders)
+Scene generateScene(std::vector<Mesh> meshes, std::vector<RenderObject> objects, std::vector<ShaderEffect> shaders)
 {
-    ShaderEffect *atmosphereShader = initializeAtmosphericScatteringShader();
-    shaders->push_back(atmosphereShader);
-    Mesh *atmosphereMesh = generateSphere(atmospherePlanetRatio * (baseRadius + maxHeight), 4);
-    atmosphereMesh->reverseFaces();
-    atmosphereMesh->generateVBOs();
-    meshes->push_back(atmosphereMesh);
-    RenderObject *atmosphereRenderState = new RenderObject();
-    atmosphereRenderState->meshId = meshes->size() - 1;
-    atmosphereRenderState->shaderIds.push_back(shaders->size() - 1);
-    atmosphereRenderState->texId = textures[textureIndex];
-    objects->push_back(atmosphereRenderState);
+    ShaderEffect atmosphereShader = initializeAtmosphericScatteringShader();
+    shaders.push_back(atmosphereShader);
+    Mesh atmosphereMesh = generateSphere(atmospherePlanetRatio * (baseRadius + maxHeight), 4);
+    atmosphereMesh.reverseFaces();
+    atmosphereMesh.generateVBOs();
+    meshes.push_back(atmosphereMesh);
+    RenderObject atmosphereRenderState = RenderObject();
+    atmosphereRenderState.meshId = meshes.size() - 1;
+    atmosphereRenderState.shaderIds.push_back(shaders.size() - 1);
+    atmosphereRenderState.texId = textures[textureIndex];
+    objects.push_back(atmosphereRenderState);
 
-    ShaderEffect *terrainGeneratorShader = initializeTerrainGeneratorShader();
-    shaders->push_back(terrainGeneratorShader);
-    Mesh *sphereMesh = generateSphere(baseRadius, 7);
-    sphereMesh->generateVBOs();
-    meshes->push_back(sphereMesh);
-    RenderObject *sphereRenderState = new RenderObject();
-    sphereRenderState->meshId = meshes->size() - 1;
-    sphereRenderState->shaderIds.push_back(shaders->size() - 1);
-    sphereRenderState->texId = textures[textureIndex];
-    objects->push_back(sphereRenderState);
+    ShaderEffect terrainGeneratorShader = initializeTerrainGeneratorShader();
+    shaders.push_back(terrainGeneratorShader);
+    Mesh sphereMesh = generateSphere(baseRadius, 7);
+    sphereMesh.generateVBOs();
+    meshes.push_back(sphereMesh);
+    RenderObject sphereRenderState = RenderObject();
+    sphereRenderState.meshId = meshes.size() - 1;
+    sphereRenderState.shaderIds.push_back(shaders.size() - 1);
+    sphereRenderState.texId = textures[textureIndex];
+    objects.push_back(sphereRenderState);
 
     return Scene(objects, meshes, shaders);
 }
@@ -239,10 +239,10 @@ int main(void)
     }
     check_gl_error();
 
-    std::vector<Mesh *> meshes;
-    std::vector<RenderObject *> objects;
-    std::vector<ShaderEffect *> shaders;
-    Scene scene = generateScene(&meshes, &objects, &shaders);
+    std::vector<Mesh> meshes;
+    std::vector<RenderObject> objects;
+    std::vector<ShaderEffect> shaders;
+    Scene scene = generateScene(meshes, objects, shaders);
 
     check_gl_error();
 

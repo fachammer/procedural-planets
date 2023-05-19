@@ -62,7 +62,7 @@ static int addSphereVertex(Mesh *mesh, vec3 vertex, GLfloat radius)
     return mesh->indexed_vertices.size() - 1;
 }
 
-Mesh *generateSphere(GLfloat radius, int subdivisions)
+Mesh generateSphere(GLfloat radius, int subdivisions)
 {
     Mesh *sphere = new Mesh();
 
@@ -118,5 +118,5 @@ Mesh *generateSphere(GLfloat radius, int subdivisions)
         sphere->indices = subdividedSphereIndices;
     }
 
-    return sphere;
+    return *sphere;
 }

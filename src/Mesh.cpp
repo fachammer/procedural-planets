@@ -74,6 +74,4 @@ Mesh::Mesh() : modelMatrix(glm::mat4(1.0))
 
 Mesh::~Mesh()
 {
-    glDeleteBuffers(1, &vertexBuffer);
-    glDeleteBuffers(1, &elementBuffer);
 }

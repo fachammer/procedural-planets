@@ -13,6 +13,6 @@ class Mesh;
 
 #include <GL/glew.h>
 
-Mesh *generateSphere(GLfloat radius, int subdivisions);
+Mesh generateSphere(GLfloat radius, int subdivisions);
 
 #endif /* SphereGenerator_h */
