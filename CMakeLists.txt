@@ -40,14 +40,10 @@ add_executable(ProceduralPlanets
 	src/Mesh.cpp
 	src/GLError.h
 	src/GLError.cpp
-	src/RenderState.hpp
-	src/RenderState.cpp
 	
     shaders/TerrainGenerator.vertexshader
     shaders/TerrainGenerator.geometryshader
     shaders/TerrainGenerator.fragmentshader
-    shaders/TerrainGeneratorNormals.geometryshader
-    shaders/TerrainGeneratorNormals.fragmentshader
     shaders/AtmosphericScattering.vertexshader
     shaders/AtmosphericScattering.fragmentshader
 )

@@ -29,7 +29,6 @@ using namespace glm;
 #include "Controls.hpp"
 #include "Mesh.hpp"
 #include "GLError.h"
-#include "RenderState.hpp"
 
 #include "SphereGenerator.hpp"
 
@@ -51,6 +50,13 @@ const char *textureNames[textureCount] = {
     "tropic.png"};
 int textureIndex = 0;
 
+struct RenderState
+{
+    unsigned int meshId;
+    std::vector<int> shaderEffectIds;
+    unsigned int texId;
+};
+
 struct Scene
 {
     std::vector<RenderState *> *objects;
@@ -66,7 +72,7 @@ struct Scene
     }
 };
 
-void renderObjects(Scene &scene, glm::mat4x4 &viewMatrix, const glm::mat4x4 &projectionMatrix, const glm::vec3 &lightPosition)
+void renderObjects(Scene &scene, glm::mat4x4 &viewMatrix, const glm::mat4x4 &projectionMatrix, const glm::vec3 &lightPositionWorldSpace)
 {
     std::vector<RenderState *> *objects = scene.objects;
 #ifdef MINGW_COMPILER
@@ -98,12 +104,17 @@ void renderObjects(Scene &scene, glm::mat4x4 &viewMatrix, const glm::mat4x4 &pro
             ShaderEffect *effect = (*scene.effects)[effectId];
             glUseProgram(effect->programId);
             check_gl_error();
-            rs->setParameters(effect, lightPosition);
-            // Send our transformation to the currently bound shader,
-            // in the "MVP" uniform
+
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, rs->texId);
+            glUniform1i(effect->textureSamplerId, 0);
+            check_gl_error();
+            glUniform3f(effect->lightPositionId, lightPositionWorldSpace.x, lightPositionWorldSpace.y, lightPositionWorldSpace.z);
+
             glUniformMatrix4fv(effect->MVPId, 1, GL_FALSE, &MVP[0][0]);
             glUniformMatrix4fv(effect->MId, 1, GL_FALSE, &modelMatrix[0][0]);
             glUniformMatrix4fv(effect->VId, 1, GL_FALSE, &viewMatrix[0][0]);
+
             glUniform1f(glGetUniformLocation(effect->programId, "maxNegativeHeight"), maxDepth);
             glUniform1f(glGetUniformLocation(effect->programId, "maxPositiveHeight"), maxHeight);
             glUniform1f(glGetUniformLocation(effect->programId, "baseRadius"), baseRadius);

@@ -259,7 +259,6 @@ GLuint LoadShaders(const char *vertex_file_name, const char *geometry_file_name,
 
 ShaderEffect::ShaderEffect(unsigned int _programId)
 {
-    lightMatrixId = 0xffffffff;
     programId = _programId;
     glUseProgram(programId);
     MVPId = glGetUniformLocation(programId, "MVP");

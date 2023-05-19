@@ -12,7 +12,6 @@ struct ShaderEffect
     unsigned int MVPId;
     unsigned int VId;
     unsigned int MId;
-    unsigned int lightMatrixId;
     unsigned int textureSamplerId;
     unsigned int lightPositionId;
 };
