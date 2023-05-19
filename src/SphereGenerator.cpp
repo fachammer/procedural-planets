@@ -55,16 +55,16 @@ static const unsigned int ICOSAHEDRON_INDICES[60] = {
     8, 6, 7,
     9, 8, 1};
 
-static int addSphereVertex(Mesh *mesh, vec3 vertex, GLfloat radius)
+static int addSphereVertex(Mesh &mesh, vec3 vertex, GLfloat radius)
 {
     vec3 normalizedVertex = normalize(vertex * radius);
-    mesh->indexed_vertices.push_back(normalizedVertex * radius);
-    return mesh->indexed_vertices.size() - 1;
+    mesh.indexed_vertices.push_back(normalizedVertex * radius);
+    return mesh.indexed_vertices.size() - 1;
 }
 
 Mesh generateSphere(GLfloat radius, int subdivisions)
 {
-    Mesh *sphere = new Mesh();
+    Mesh sphere;
 
     for (int i = 0; i < 12; i++)
     {
@@ -73,22 +73,22 @@ Mesh generateSphere(GLfloat radius, int subdivisions)
 
     for (int i = 0; i < 60; i++)
     {
-        sphere->indices.push_back(ICOSAHEDRON_INDICES[i]);
+        sphere.indices.push_back(ICOSAHEDRON_INDICES[i]);
     }
 
     for (int s = 0; s < subdivisions; s++)
     {
         std::vector<unsigned int> subdividedSphereIndices;
 
-        for (int i = 0; (i + 2) < sphere->indices.size(); i += 3)
+        for (int i = 0; (i + 2) < sphere.indices.size(); i += 3)
         {
-            int aIndex = sphere->indices[i];
-            int bIndex = sphere->indices[i + 1];
-            int cIndex = sphere->indices[i + 2];
+            int aIndex = sphere.indices[i];
+            int bIndex = sphere.indices[i + 1];
+            int cIndex = sphere.indices[i + 2];
 
-            vec3 a = sphere->indexed_vertices[aIndex];
-            vec3 b = sphere->indexed_vertices[bIndex];
-            vec3 c = sphere->indexed_vertices[cIndex];
+            vec3 a = sphere.indexed_vertices[aIndex];
+            vec3 b = sphere.indexed_vertices[bIndex];
+            vec3 c = sphere.indexed_vertices[cIndex];
 
             vec3 ab = a + b;
             vec3 bc = b + c;
@@ -115,8 +115,8 @@ Mesh generateSphere(GLfloat radius, int subdivisions)
             subdividedSphereIndices.push_back(caIndex);
         }
 
-        sphere->indices = subdividedSphereIndices;
+        sphere.indices = subdividedSphereIndices;
     }
 
-    return *sphere;
+    return sphere;
 }
