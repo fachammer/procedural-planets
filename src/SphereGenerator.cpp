@@ -62,7 +62,7 @@ static int addSphereVertex(Mesh *mesh, vec3 vertex, GLfloat radius)
     return mesh->indexed_vertices.size() - 1;
 }
 
-Mesh *generateSphere(GLfloat radius, int subdivisions, bool reversedFaces)
+Mesh *generateSphere(GLfloat radius, int subdivisions)
 {
     Mesh *sphere = new Mesh();
 
@@ -72,7 +72,9 @@ Mesh *generateSphere(GLfloat radius, int subdivisions, bool reversedFaces)
     }
 
     for (int i = 0; i < 60; i++)
+    {
         sphere->indices.push_back(ICOSAHEDRON_INDICES[i]);
+    }
 
     for (int s = 0; s < subdivisions; s++)
     {
@@ -114,21 +116,6 @@ Mesh *generateSphere(GLfloat radius, int subdivisions, bool reversedFaces)
         }
 
         sphere->indices = subdividedSphereIndices;
-    }
-
-    if (reversedFaces)
-    {
-        std::vector<unsigned int> reversedIndices;
-
-        for (int i = 0; i < sphere->indices.size(); i += 3)
-        {
-            for (int j = 2; j >= 0; j--)
-            {
-                reversedIndices.push_back(sphere->indices[i + j]);
-            }
-        }
-
-        sphere->indices = reversedIndices;
     }
 
     return sphere;

@@ -155,7 +155,8 @@ Scene generateScene(std::vector<Mesh *> *meshes, std::vector<RenderState *> *obj
         ATMOSPHERIC_SCATTERING = 1
     };
 
-    Mesh *atmosphereMesh = generateSphere(atmospherePlanetRatio * (baseRadius + maxHeight), 4, true);
+    Mesh *atmosphereMesh = generateSphere(atmospherePlanetRatio * (baseRadius + maxHeight), 4);
+    atmosphereMesh->reverseFaces();
     atmosphereMeshId = meshes->size();
     atmosphereMesh->generateVBOs();
     meshes->push_back(atmosphereMesh);
@@ -165,7 +166,7 @@ Scene generateScene(std::vector<Mesh *> *meshes, std::vector<RenderState *> *obj
     atmosphereRenderState->texId = textures[textureIndex];
     objects->push_back(atmosphereRenderState);
 
-    Mesh *sphereMesh = generateSphere(baseRadius, 7, false);
+    Mesh *sphereMesh = generateSphere(baseRadius, 7);
     sphereMesh->generateVBOs();
     meshes->push_back(sphereMesh);
     RenderState *sphereRenderState = new RenderState();

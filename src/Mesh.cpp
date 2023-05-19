@@ -53,6 +53,21 @@ void Mesh::bindBuffersAndDraw()
     check_gl_error();
 }
 
+void Mesh::reverseFaces()
+{
+    std::vector<unsigned int> reversedIndices;
+
+    for (int i = 0; i < this->indices.size(); i += 3)
+    {
+        for (int j = 2; j >= 0; j--)
+        {
+            reversedIndices.push_back(this->indices[i + j]);
+        }
+    }
+
+    this->indices = reversedIndices;
+}
+
 Mesh::Mesh() : modelMatrix(glm::mat4(1.0))
 {
 }
