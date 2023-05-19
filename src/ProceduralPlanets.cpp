@@ -66,7 +66,7 @@ struct Scene
     }
 };
 
-void renderObjects(Scene &scene, glm::mat4x4 &viewMatrix, const glm::mat4x4 &projectionMatrix, glm::vec3 &lightPos, const glm::mat4 &lightMatrix)
+void renderObjects(Scene &scene, glm::mat4x4 &viewMatrix, const glm::mat4x4 &projectionMatrix, const glm::vec3 &lightPosition)
 {
     std::vector<RenderState *> *objects = scene.objects;
 #ifdef MINGW_COMPILER
@@ -98,7 +98,7 @@ void renderObjects(Scene &scene, glm::mat4x4 &viewMatrix, const glm::mat4x4 &pro
             ShaderEffect *effect = (*scene.effects)[effectId];
             glUseProgram(effect->programId);
             check_gl_error();
-            rs->setParameters(effect);
+            rs->setParameters(effect, lightPosition);
             // Send our transformation to the currently bound shader,
             // in the "MVP" uniform
             glUniformMatrix4fv(effect->MVPId, 1, GL_FALSE, &MVP[0][0]);
@@ -113,12 +113,6 @@ void renderObjects(Scene &scene, glm::mat4x4 &viewMatrix, const glm::mat4x4 &pro
             glUniform3f(glGetUniformLocation(effect->programId, "noiseOffset"), noiseOffset.x, noiseOffset.y, noiseOffset.z);
 
             check_gl_error();
-
-            if (effect->lightMatrixId != 0xffffffff)
-            {
-                glm::mat4 lm = lightMatrix * modelMatrix;
-                glUniformMatrix4fv(effect->lightMatrixId, 1, GL_FALSE, &lm[0][0]);
-            }
 
             m->bindBuffersAndDraw();
 
@@ -213,8 +207,6 @@ int main(void)
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
     glfwSetCursorPos(window, SCREENHEIGHT / 2, SCREENHEIGHT / 2);
 
-    glm::vec3 lightPos = glm::vec3(-464, 670, -570);
-
     // Dark blue background
     glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
 
@@ -249,7 +241,7 @@ int main(void)
     check_gl_error();
 
     computeMatricesFromInputs();
-    RenderState::lightPositionWorldSpace = getCameraPosition();
+    glm::vec3 lightPositionWorldSpace = getCameraPosition();
 
     srand(time(NULL));
 
@@ -265,16 +257,12 @@ int main(void)
         glm::mat4 ViewMatrix = getViewMatrix();
         check_gl_error();
 
-        glm::mat4 lightViewMatrix = glm::lookAt(lightPos, lightPos + glm::vec3(0.5, -1.0, 0.5), glm::vec3(0.0, 0.0, 1.0));
-        glm::mat4 lightProjMatrix = glm::perspective(90.0f, 1.0f, 2.5f, 100.0f);
-        glm::mat4 lightMVPMatrix = lightProjMatrix * lightViewMatrix;
-
         if (setLightToCamera)
         {
-            RenderState::lightPositionWorldSpace = getCameraPosition();
+            lightPositionWorldSpace = getCameraPosition();
         }
 
-        renderObjects(scene, ViewMatrix, ProjectionMatrix, lightPos, lightMVPMatrix);
+        renderObjects(scene, ViewMatrix, ProjectionMatrix, lightPositionWorldSpace);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
