@@ -26,18 +26,28 @@ using namespace glm;
 
 #include "Shader.hpp"
 #include "Texture.hpp"
-#include "Controls.hpp"
 #include "Mesh.hpp"
 #include "GLError.h"
 
 #include "SphereGenerator.hpp"
 
-const float baseRadius = 50;
-const float maxDepth = 30;
-const float maxHeight = 40;
-const float seaLevelFromBaseRadius = 10;
-const float atmospherePlanetRatio = 0.9;
-vec3 noiseOffset = vec3(0, 0, 0);
+struct PlanetParameters
+{
+    const float baseRadius = 50;
+    const float maxDepth = 30;
+    const float maxHeight = 40;
+    const float seaLevelFromBaseRadius = 10;
+    const float atmospherePlanetRatio = 0.9;
+    const unsigned int atmosphereSubdivisions = 4;
+    const unsigned int planetSubdivisions = 7;
+
+    vec3 noiseOffset = vec3(0, 0, 0);
+
+    float atmosphereRadius() const
+    {
+        return atmospherePlanetRatio * (baseRadius + maxHeight);
+    }
+};
 
 const int textureCount = 4;
 GLuint textures[textureCount];
@@ -87,7 +97,131 @@ void reverseFaces(Mesh &mesh)
     mesh.indices = reversedIndices;
 }
 
-void renderScene(const Scene &scene, glm::mat4x4 &viewMatrix, const glm::mat4x4 &projectionMatrix)
+struct Camera
+{
+    glm::mat4 viewMatrix;
+    glm::mat4 projectionMatrix;
+
+    glm::vec3 position;
+
+    // Initial Field of View
+    float initialFoV = 45.0f;
+
+    float defaultSpeed = 0.75f;
+    float speed = 300.f;
+    float defaultRotateSpeed = 0.003f;
+    float rotateSpeed = 1.5f;
+
+    glm::vec3 up = glm::vec3(0, 1, 0);
+    glm::vec3 targetPos = glm::vec3(0, 0, 0);
+
+    float rho = 500;
+    float theta = 0;
+    float phi = 0;
+
+    bool canChangeWireframeMode = true;
+    bool canChangeDrawCoordinateMeshes = true;
+    bool canGenerateNewNoise = true;
+};
+
+void computeMatricesFromInputs(Camera &camera, PlanetParameters &planetParameters)
+{
+    // glfwGetTime is called only once, the first time this function is called
+    static double lastTime = glfwGetTime();
+
+    // Compute time difference between current and last frame
+    double currentTime = glfwGetTime();
+    float deltaTime = float(currentTime - lastTime);
+
+    // update move speed based on distance
+    camera.rotateSpeed = camera.defaultRotateSpeed * camera.rho;
+    camera.speed = camera.defaultSpeed * camera.rho;
+
+    // change latitude
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+    {
+        camera.phi += deltaTime * camera.rotateSpeed;
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+    {
+        camera.phi -= deltaTime * camera.rotateSpeed;
+    }
+
+    // change longitude
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    {
+        camera.theta -= deltaTime * camera.rotateSpeed;
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    {
+        camera.theta += deltaTime * camera.rotateSpeed;
+    }
+
+    // Move towards and away from planet
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+    {
+        camera.rho -= camera.speed * deltaTime;
+    }
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+    {
+        camera.rho += camera.speed * deltaTime;
+    }
+
+    // toggle wireframe mode
+    int changeMode = glfwGetKey(window, GLFW_KEY_F);
+    if (changeMode == GLFW_PRESS && camera.canChangeWireframeMode)
+    {
+        wireFrameMode = !wireFrameMode;
+        camera.canChangeWireframeMode = false;
+    }
+    else if (changeMode == GLFW_RELEASE)
+    {
+        camera.canChangeWireframeMode = true;
+    }
+
+    int newNoiseOffset = glfwGetKey(window, GLFW_KEY_R);
+    if (newNoiseOffset == GLFW_PRESS && camera.canGenerateNewNoise)
+    {
+        planetParameters.noiseOffset = glm::vec3(rand() % 99, rand() % 99, rand() % 99);
+        camera.canGenerateNewNoise = false;
+    }
+    else if (newNoiseOffset == GLFW_RELEASE)
+    {
+        camera.canGenerateNewNoise = true;
+    }
+
+    for (int i = 0; i < 4; i++)
+    {
+        if (glfwGetKey(window, GLFW_KEY_1 + i) == GLFW_PRESS)
+            textureIndex = i;
+    }
+
+    setLightToCamera = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
+
+    // clamp distance and latitude
+    camera.phi = min(1.57f, max(-1.57f, camera.phi));
+    camera.rho = min(1000.f, max(10.f, camera.rho));
+
+    camera.position = glm::vec3(
+        camera.rho * cos(camera.theta) * cos(camera.phi),
+        camera.rho * sin(camera.phi),
+        camera.rho * sin(camera.theta) * cos(camera.phi));
+
+    // Projection matrix
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
+    camera.projectionMatrix = glm::perspective(camera.initialFoV, (float)width / height, 0.1f, 10000.0f);
+    // Camera matrix
+    camera.viewMatrix = glm::lookAt(
+        camera.position,
+        camera.targetPos,
+        camera.up);
+
+    // For the next frame, the "last time" will be "now"
+    lastTime = currentTime;
+}
+
+void renderScene(const Scene &scene, const Camera &camera, const PlanetParameters &planetParameters)
 {
     std::vector<RenderObject> objects = scene.objects;
 
@@ -95,8 +229,6 @@ void renderScene(const Scene &scene, glm::mat4x4 &viewMatrix, const glm::mat4x4 
 
     int width, height;
     glfwGetWindowSize(window, &width, &height);
-
-    glm::vec3 cameraPosition = getCameraPosition();
     glm::vec3 lightPosition = scene.lightPosition;
     check_gl_error();
     for (RenderObject rs : objects)
@@ -105,7 +237,7 @@ void renderScene(const Scene &scene, glm::mat4x4 &viewMatrix, const glm::mat4x4 
         unsigned int meshId = rs.meshId;
         OpenGLMesh *mesh = scene.meshes.at(meshId);
         glm::mat4 modelMatrix = mesh->modelMatrix;
-        glm::mat4 MVP = projectionMatrix * viewMatrix * modelMatrix;
+        glm::mat4 MVP = camera.projectionMatrix * camera.viewMatrix * modelMatrix;
 
         for (int j = 0; j < rs.shaderIds.size(); j++)
         {
@@ -123,15 +255,16 @@ void renderScene(const Scene &scene, glm::mat4x4 &viewMatrix, const glm::mat4x4 
 
             glUniformMatrix4fv(effect.MVPId, 1, GL_FALSE, &MVP[0][0]);
             glUniformMatrix4fv(effect.MId, 1, GL_FALSE, &modelMatrix[0][0]);
-            glUniformMatrix4fv(effect.VId, 1, GL_FALSE, &viewMatrix[0][0]);
+            glUniformMatrix4fv(effect.VId, 1, GL_FALSE, &camera.viewMatrix[0][0]);
 
-            glUniform1f(glGetUniformLocation(effect.programId, "maxNegativeHeight"), maxDepth);
-            glUniform1f(glGetUniformLocation(effect.programId, "maxPositiveHeight"), maxHeight);
-            glUniform1f(glGetUniformLocation(effect.programId, "baseRadius"), baseRadius);
-            glUniform1f(glGetUniformLocation(effect.programId, "atmosphereRadius"), atmospherePlanetRatio * (baseRadius + maxHeight));
-            glUniform3f(glGetUniformLocation(effect.programId, "cameraPosition"), cameraPosition.x, cameraPosition.y, cameraPosition.z);
+            glUniform1f(glGetUniformLocation(effect.programId, "maxNegativeHeight"), planetParameters.maxDepth);
+            glUniform1f(glGetUniformLocation(effect.programId, "maxPositiveHeight"), planetParameters.maxHeight);
+            glUniform1f(glGetUniformLocation(effect.programId, "baseRadius"), planetParameters.baseRadius);
+            glUniform1f(glGetUniformLocation(effect.programId, "atmosphereRadius"), planetParameters.atmosphereRadius());
+            glUniform3f(glGetUniformLocation(effect.programId, "noiseOffset"), planetParameters.noiseOffset.x, planetParameters.noiseOffset.y, planetParameters.noiseOffset.z);
+
+            glUniform3f(glGetUniformLocation(effect.programId, "cameraPosition"), camera.position.x, camera.position.y, camera.position.z);
             glUniform3f(glGetUniformLocation(effect.programId, "lightColor"), 1, 1, 1);
-            glUniform3f(glGetUniformLocation(effect.programId, "noiseOffset"), noiseOffset.x, noiseOffset.y, noiseOffset.z);
 
             check_gl_error();
 
@@ -162,13 +295,13 @@ ShaderEffect initializeAtmosphericScatteringShader()
     return atmosphericScatteringProgram;
 }
 
-Scene generateScene()
+Scene generateScene(const PlanetParameters &planetParameters)
 {
     Scene scene;
 
     ShaderEffect atmosphereShader = initializeAtmosphericScatteringShader();
     scene.shaders.push_back(atmosphereShader);
-    Mesh atmosphereMesh = generateSphere(atmospherePlanetRatio * (baseRadius + maxHeight), 4);
+    Mesh atmosphereMesh = generateSphere(planetParameters.atmosphereRadius(), planetParameters.atmosphereSubdivisions);
     reverseFaces(atmosphereMesh);
     scene.meshes.push_back(new OpenGLMesh(atmosphereMesh, glm::mat4(1.0)));
     RenderObject atmosphereRenderState = RenderObject();
@@ -179,7 +312,7 @@ Scene generateScene()
 
     ShaderEffect terrainGeneratorShader = initializeTerrainGeneratorShader();
     scene.shaders.push_back(terrainGeneratorShader);
-    Mesh sphereMesh = generateSphere(baseRadius, 7);
+    Mesh sphereMesh = generateSphere(planetParameters.baseRadius, planetParameters.planetSubdivisions);
     scene.meshes.push_back(new OpenGLMesh(sphereMesh, glm::mat4(1.0)));
     RenderObject sphereRenderState = RenderObject();
     sphereRenderState.meshId = scene.meshes.size() - 1;
@@ -250,33 +383,32 @@ int main(void)
     }
     check_gl_error();
 
-    Scene scene = generateScene();
+    PlanetParameters planetParameters;
+    Scene scene = generateScene(planetParameters);
 
     check_gl_error();
 
-    computeMatricesFromInputs();
-    scene.lightPosition = getCameraPosition();
+    Camera camera;
+    computeMatricesFromInputs(camera, planetParameters);
+    scene.lightPosition = camera.position;
 
     srand(time(NULL));
 
     do
     {
         check_gl_error();
-        // Clear the screen
         glClearColor(0.0, 0.0, 0.0, 1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        computeMatricesFromInputs();
-        glm::mat4 ProjectionMatrix = getProjectionMatrix();
-        glm::mat4 ViewMatrix = getViewMatrix();
+        computeMatricesFromInputs(camera, planetParameters);
         check_gl_error();
 
         if (setLightToCamera)
         {
-            scene.lightPosition = getCameraPosition();
+            scene.lightPosition = camera.position;
         }
 
-        renderScene(scene, ViewMatrix, ProjectionMatrix);
+        renderScene(scene, camera, planetParameters);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

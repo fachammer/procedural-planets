@@ -32,8 +32,6 @@ add_executable(ProceduralPlanets
 	src/SphereGenerator.cpp
 	src/Shader.cpp
 	src/Shader.hpp
-	src/Controls.cpp
-	src/Controls.hpp
 	src/Texture.cpp
 	src/Texture.hpp
 	src/Mesh.hpp
