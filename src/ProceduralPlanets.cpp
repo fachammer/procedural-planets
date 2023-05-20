@@ -59,7 +59,6 @@ struct State
     bool canGenerateNewNoise = true;
 
     bool wireFrameMode = false;
-    bool setLightToCamera = true;
 
     int textureIndex = 0;
 
@@ -117,7 +116,7 @@ struct Camera
     const glm::vec3 targetPos = glm::vec3(0, 0, 0);
 };
 
-void updateCamera(GLFWwindow *window, Camera &camera, PlanetParameters &planetParameters, State &state)
+void update(GLFWwindow *window, Scene &scene, Camera &camera, PlanetParameters &planetParameters, State &state)
 {
     double currentTime = glfwGetTime();
     float deltaTime = float(currentTime - state.lastTime);
@@ -187,7 +186,10 @@ void updateCamera(GLFWwindow *window, Camera &camera, PlanetParameters &planetPa
         }
     }
 
-    state.setLightToCamera = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+    {
+        scene.lightPosition = camera.position;
+    }
 
     // clamp distance and latitude
     state.phi = glm::min(1.57f, glm::max(-1.57f, state.phi));
@@ -211,7 +213,7 @@ void updateCamera(GLFWwindow *window, Camera &camera, PlanetParameters &planetPa
     state.lastTime = currentTime;
 }
 
-void renderScene(GLFWwindow *window, const Scene &scene, const State &state, const Camera &camera, GLuint *textures, const PlanetParameters &planetParameters)
+void render(GLFWwindow *window, const Scene &scene, const State &state, const Camera &camera, GLuint *textures, const PlanetParameters &planetParameters)
 {
     std::vector<RenderObject> objects = scene.objects;
 
@@ -382,11 +384,10 @@ int main(void)
     check_gl_error();
 
     PlanetParameters planetParameters;
-    Camera camera;
     State state;
-    updateCamera(window, camera, planetParameters, state);
-
     Scene scene = generateScene(planetParameters, textures, state.textureIndex);
+    Camera camera;
+    update(window, scene, camera, planetParameters, state);
     scene.lightPosition = camera.position;
 
     srand(time(NULL));
@@ -397,15 +398,10 @@ int main(void)
         glClearColor(0.0, 0.0, 0.0, 1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        updateCamera(window, camera, planetParameters, state);
+        update(window, scene, camera, planetParameters, state);
         check_gl_error();
 
-        if (state.setLightToCamera)
-        {
-            scene.lightPosition = camera.position;
-        }
-
-        renderScene(window, scene, state, camera, textures, planetParameters);
+        render(window, scene, state, camera, textures, planetParameters);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
