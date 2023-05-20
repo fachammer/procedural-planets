@@ -124,7 +124,7 @@ struct Camera
     bool canGenerateNewNoise = true;
 };
 
-void computeMatricesFromInputs(Camera &camera, PlanetParameters &planetParameters)
+void updateCamera(Camera &camera, PlanetParameters &planetParameters)
 {
     // glfwGetTime is called only once, the first time this function is called
     static double lastTime = glfwGetTime();
@@ -389,7 +389,7 @@ int main(void)
     check_gl_error();
 
     Camera camera;
-    computeMatricesFromInputs(camera, planetParameters);
+    updateCamera(camera, planetParameters);
     scene.lightPosition = camera.position;
 
     srand(time(NULL));
@@ -400,7 +400,7 @@ int main(void)
         glClearColor(0.0, 0.0, 0.0, 1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        computeMatricesFromInputs(camera, planetParameters);
+        updateCamera(camera, planetParameters);
         check_gl_error();
 
         if (setLightToCamera)
