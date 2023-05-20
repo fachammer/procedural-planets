@@ -5,11 +5,9 @@
 
 class ShaderEffect;
 
-class Mesh
+struct Mesh
 {
-public:
     std::vector<glm::vec3> vertices;
-
     std::vector<unsigned int> indices;
     std::vector<glm::vec3> indexed_vertices;
 
