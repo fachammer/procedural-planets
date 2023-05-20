@@ -394,12 +394,10 @@ int main(void)
 
     do
     {
-        check_gl_error();
+        update(window, scene, camera, planetParameters, state);
+
         glClearColor(0.0, 0.0, 0.0, 1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        update(window, scene, camera, planetParameters, state);
-        check_gl_error();
 
         render(window, scene, state, camera, textures, planetParameters);
 
