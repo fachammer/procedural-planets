@@ -2,8 +2,8 @@
 
 #include <GL/glew.h>
 
-unsigned int LoadShaders(const char *vertex_file_name, const char *fragment_file_name, const char *contentPath);
-unsigned int LoadShaders(const char *vertex_file_name, const char *geometry_file_name, const char *fragment_file_name, const char *contentPath);
+unsigned int LoadShaders(const char *vertex_file_name, const char *fragment_file_name);
+unsigned int LoadShaders(const char *vertex_file_name, const char *geometry_file_name, const char *fragment_file_name);
 
 struct ShaderEffect
 {

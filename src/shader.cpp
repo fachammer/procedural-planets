@@ -14,14 +14,10 @@ using namespace std;
 #include "Shader.hpp"
 #include "GLError.h"
 
-GLuint LoadShaders(const char *vertex_file_name, const char *fragment_file_name, const char *contentPath)
+GLuint LoadShaders(const char *vertex_file_name, const char *fragment_file_name)
 {
-
-    std::string vertexShaderPath = contentPath;
-    vertexShaderPath += std::string(vertex_file_name);
-
-    std::string fragmentShaderPath = contentPath;
-    fragmentShaderPath += std::string(fragment_file_name);
+    std::string vertexShaderPath = std::string(vertex_file_name);
+    std::string fragmentShaderPath = std::string(fragment_file_name);
 
     // Create the shaders
     GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
@@ -113,17 +109,11 @@ GLuint LoadShaders(const char *vertex_file_name, const char *fragment_file_name,
     return ProgramID;
 }
 
-GLuint LoadShaders(const char *vertex_file_name, const char *geometry_file_name, const char *fragment_file_name, const char *contentPath)
+GLuint LoadShaders(const char *vertex_file_name, const char *geometry_file_name, const char *fragment_file_name)
 {
-
-    std::string vertexShaderPath = contentPath;
-    vertexShaderPath += std::string(vertex_file_name);
-
-    std::string fragmentShaderPath = contentPath;
-    fragmentShaderPath += std::string(fragment_file_name);
-
-    std::string geometryShaderPath = contentPath;
-    geometryShaderPath += std::string(geometry_file_name);
+    std::string vertexShaderPath = std::string(vertex_file_name);
+    std::string fragmentShaderPath = std::string(fragment_file_name);
+    std::string geometryShaderPath = std::string(geometry_file_name);
 
     // Create the shaders
     GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);

@@ -32,8 +32,6 @@ using namespace glm;
 
 #include "SphereGenerator.hpp"
 
-std::string contentPath = "../shaders/";
-
 const float baseRadius = 50;
 const float maxDepth = 30;
 const float maxHeight = 40;
@@ -151,7 +149,7 @@ void renderScene(const Scene &scene, glm::mat4x4 &viewMatrix, const glm::mat4x4 
 
 ShaderEffect initializeTerrainGeneratorShader()
 {
-    GLuint terrainGeneratorProgramId = LoadShaders("TerrainGenerator.vertexshader", "TerrainGenerator.geometryshader", "TerrainGenerator.fragmentshader", contentPath.c_str());
+    GLuint terrainGeneratorProgramId = LoadShaders("../shaders/TerrainGenerator.vertexshader", "../shaders/TerrainGenerator.geometryshader", "../shaders/TerrainGenerator.fragmentshader");
     ShaderEffect terrainGeneratorProgram = ShaderEffect(terrainGeneratorProgramId);
     terrainGeneratorProgram.textureSamplerId = glGetUniformLocation(terrainGeneratorProgramId, "heightSlopeBasedColorMap");
     return terrainGeneratorProgram;
@@ -159,7 +157,7 @@ ShaderEffect initializeTerrainGeneratorShader()
 
 ShaderEffect initializeAtmosphericScatteringShader()
 {
-    GLuint atmosphericScatteringProgramId = LoadShaders("AtmosphericScattering.vertexshader", "AtmosphericScattering.fragmentshader", contentPath.c_str());
+    GLuint atmosphericScatteringProgramId = LoadShaders("../shaders/AtmosphericScattering.vertexshader", "../shaders/AtmosphericScattering.fragmentshader");
     ShaderEffect atmosphericScatteringProgram = ShaderEffect(atmosphericScatteringProgramId);
     return atmosphericScatteringProgram;
 }
