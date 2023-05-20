@@ -14,7 +14,6 @@
 
 // Include GLFW
 #include <glfw3.h>
-GLFWwindow *window;
 
 bool wireFrameMode = false;
 bool setLightToCamera = true;
@@ -124,7 +123,7 @@ struct Camera
     bool canGenerateNewNoise = true;
 };
 
-void updateCamera(Camera &camera, PlanetParameters &planetParameters)
+void updateCamera(GLFWwindow *window, Camera &camera, PlanetParameters &planetParameters)
 {
     // glfwGetTime is called only once, the first time this function is called
     static double lastTime = glfwGetTime();
@@ -221,7 +220,7 @@ void updateCamera(Camera &camera, PlanetParameters &planetParameters)
     lastTime = currentTime;
 }
 
-void renderScene(const Scene &scene, const Camera &camera, const PlanetParameters &planetParameters)
+void renderScene(GLFWwindow *window, const Scene &scene, const Camera &camera, const PlanetParameters &planetParameters)
 {
     std::vector<RenderObject> objects = scene.objects;
 
@@ -338,8 +337,7 @@ int main(void)
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    // Open a window and create its OpenGL context
-    window = glfwCreateWindow(SCREENHEIGHT, SCREENHEIGHT, "Procedural Planets", NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(SCREENHEIGHT, SCREENHEIGHT, "Procedural Planets", NULL, NULL);
     if (window == NULL)
     {
         fprintf(stderr, "Failed to open GLFW window.\n");
@@ -389,7 +387,7 @@ int main(void)
     check_gl_error();
 
     Camera camera;
-    updateCamera(camera, planetParameters);
+    updateCamera(window, camera, planetParameters);
     scene.lightPosition = camera.position;
 
     srand(time(NULL));
@@ -400,7 +398,7 @@ int main(void)
         glClearColor(0.0, 0.0, 0.0, 1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        updateCamera(camera, planetParameters);
+        updateCamera(window, camera, planetParameters);
         check_gl_error();
 
         if (setLightToCamera)
@@ -408,7 +406,7 @@ int main(void)
             scene.lightPosition = camera.position;
         }
 
-        renderScene(scene, camera, planetParameters);
+        renderScene(window, scene, camera, planetParameters);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
