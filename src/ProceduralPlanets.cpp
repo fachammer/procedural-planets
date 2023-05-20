@@ -60,17 +60,40 @@ struct RenderObject
 struct Scene
 {
     std::vector<RenderObject> objects;
-    std::vector<Mesh> meshes;
+    std::vector<OpenGLMesh *> meshes;
     std::vector<ShaderEffect> shaders;
 
-    Scene(std::vector<RenderObject> _obj,
-          std::vector<Mesh> _meshes,
-          std::vector<ShaderEffect> _shaders) : objects(_obj),
-                                                meshes(_meshes),
-                                                shaders(_shaders)
+    Scene(std::vector<RenderObject> &&_obj,
+          std::vector<OpenGLMesh *> &&_meshes,
+          std::vector<ShaderEffect> &&_shaders) : objects(_obj),
+                                                  meshes(_meshes),
+                                                  shaders(_shaders)
     {
     }
+
+    ~Scene()
+    {
+        for (OpenGLMesh *mesh : meshes)
+        {
+            delete mesh;
+        }
+    }
 };
+
+void reverseFaces(Mesh &mesh)
+{
+    std::vector<unsigned int> reversedIndices;
+
+    for (int i = 0; i < mesh.indices.size(); i += 3)
+    {
+        for (int j = 2; j >= 0; j--)
+        {
+            reversedIndices.push_back(mesh.indices[i + j]);
+        }
+    }
+
+    mesh.indices = reversedIndices;
+}
 
 void renderObjects(const Scene &scene, glm::mat4x4 &viewMatrix, const glm::mat4x4 &projectionMatrix, const glm::vec3 &lightPositionWorldSpace)
 {
@@ -88,8 +111,8 @@ void renderObjects(const Scene &scene, glm::mat4x4 &viewMatrix, const glm::mat4x
         RenderObject rs = objects.at(i);
         rs.texId = textures[textureIndex];
         unsigned int meshId = rs.meshId;
-        Mesh m = scene.meshes.at(meshId);
-        glm::mat4 modelMatrix = m.modelMatrix;
+        OpenGLMesh *mesh = scene.meshes.at(meshId);
+        glm::mat4 modelMatrix = mesh->modelMatrix;
         glm::mat4 MVP = projectionMatrix * viewMatrix * modelMatrix;
 
         for (int j = 0; j < rs.shaderIds.size(); j++)
@@ -120,7 +143,7 @@ void renderObjects(const Scene &scene, glm::mat4x4 &viewMatrix, const glm::mat4x
 
             check_gl_error();
 
-            m.bindBuffersAndDraw();
+            mesh->draw();
 
             glDisableVertexAttribArray(0);
             glDisableVertexAttribArray(1);
@@ -147,14 +170,17 @@ ShaderEffect initializeAtmosphericScatteringShader()
     return atmosphericScatteringProgram;
 }
 
-Scene generateScene(std::vector<Mesh> meshes, std::vector<RenderObject> objects, std::vector<ShaderEffect> shaders)
+Scene generateScene()
 {
+    std::vector<OpenGLMesh *> meshes;
+    std::vector<RenderObject> objects;
+    std::vector<ShaderEffect> shaders;
+
     ShaderEffect atmosphereShader = initializeAtmosphericScatteringShader();
     shaders.push_back(atmosphereShader);
     Mesh atmosphereMesh = generateSphere(atmospherePlanetRatio * (baseRadius + maxHeight), 4);
-    atmosphereMesh.reverseFaces();
-    atmosphereMesh.generateVBOs();
-    meshes.push_back(atmosphereMesh);
+    reverseFaces(atmosphereMesh);
+    meshes.push_back(new OpenGLMesh(atmosphereMesh, glm::mat4(1.0)));
     RenderObject atmosphereRenderState = RenderObject();
     atmosphereRenderState.meshId = meshes.size() - 1;
     atmosphereRenderState.shaderIds.push_back(shaders.size() - 1);
@@ -164,15 +190,14 @@ Scene generateScene(std::vector<Mesh> meshes, std::vector<RenderObject> objects,
     ShaderEffect terrainGeneratorShader = initializeTerrainGeneratorShader();
     shaders.push_back(terrainGeneratorShader);
     Mesh sphereMesh = generateSphere(baseRadius, 7);
-    sphereMesh.generateVBOs();
-    meshes.push_back(sphereMesh);
+    meshes.push_back(new OpenGLMesh(sphereMesh, glm::mat4(1.0)));
     RenderObject sphereRenderState = RenderObject();
     sphereRenderState.meshId = meshes.size() - 1;
     sphereRenderState.shaderIds.push_back(shaders.size() - 1);
     sphereRenderState.texId = textures[textureIndex];
     objects.push_back(sphereRenderState);
 
-    return Scene(objects, meshes, shaders);
+    return Scene(std::move(objects), std::move(meshes), std::move(shaders));
 }
 
 int main(void)
@@ -239,10 +264,7 @@ int main(void)
     }
     check_gl_error();
 
-    std::vector<Mesh> meshes;
-    std::vector<RenderObject> objects;
-    std::vector<ShaderEffect> shaders;
-    Scene scene = generateScene(meshes, objects, shaders);
+    Scene scene = generateScene();
 
     check_gl_error();
 

@@ -10,19 +10,26 @@
 // Include GLFW
 #include <glfw3.h>
 
-void Mesh::generateVBOs()
+OpenGLMesh::OpenGLMesh(Mesh _mesh, glm::mat4 _modelMatrix) : mesh(_mesh), modelMatrix(_modelMatrix)
 {
     glGenBuffers(1, &vertexBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, indexed_vertices.size() * sizeof(glm::vec3), &indexed_vertices[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, mesh.indexed_vertices.size() * sizeof(glm::vec3), &mesh.indexed_vertices[0], GL_STATIC_DRAW);
+    check_gl_error();
 
-    // Generate a buffer for the indices as well
     glGenBuffers(1, &elementBuffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh.indices.size() * sizeof(unsigned int), &mesh.indices[0], GL_STATIC_DRAW);
+    check_gl_error();
 }
 
-void Mesh::bindBuffersAndDraw()
+OpenGLMesh::~OpenGLMesh()
+{
+    glDeleteBuffers(1, &vertexBuffer);
+    glDeleteBuffers(1, &elementBuffer);
+}
+
+void OpenGLMesh::draw()
 {
     // 1rst attribute buffer : vertices
     glEnableVertexAttribArray(0);
@@ -45,29 +52,10 @@ void Mesh::bindBuffersAndDraw()
     check_gl_error();
     // Draw the triangles !
     glDrawElements(
-        GL_TRIANGLES,    // mode
-        indices.size(),  // count
-        GL_UNSIGNED_INT, // type
-        (void *)0        // element array buffer offset
+        GL_TRIANGLES,        // mode
+        mesh.indices.size(), // count
+        GL_UNSIGNED_INT,     // type
+        (void *)0            // element array buffer offset
     );
     check_gl_error();
-}
-
-void Mesh::reverseFaces()
-{
-    std::vector<unsigned int> reversedIndices;
-
-    for (int i = 0; i < this->indices.size(); i += 3)
-    {
-        for (int j = 2; j >= 0; j--)
-        {
-            reversedIndices.push_back(this->indices[i + j]);
-        }
-    }
-
-    this->indices = reversedIndices;
-}
-
-Mesh::Mesh() : modelMatrix(glm::mat4(1.0))
-{
 }

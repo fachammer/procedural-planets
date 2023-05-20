@@ -2,23 +2,29 @@
 
 #include <vector>
 #include <glm/glm.hpp>
+#include "GLError.h"
 
 class ShaderEffect;
 
 struct Mesh
 {
-    std::vector<glm::vec3> vertices;
     std::vector<unsigned int> indices;
     std::vector<glm::vec3> indexed_vertices;
+};
 
-    glm::mat4 modelMatrix;
-
+class OpenGLMesh
+{
+private:
+    Mesh mesh;
     unsigned int vertexBuffer;
     unsigned int elementBuffer;
 
-    void generateVBOs();
-    void bindBuffersAndDraw();
-    void reverseFaces();
+public:
+    glm::mat4 modelMatrix;
 
-    Mesh();
+public:
+    OpenGLMesh(Mesh _mesh, glm::mat4 _modelMatrix);
+    ~OpenGLMesh();
+
+    void draw();
 };
