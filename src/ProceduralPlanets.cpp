@@ -15,9 +15,6 @@
 // Include GLFW
 #include <glfw3.h>
 
-bool wireFrameMode = false;
-bool setLightToCamera = true;
-
 // Include GLM
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -121,6 +118,9 @@ struct Camera
     bool canChangeWireframeMode = true;
     bool canChangeDrawCoordinateMeshes = true;
     bool canGenerateNewNoise = true;
+
+    bool wireFrameMode = false;
+    bool setLightToCamera = true;
 };
 
 void updateCamera(GLFWwindow *window, Camera &camera, PlanetParameters &planetParameters)
@@ -170,7 +170,7 @@ void updateCamera(GLFWwindow *window, Camera &camera, PlanetParameters &planetPa
     int changeMode = glfwGetKey(window, GLFW_KEY_F);
     if (changeMode == GLFW_PRESS && camera.canChangeWireframeMode)
     {
-        wireFrameMode = !wireFrameMode;
+        camera.wireFrameMode = !camera.wireFrameMode;
         camera.canChangeWireframeMode = false;
     }
     else if (changeMode == GLFW_RELEASE)
@@ -195,7 +195,7 @@ void updateCamera(GLFWwindow *window, Camera &camera, PlanetParameters &planetPa
             textureIndex = i;
     }
 
-    setLightToCamera = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
+    camera.setLightToCamera = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
 
     // clamp distance and latitude
     camera.phi = min(1.57f, max(-1.57f, camera.phi));
@@ -224,7 +224,7 @@ void renderScene(GLFWwindow *window, const Scene &scene, const Camera &camera, c
 {
     std::vector<RenderObject> objects = scene.objects;
 
-    glPolygonMode(GL_FRONT_AND_BACK, (wireFrameMode ? GL_LINE : GL_FILL));
+    glPolygonMode(GL_FRONT_AND_BACK, camera.wireFrameMode ? GL_LINE : GL_FILL);
 
     int width, height;
     glfwGetWindowSize(window, &width, &height);
@@ -401,7 +401,7 @@ int main(void)
         updateCamera(window, camera, planetParameters);
         check_gl_error();
 
-        if (setLightToCamera)
+        if (camera.setLightToCamera)
         {
             scene.lightPosition = camera.position;
         }
