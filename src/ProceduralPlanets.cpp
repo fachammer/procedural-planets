@@ -45,15 +45,6 @@ struct PlanetParameters
     }
 };
 
-const int textureCount = 4;
-GLuint textures[textureCount];
-const char *textureNames[textureCount] = {
-    "beachMountain.png",
-    "volcano.png",
-    "ice.png",
-    "tropic.png"};
-int textureIndex = 0;
-
 struct RenderObject
 {
     unsigned int meshId;
@@ -121,6 +112,8 @@ struct Camera
 
     bool wireFrameMode = false;
     bool setLightToCamera = true;
+
+    int textureIndex = 0;
 };
 
 void updateCamera(GLFWwindow *window, Camera &camera, PlanetParameters &planetParameters)
@@ -192,7 +185,9 @@ void updateCamera(GLFWwindow *window, Camera &camera, PlanetParameters &planetPa
     for (int i = 0; i < 4; i++)
     {
         if (glfwGetKey(window, GLFW_KEY_1 + i) == GLFW_PRESS)
-            textureIndex = i;
+        {
+            camera.textureIndex = i;
+        }
     }
 
     camera.setLightToCamera = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
@@ -220,7 +215,7 @@ void updateCamera(GLFWwindow *window, Camera &camera, PlanetParameters &planetPa
     lastTime = currentTime;
 }
 
-void renderScene(GLFWwindow *window, const Scene &scene, const Camera &camera, const PlanetParameters &planetParameters)
+void renderScene(GLFWwindow *window, const Scene &scene, const Camera &camera, GLuint *textures, const PlanetParameters &planetParameters)
 {
     std::vector<RenderObject> objects = scene.objects;
 
@@ -232,7 +227,7 @@ void renderScene(GLFWwindow *window, const Scene &scene, const Camera &camera, c
     check_gl_error();
     for (RenderObject rs : objects)
     {
-        rs.texId = textures[textureIndex];
+        rs.texId = textures[camera.textureIndex];
         unsigned int meshId = rs.meshId;
         OpenGLMesh *mesh = scene.meshes.at(meshId);
         glm::mat4 modelMatrix = mesh->modelMatrix;
@@ -294,7 +289,7 @@ ShaderEffect initializeAtmosphericScatteringShader()
     return atmosphericScatteringProgram;
 }
 
-Scene generateScene(const PlanetParameters &planetParameters)
+Scene generateScene(const PlanetParameters &planetParameters, GLuint *textures, unsigned int textureIndex)
 {
     Scene scene;
 
@@ -375,19 +370,26 @@ int main(void)
     glBindVertexArray(VertexArrayID);
 
     check_gl_error();
+    const int textureCount = 4;
+    GLuint textures[textureCount];
+    const char *textureNames[textureCount] = {
+        "beachMountain.png",
+        "volcano.png",
+        "ice.png",
+        "tropic.png"};
+
     for (int i = 0; i < textureCount; i++)
     {
         textures[i] = loadSoil(textureNames[i], "../textures/");
     }
+
     check_gl_error();
 
     PlanetParameters planetParameters;
-    Scene scene = generateScene(planetParameters);
-
-    check_gl_error();
-
     Camera camera;
     updateCamera(window, camera, planetParameters);
+
+    Scene scene = generateScene(planetParameters, textures, camera.textureIndex);
     scene.lightPosition = camera.position;
 
     srand(time(NULL));
@@ -406,7 +408,7 @@ int main(void)
             scene.lightPosition = camera.position;
         }
 
-        renderScene(window, scene, camera, planetParameters);
+        renderScene(window, scene, camera, textures, planetParameters);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
