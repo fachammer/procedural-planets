@@ -63,13 +63,7 @@ struct Scene
     std::vector<OpenGLMesh *> meshes;
     std::vector<ShaderEffect> shaders;
 
-    Scene(std::vector<RenderObject> &&_obj,
-          std::vector<OpenGLMesh *> &&_meshes,
-          std::vector<ShaderEffect> &&_shaders) : objects(_obj),
-                                                  meshes(_meshes),
-                                                  shaders(_shaders)
-    {
-    }
+    glm::vec3 lightPosition;
 
     ~Scene()
     {
@@ -95,7 +89,7 @@ void reverseFaces(Mesh &mesh)
     mesh.indices = reversedIndices;
 }
 
-void renderScene(const Scene &scene, glm::mat4x4 &viewMatrix, const glm::mat4x4 &projectionMatrix, const glm::vec3 &lightPositionWorldSpace)
+void renderScene(const Scene &scene, glm::mat4x4 &viewMatrix, const glm::mat4x4 &projectionMatrix)
 {
     std::vector<RenderObject> objects = scene.objects;
 
@@ -105,6 +99,7 @@ void renderScene(const Scene &scene, glm::mat4x4 &viewMatrix, const glm::mat4x4 
     glfwGetWindowSize(window, &width, &height);
 
     glm::vec3 cameraPosition = getCameraPosition();
+    glm::vec3 lightPosition = scene.lightPosition;
     check_gl_error();
     for (RenderObject rs : objects)
     {
@@ -126,7 +121,7 @@ void renderScene(const Scene &scene, glm::mat4x4 &viewMatrix, const glm::mat4x4 
             glBindTexture(GL_TEXTURE_2D, rs.texId);
             glUniform1i(effect.textureSamplerId, 0);
             check_gl_error();
-            glUniform3f(effect.lightPositionId, lightPositionWorldSpace.x, lightPositionWorldSpace.y, lightPositionWorldSpace.z);
+            glUniform3f(effect.lightPositionId, lightPosition.x, lightPosition.y, lightPosition.z);
 
             glUniformMatrix4fv(effect.MVPId, 1, GL_FALSE, &MVP[0][0]);
             glUniformMatrix4fv(effect.MId, 1, GL_FALSE, &modelMatrix[0][0]);
@@ -171,32 +166,30 @@ ShaderEffect initializeAtmosphericScatteringShader()
 
 Scene generateScene()
 {
-    std::vector<OpenGLMesh *> meshes;
-    std::vector<RenderObject> objects;
-    std::vector<ShaderEffect> shaders;
+    Scene scene;
 
     ShaderEffect atmosphereShader = initializeAtmosphericScatteringShader();
-    shaders.push_back(atmosphereShader);
+    scene.shaders.push_back(atmosphereShader);
     Mesh atmosphereMesh = generateSphere(atmospherePlanetRatio * (baseRadius + maxHeight), 4);
     reverseFaces(atmosphereMesh);
-    meshes.push_back(new OpenGLMesh(atmosphereMesh, glm::mat4(1.0)));
+    scene.meshes.push_back(new OpenGLMesh(atmosphereMesh, glm::mat4(1.0)));
     RenderObject atmosphereRenderState = RenderObject();
-    atmosphereRenderState.meshId = meshes.size() - 1;
-    atmosphereRenderState.shaderIds.push_back(shaders.size() - 1);
+    atmosphereRenderState.meshId = scene.meshes.size() - 1;
+    atmosphereRenderState.shaderIds.push_back(scene.shaders.size() - 1);
     atmosphereRenderState.texId = textures[textureIndex];
-    objects.push_back(atmosphereRenderState);
+    scene.objects.push_back(atmosphereRenderState);
 
     ShaderEffect terrainGeneratorShader = initializeTerrainGeneratorShader();
-    shaders.push_back(terrainGeneratorShader);
+    scene.shaders.push_back(terrainGeneratorShader);
     Mesh sphereMesh = generateSphere(baseRadius, 7);
-    meshes.push_back(new OpenGLMesh(sphereMesh, glm::mat4(1.0)));
+    scene.meshes.push_back(new OpenGLMesh(sphereMesh, glm::mat4(1.0)));
     RenderObject sphereRenderState = RenderObject();
-    sphereRenderState.meshId = meshes.size() - 1;
-    sphereRenderState.shaderIds.push_back(shaders.size() - 1);
+    sphereRenderState.meshId = scene.meshes.size() - 1;
+    sphereRenderState.shaderIds.push_back(scene.shaders.size() - 1);
     sphereRenderState.texId = textures[textureIndex];
-    objects.push_back(sphereRenderState);
+    scene.objects.push_back(sphereRenderState);
 
-    return Scene(std::move(objects), std::move(meshes), std::move(shaders));
+    return scene;
 }
 
 int main(void)
@@ -244,13 +237,9 @@ int main(void)
 
     // Enable depth test
     glEnable(GL_DEPTH_TEST);
-    //
-    // Accept fragment if it closer to the camera than the former one
     glDepthFunc(GL_LESS);
 
     glEnable(GL_CULL_FACE);
-
-    glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
 
     GLuint VertexArrayID;
     glGenVertexArrays(1, &VertexArrayID);
@@ -268,7 +257,7 @@ int main(void)
     check_gl_error();
 
     computeMatricesFromInputs();
-    glm::vec3 lightPositionWorldSpace = getCameraPosition();
+    scene.lightPosition = getCameraPosition();
 
     srand(time(NULL));
 
@@ -286,10 +275,10 @@ int main(void)
 
         if (setLightToCamera)
         {
-            lightPositionWorldSpace = getCameraPosition();
+            scene.lightPosition = getCameraPosition();
         }
 
-        renderScene(scene, ViewMatrix, ProjectionMatrix, lightPositionWorldSpace);
+        renderScene(scene, ViewMatrix, ProjectionMatrix);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
