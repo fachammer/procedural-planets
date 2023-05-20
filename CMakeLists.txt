@@ -12,7 +12,7 @@ add_subdirectory(external)
 
 include_directories(
 	external/glfw-3.3.8/include/GLFW/
-	external/glm-0.9.4.0/
+	external/glm-0.9.9.8/
 	external/glew-1.9.0/include/
 	external/Soil/src/
 	.
@@ -54,3 +54,5 @@ target_link_libraries(ProceduralPlanets
 	GLEW_190
     SOIL
 )
+
+set_property(TARGET ProceduralPlanets PROPERTY CXX_STANDARD 11)
