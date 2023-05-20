@@ -95,7 +95,7 @@ void reverseFaces(Mesh &mesh)
     mesh.indices = reversedIndices;
 }
 
-void renderObjects(const Scene &scene, glm::mat4x4 &viewMatrix, const glm::mat4x4 &projectionMatrix, const glm::vec3 &lightPositionWorldSpace)
+void renderScene(const Scene &scene, glm::mat4x4 &viewMatrix, const glm::mat4x4 &projectionMatrix, const glm::vec3 &lightPositionWorldSpace)
 {
     std::vector<RenderObject> objects = scene.objects;
 
@@ -106,9 +106,8 @@ void renderObjects(const Scene &scene, glm::mat4x4 &viewMatrix, const glm::mat4x
 
     glm::vec3 cameraPosition = getCameraPosition();
     check_gl_error();
-    for (int i = 0; i < objects.size(); i++)
+    for (RenderObject rs : objects)
     {
-        RenderObject rs = objects.at(i);
         rs.texId = textures[textureIndex];
         unsigned int meshId = rs.meshId;
         OpenGLMesh *mesh = scene.meshes.at(meshId);
@@ -290,7 +289,7 @@ int main(void)
             lightPositionWorldSpace = getCameraPosition();
         }
 
-        renderObjects(scene, ViewMatrix, ProjectionMatrix, lightPositionWorldSpace);
+        renderScene(scene, ViewMatrix, ProjectionMatrix, lightPositionWorldSpace);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
