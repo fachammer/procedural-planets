@@ -72,11 +72,33 @@ struct RenderObject
     unsigned int texId;
 };
 
+const glm::vec3 UP(0, 1, 0);
+struct Camera
+{
+    float fieldOfView;
+    float aspectRatio;
+    glm::vec3 position;
+    glm::vec3 targetPosition;
+
+    glm::mat4 viewMatrix() const
+    {
+        return glm::lookAt(
+            position,
+            targetPosition,
+            UP);
+    }
+    glm::mat4 projectionMatrix() const
+    {
+        return glm::perspective(fieldOfView, aspectRatio, 0.1f, 10000.0f);
+    }
+};
+
 struct Scene
 {
     std::vector<RenderObject> objects;
     std::vector<OpenGLMesh *> meshes;
     std::vector<ShaderEffect> shaders;
+    Camera camera;
 
     glm::vec3 lightPosition;
 
@@ -104,28 +126,7 @@ void reverseFaces(Mesh &mesh)
     mesh.indices = reversedIndices;
 }
 
-const glm::vec3 UP(0, 1, 0);
-struct Camera
-{
-    float fieldOfView;
-    float aspectRatio;
-    glm::vec3 position;
-    glm::vec3 targetPosition;
-
-    glm::mat4 viewMatrix() const
-    {
-        return glm::lookAt(
-            position,
-            targetPosition,
-            UP);
-    }
-    glm::mat4 projectionMatrix() const
-    {
-        return glm::perspective(fieldOfView, aspectRatio, 0.1f, 10000.0f);
-    }
-};
-
-void update(GLFWwindow *window, Scene &scene, Camera &camera, PlanetParameters &planetParameters, State &state)
+void update(GLFWwindow *window, Scene &scene, PlanetParameters &planetParameters, State &state)
 {
     double currentTime = glfwGetTime();
     float deltaTime = float(currentTime - state.lastTime);
@@ -197,14 +198,14 @@ void update(GLFWwindow *window, Scene &scene, Camera &camera, PlanetParameters &
 
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
     {
-        scene.lightPosition = camera.position;
+        scene.lightPosition = scene.camera.position;
     }
 
     // clamp distance and latitude
     state.phi = glm::min(1.57f, glm::max(-1.57f, state.phi));
     state.rho = glm::min(1000.f, glm::max(10.f, state.rho));
 
-    camera.position = glm::vec3(
+    scene.camera.position = glm::vec3(
         state.rho * cos(state.theta) * cos(state.phi),
         state.rho * sin(state.phi),
         state.rho * sin(state.theta) * cos(state.phi));
@@ -212,12 +213,12 @@ void update(GLFWwindow *window, Scene &scene, Camera &camera, PlanetParameters &
     // Projection matrix
     int width, height;
     glfwGetWindowSize(window, &width, &height);
-    camera.aspectRatio = (float)width / height;
+    scene.camera.aspectRatio = (float)width / height;
 
     state.lastTime = currentTime;
 }
 
-void render(const Scene &scene, const State &state, const Camera &camera, GLuint *textures, const PlanetParameters &planetParameters)
+void render(const Scene &scene, const State &state, GLuint *textures, const PlanetParameters &planetParameters)
 {
     std::vector<RenderObject> objects = scene.objects;
 
@@ -230,8 +231,8 @@ void render(const Scene &scene, const State &state, const Camera &camera, GLuint
         unsigned int meshId = rs.meshId;
         OpenGLMesh *mesh = scene.meshes.at(meshId);
         glm::mat4 modelMatrix = mesh->modelMatrix;
-        glm::mat4 viewMatrix = camera.viewMatrix();
-        glm::mat4 MVP = camera.projectionMatrix() * viewMatrix * modelMatrix;
+        glm::mat4 viewMatrix = scene.camera.viewMatrix();
+        glm::mat4 MVP = scene.camera.projectionMatrix() * viewMatrix * modelMatrix;
 
         for (int j = 0; j < rs.shaderIds.size(); j++)
         {
@@ -254,7 +255,7 @@ void render(const Scene &scene, const State &state, const Camera &camera, GLuint
             glUniform1f(glGetUniformLocation(effect.programId, "atmosphereRadius"), planetParameters.atmosphereRadius());
             glUniform3f(glGetUniformLocation(effect.programId, "noiseOffset"), state.noiseOffset.x, state.noiseOffset.y, state.noiseOffset.z);
 
-            glUniform3f(glGetUniformLocation(effect.programId, "cameraPosition"), camera.position.x, camera.position.y, camera.position.z);
+            glUniform3f(glGetUniformLocation(effect.programId, "cameraPosition"), scene.camera.position.x, scene.camera.position.y, scene.camera.position.z);
             glUniform3f(glGetUniformLocation(effect.programId, "lightColor"), 1, 1, 1);
 
             mesh->draw();
@@ -305,10 +306,13 @@ Scene generateScene(const PlanetParameters &planetParameters, GLuint *textures, 
             .shaderIds = std::vector<unsigned int>{1},
             .texId = textures[textureIndex]}};
 
+    Camera camera{.fieldOfView = 45.0, .targetPosition = glm::vec3(0, 0, 0)};
+
     return Scene{
         .meshes = openGlMeshes,
         .shaders = shaders,
-        .objects = objects};
+        .objects = objects,
+        .camera = camera};
 }
 
 class BoundVertexArrayObject
@@ -420,11 +424,10 @@ int main(void)
                 PlanetParameters planetParameters;
                 State state;
                 Scene scene = generateScene(planetParameters, textures, state.textureIndex);
-                Camera camera{.fieldOfView = 45.0, .targetPosition = glm::vec3(0, 0, 0)};
                 GLFWwindow *glfwWindow = window.glfwWindow();
 
-                update(glfwWindow, scene, camera, planetParameters, state);
-                scene.lightPosition = camera.position;
+                update(glfwWindow, scene, planetParameters, state);
+                scene.lightPosition = scene.camera.position;
 
                 glEnable(GL_DEPTH_TEST);
                 glDepthFunc(GL_LESS);
@@ -433,12 +436,12 @@ int main(void)
                 BoundVertexArrayObject vao;
                 do
                 {
-                    update(glfwWindow, scene, camera, planetParameters, state);
+                    update(glfwWindow, scene, planetParameters, state);
 
                     glClearColor(0.0, 0.0, 0.0, 1.0);
                     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-                    render(scene, state, camera, textures, planetParameters);
+                    render(scene, state, textures, planetParameters);
 
                     glfwSwapBuffers(glfwWindow);
                     glfwPollEvents();
