@@ -9,6 +9,7 @@ uniform vec3 cameraPositionInWorldSpace;
 uniform vec3 lightDirectionInWorldSpace;
 uniform float atmosphereRadius;
 uniform float baseRadius;
+uniform float lightPower;
 
 // adapted code from: https://www.shadertoy.com/view/lslXDr
 // Written by GLtracy
@@ -118,7 +119,6 @@ vec3 in_scatter(vec3 o, vec3 dir, vec2 e, vec3 l) {
 }
 
 void main() {
-    float lightPower = 50000;
     R = atmosphereRadius;
     R_INNER = baseRadius;
     SCALE_H = 4.0 / (R - R_INNER);

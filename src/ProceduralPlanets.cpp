@@ -361,6 +361,7 @@ void render(GLFWwindow *glfwWindow, const Scene &scene)
             glUniform1f(glGetUniformLocation(shaderProgram->id(), "maxPositiveHeight"), scene.planetParameters.maxHeight);
             glUniform1f(glGetUniformLocation(shaderProgram->id(), "baseRadius"), scene.planetParameters.baseRadius);
             glUniform1f(glGetUniformLocation(shaderProgram->id(), "atmosphereRadius"), scene.planetParameters.atmosphereRadius());
+            glUniform1f(glGetUniformLocation(shaderProgram->id(), "lightPower"), 40000.0f);
             glUniform3f(glGetUniformLocation(shaderProgram->id(), "noiseOffset"), scene.state.noiseOffset.x, scene.state.noiseOffset.y, scene.state.noiseOffset.z);
             glUniform3f(glGetUniformLocation(shaderProgram->id(), "cameraPositionInWorldSpace"), cameraPosition.x, cameraPosition.y, cameraPosition.z);
             glUniform3f(glGetUniformLocation(shaderProgram->id(), "lightColor"), 1, 1, 1);
