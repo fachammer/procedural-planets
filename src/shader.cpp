@@ -40,7 +40,6 @@ Shader *loadShader(GLenum shaderType, std::string path)
 ShaderProgram *
 createVertexFragmentShaderProgram(Shader *vertexShader, Shader *fragmentShader)
 {
-    printf("Linking program\n");
     ShaderProgram *shaderProgram = new ShaderProgram(std::vector<Shader *>{vertexShader, fragmentShader});
 
     GLint Result = GL_FALSE;
