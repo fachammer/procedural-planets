@@ -187,8 +187,8 @@ struct Scene
     std::vector<OpenGLMesh *> meshes;
     std::vector<ShaderEffect> shaders;
     std::vector<Texture *> textures;
-    Camera camera;
 
+    Camera camera;
     glm::vec3 lightPosition;
 
     Scene(const PlanetParameters &planetParameters, unsigned int textureIndex)
@@ -333,14 +333,14 @@ void update(GLFWwindow *window, Scene &scene, PlanetParameters &planetParameters
     state.lastTime = currentTime;
 }
 
-void render(const Scene &scene, const State &state, const PlanetParameters &planetParameters)
+void render(GLFWwindow *glfwWindow, const Scene &scene, const State &state, const PlanetParameters &planetParameters)
 {
-    std::vector<RenderObject> objects = scene.objects;
-
+    glClearColor(0.0, 0.0, 0.0, 1.0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glPolygonMode(GL_FRONT_AND_BACK, state.wireFrameMode ? GL_LINE : GL_FILL);
 
     glm::vec3 lightPosition = scene.lightPosition;
-    for (RenderObject rs : objects)
+    for (RenderObject rs : scene.objects)
     {
         rs.texId = scene.textures[state.textureIndex]->id();
         unsigned int meshId = rs.meshId;
@@ -376,6 +376,9 @@ void render(const Scene &scene, const State &state, const PlanetParameters &plan
             mesh->draw();
         }
     }
+
+    glfwSwapBuffers(glfwWindow);
+    glfwPollEvents();
     check_gl_error();
 }
 
@@ -406,6 +409,9 @@ struct Glfw
             throw initResult;
         }
     }
+
+    Glfw(const Glfw &) = delete;
+    Glfw operator=(const Glfw &) = delete;
 
     ~Glfw()
     {
@@ -489,14 +495,8 @@ int main(void)
                 do
                 {
                     update(glfwWindow, scene, planetParameters, state);
+                    render(glfwWindow, scene, state, planetParameters);
 
-                    glClearColor(0.0, 0.0, 0.0, 1.0);
-                    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-                    render(scene, state, planetParameters);
-
-                    glfwSwapBuffers(glfwWindow);
-                    glfwPollEvents();
                 } while (glfwGetKey(glfwWindow, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
                          glfwWindowShouldClose(glfwWindow) == 0);
             }
