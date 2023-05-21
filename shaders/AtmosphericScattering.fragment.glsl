@@ -5,7 +5,7 @@ in vec3 positionInWorldSpace;
 // Ouput data
 out vec4 color;
 
-uniform vec3 cameraPosition;
+uniform vec3 cameraPositionInWorldSpace;
 uniform vec3 lightPositionInWorldSpace;
 uniform float atmosphereRadius;
 uniform float baseRadius;
@@ -126,8 +126,8 @@ void main() {
     vec3 lightDirection = lightPositionInWorldSpace - positionInWorldSpace;
     E = lightPower / length(lightDirection);
 
-    vec3 eye = cameraPosition;
-    vec3 dir = normalize(positionInWorldSpace - cameraPosition);
+    vec3 eye = cameraPositionInWorldSpace;
+    vec3 dir = normalize(positionInWorldSpace - cameraPositionInWorldSpace);
 
     vec2 e = ray_vs_sphere(eye, dir, atmosphereRadius);
     vec2 f = ray_vs_sphere(eye, dir, baseRadius);

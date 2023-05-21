@@ -8,9 +8,8 @@ in float vertexSlope;
 out vec4 color;
 
 uniform vec3 lightPositionInWorldSpace;
+uniform vec3 lightColor;
 uniform sampler2D heightSlopeBasedColorMap;
-
-const vec3 lightColor = vec3(1, 1, 1);
 
 const float LightPower = 50000.0f;
 

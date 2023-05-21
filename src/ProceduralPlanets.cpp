@@ -361,7 +361,7 @@ void render(GLFWwindow *glfwWindow, const Scene &scene)
             glUniform1f(glGetUniformLocation(effect.programId, "atmosphereRadius"), scene.planetParameters.atmosphereRadius());
             glUniform3f(glGetUniformLocation(effect.programId, "noiseOffset"), scene.state.noiseOffset.x, scene.state.noiseOffset.y, scene.state.noiseOffset.z);
 
-            glUniform3f(glGetUniformLocation(effect.programId, "cameraPosition"), cameraPosition.x, cameraPosition.y, cameraPosition.z);
+            glUniform3f(glGetUniformLocation(effect.programId, "cameraPositionInWorldSpace"), cameraPosition.x, cameraPosition.y, cameraPosition.z);
             glUniform3f(glGetUniformLocation(effect.programId, "lightColor"), 1, 1, 1);
 
             mesh->draw();
