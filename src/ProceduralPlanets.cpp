@@ -104,20 +104,20 @@ void reverseFaces(Mesh &mesh)
     mesh.indices = reversedIndices;
 }
 
+const glm::vec3 UP(0, 1, 0);
 struct Camera
 {
-    float fieldOfView = 45.0f;
+    float fieldOfView;
     float aspectRatio;
     glm::vec3 position;
-    const glm::vec3 targetPosition = glm::vec3(0, 0, 0);
-    const glm::vec3 up = glm::vec3(0, 1, 0);
+    glm::vec3 targetPosition;
 
     glm::mat4 viewMatrix() const
     {
         return glm::lookAt(
             position,
             targetPosition,
-            up);
+            UP);
     }
     glm::mat4 projectionMatrix() const
     {
@@ -420,7 +420,7 @@ int main(void)
                 PlanetParameters planetParameters;
                 State state;
                 Scene scene = generateScene(planetParameters, textures, state.textureIndex);
-                Camera camera;
+                Camera camera{.fieldOfView = 45.0, .targetPosition = glm::vec3(0, 0, 0)};
                 GLFWwindow *glfwWindow = window.glfwWindow();
 
                 update(glfwWindow, scene, camera, planetParameters, state);
