@@ -233,7 +233,6 @@ void render(GLFWwindow *window, const Scene &scene, const State &state, const Ca
 
         for (int j = 0; j < rs.shaderIds.size(); j++)
         {
-            // Use our shader
             unsigned int effectId = rs.shaderIds.at(j);
             ShaderEffect effect = scene.shaders.at(effectId);
             glUseProgram(effect.programId);
@@ -262,11 +261,6 @@ void render(GLFWwindow *window, const Scene &scene, const State &state, const Ca
 
             mesh->draw();
 
-            glDisableVertexAttribArray(0);
-            glDisableVertexAttribArray(1);
-            glDisableVertexAttribArray(2);
-            glDisableVertexAttribArray(3);
-            glDisableVertexAttribArray(4);
             check_gl_error();
         }
     }

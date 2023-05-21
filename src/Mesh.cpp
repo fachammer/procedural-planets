@@ -56,17 +56,16 @@ OpenGLMesh::OpenGLMesh(const Mesh &_mesh, glm::mat4 modelMatrix) : vertexBuffer(
 
 void OpenGLMesh::draw() const
 {
-    glEnableVertexAttribArray(0);
-
     vertexBuffer.bind();
 
+    glEnableVertexAttribArray(0);
     glVertexAttribPointer(
         0,
         3,
         GL_FLOAT,
         GL_FALSE,
         0,
-        (void *)0);
+        0);
 
     elementBuffer.bind();
 
@@ -74,6 +73,7 @@ void OpenGLMesh::draw() const
         GL_TRIANGLES,
         numberOfElements,
         GL_UNSIGNED_INT,
-        (void *)0);
-    check_gl_error();
+        0);
+
+    glDisableVertexAttribArray(0);
 }
