@@ -191,7 +191,10 @@ struct Scene
     Camera camera;
     glm::vec3 lightPosition;
 
-    Scene(const PlanetParameters &planetParameters, unsigned int textureIndex)
+    State state;
+    PlanetParameters planetParameters;
+
+    Scene()
     {
         Mesh atmosphereMesh = generateSphere(planetParameters.atmosphereRadius(), planetParameters.atmosphereSubdivisions);
         reverseFaces(atmosphereMesh);
@@ -217,12 +220,12 @@ struct Scene
             RenderObject{
                 .meshId = 0,
                 .shaderIds = std::vector<unsigned int>{0},
-                .texId = textures[textureIndex]->id(),
+                .texId = textures[state.textureIndex]->id(),
             },
             RenderObject{
                 .meshId = 1,
                 .shaderIds = std::vector<unsigned int>{1},
-                .texId = textures[textureIndex]->id()}};
+                .texId = textures[state.textureIndex]->id()}};
 
         camera = Camera{.fieldOfView = 45.0, .targetPosition = glm::vec3(0, 0, 0)};
     }
@@ -241,73 +244,73 @@ struct Scene
     }
 };
 
-void update(GLFWwindow *window, Scene &scene, PlanetParameters &planetParameters, State &state)
+void update(GLFWwindow *window, Scene &scene)
 {
     double currentTime = glfwGetTime();
-    float deltaTime = float(currentTime - state.lastTime);
+    float deltaTime = float(currentTime - scene.state.lastTime);
 
     // update move speed based on distance
-    state.rotateSpeed = state.defaultRotateSpeed * state.rho;
-    state.speed = state.defaultSpeed * state.rho;
+    scene.state.rotateSpeed = scene.state.defaultRotateSpeed * scene.state.rho;
+    scene.state.speed = scene.state.defaultSpeed * scene.state.rho;
 
     // change latitude
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
     {
-        state.phi += deltaTime * state.rotateSpeed;
+        scene.state.phi += deltaTime * scene.state.rotateSpeed;
     }
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
     {
-        state.phi -= deltaTime * state.rotateSpeed;
+        scene.state.phi -= deltaTime * scene.state.rotateSpeed;
     }
 
     // change longitude
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
     {
-        state.theta -= deltaTime * state.rotateSpeed;
+        scene.state.theta -= deltaTime * scene.state.rotateSpeed;
     }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
     {
-        state.theta += deltaTime * state.rotateSpeed;
+        scene.state.theta += deltaTime * scene.state.rotateSpeed;
     }
 
     // Move towards and away from planet
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
     {
-        state.rho -= state.speed * deltaTime;
+        scene.state.rho -= scene.state.speed * deltaTime;
     }
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
     {
-        state.rho += state.speed * deltaTime;
+        scene.state.rho += scene.state.speed * deltaTime;
     }
 
     // toggle wireframe mode
     int changeMode = glfwGetKey(window, GLFW_KEY_F);
-    if (changeMode == GLFW_PRESS && state.canChangeWireframeMode)
+    if (changeMode == GLFW_PRESS && scene.state.canChangeWireframeMode)
     {
-        state.wireFrameMode = !state.wireFrameMode;
-        state.canChangeWireframeMode = false;
+        scene.state.wireFrameMode = !scene.state.wireFrameMode;
+        scene.state.canChangeWireframeMode = false;
     }
     else if (changeMode == GLFW_RELEASE)
     {
-        state.canChangeWireframeMode = true;
+        scene.state.canChangeWireframeMode = true;
     }
 
     int newNoiseOffset = glfwGetKey(window, GLFW_KEY_R);
-    if (newNoiseOffset == GLFW_PRESS && state.canGenerateNewNoise)
+    if (newNoiseOffset == GLFW_PRESS && scene.state.canGenerateNewNoise)
     {
-        state.noiseOffset = glm::vec3(rand() % 99, rand() % 99, rand() % 99);
-        state.canGenerateNewNoise = false;
+        scene.state.noiseOffset = glm::vec3(rand() % 99, rand() % 99, rand() % 99);
+        scene.state.canGenerateNewNoise = false;
     }
     else if (newNoiseOffset == GLFW_RELEASE)
     {
-        state.canGenerateNewNoise = true;
+        scene.state.canGenerateNewNoise = true;
     }
 
     for (int i = 0; i < 4; i++)
     {
         if (glfwGetKey(window, GLFW_KEY_1 + i) == GLFW_PRESS)
         {
-            state.textureIndex = i;
+            scene.state.textureIndex = i;
         }
     }
 
@@ -317,32 +320,32 @@ void update(GLFWwindow *window, Scene &scene, PlanetParameters &planetParameters
     }
 
     // clamp distance and latitude
-    state.phi = glm::min(1.57f, glm::max(-1.57f, state.phi));
-    state.rho = glm::min(1000.f, glm::max(10.f, state.rho));
+    scene.state.phi = glm::min(1.57f, glm::max(-1.57f, scene.state.phi));
+    scene.state.rho = glm::min(1000.f, glm::max(10.f, scene.state.rho));
 
     scene.camera.position = glm::vec3(
-        state.rho * cos(state.theta) * cos(state.phi),
-        state.rho * sin(state.phi),
-        state.rho * sin(state.theta) * cos(state.phi));
+        scene.state.rho * cos(scene.state.theta) * cos(scene.state.phi),
+        scene.state.rho * sin(scene.state.phi),
+        scene.state.rho * sin(scene.state.theta) * cos(scene.state.phi));
 
     // Projection matrix
     int width, height;
     glfwGetWindowSize(window, &width, &height);
     scene.camera.aspectRatio = (float)width / height;
 
-    state.lastTime = currentTime;
+    scene.state.lastTime = currentTime;
 }
 
-void render(GLFWwindow *glfwWindow, const Scene &scene, const State &state, const PlanetParameters &planetParameters)
+void render(GLFWwindow *glfwWindow, const Scene &scene)
 {
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glPolygonMode(GL_FRONT_AND_BACK, state.wireFrameMode ? GL_LINE : GL_FILL);
+    glPolygonMode(GL_FRONT_AND_BACK, scene.state.wireFrameMode ? GL_LINE : GL_FILL);
 
     glm::vec3 lightPosition = scene.lightPosition;
     for (RenderObject rs : scene.objects)
     {
-        rs.texId = scene.textures[state.textureIndex]->id();
+        rs.texId = scene.textures[scene.state.textureIndex]->id();
         unsigned int meshId = rs.meshId;
         OpenGLMesh *mesh = scene.meshes.at(meshId);
         glm::mat4 modelMatrix = mesh->modelMatrix;
@@ -364,11 +367,11 @@ void render(GLFWwindow *glfwWindow, const Scene &scene, const State &state, cons
             glUniformMatrix4fv(effect.MId, 1, GL_FALSE, &modelMatrix[0][0]);
             glUniformMatrix4fv(effect.VId, 1, GL_FALSE, &viewMatrix[0][0]);
 
-            glUniform1f(glGetUniformLocation(effect.programId, "maxNegativeHeight"), planetParameters.maxDepth);
-            glUniform1f(glGetUniformLocation(effect.programId, "maxPositiveHeight"), planetParameters.maxHeight);
-            glUniform1f(glGetUniformLocation(effect.programId, "baseRadius"), planetParameters.baseRadius);
-            glUniform1f(glGetUniformLocation(effect.programId, "atmosphereRadius"), planetParameters.atmosphereRadius());
-            glUniform3f(glGetUniformLocation(effect.programId, "noiseOffset"), state.noiseOffset.x, state.noiseOffset.y, state.noiseOffset.z);
+            glUniform1f(glGetUniformLocation(effect.programId, "maxNegativeHeight"), scene.planetParameters.maxDepth);
+            glUniform1f(glGetUniformLocation(effect.programId, "maxPositiveHeight"), scene.planetParameters.maxHeight);
+            glUniform1f(glGetUniformLocation(effect.programId, "baseRadius"), scene.planetParameters.baseRadius);
+            glUniform1f(glGetUniformLocation(effect.programId, "atmosphereRadius"), scene.planetParameters.atmosphereRadius());
+            glUniform3f(glGetUniformLocation(effect.programId, "noiseOffset"), scene.state.noiseOffset.x, scene.state.noiseOffset.y, scene.state.noiseOffset.z);
 
             glUniform3f(glGetUniformLocation(effect.programId, "cameraPosition"), scene.camera.position.x, scene.camera.position.y, scene.camera.position.z);
             glUniform3f(glGetUniformLocation(effect.programId, "lightColor"), 1, 1, 1);
@@ -479,12 +482,10 @@ int main(void)
             {
                 Glew glew;
 
-                PlanetParameters planetParameters;
-                State state;
-                Scene scene(planetParameters, state.textureIndex);
+                Scene scene;
                 GLFWwindow *glfwWindow = window.glfwWindow();
 
-                update(glfwWindow, scene, planetParameters, state);
+                update(glfwWindow, scene);
                 scene.lightPosition = scene.camera.position;
 
                 glEnable(GL_DEPTH_TEST);
@@ -494,8 +495,8 @@ int main(void)
                 BoundVertexArrayObject vao;
                 do
                 {
-                    update(glfwWindow, scene, planetParameters, state);
-                    render(glfwWindow, scene, state, planetParameters);
+                    update(glfwWindow, scene);
+                    render(glfwWindow, scene);
 
                 } while (glfwGetKey(glfwWindow, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
                          glfwWindowShouldClose(glfwWindow) == 0);
