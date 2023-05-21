@@ -1,53 +1,39 @@
 #include "Mesh.hpp"
-
-#include "GLError.h"
-
-// Include GLEW
 #include <GL/glew.h>
-
-#include <map>
-
-// Include GLFW
 #include <glfw3.h>
 
 VertexBuffer::VertexBuffer(const std::vector<glm::vec3> &vertices)
 {
-    bufferId = new unsigned int;
-    glGenBuffers(1, bufferId);
-    glBindBuffer(GL_ARRAY_BUFFER, *bufferId);
+    glGenBuffers(1, &bufferId);
+    glBindBuffer(GL_ARRAY_BUFFER, bufferId);
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);
-    check_gl_error();
 }
 
 VertexBuffer::~VertexBuffer()
 {
-    glDeleteBuffers(1, bufferId);
-    delete bufferId;
+    glDeleteBuffers(1, &bufferId);
 }
 
 void VertexBuffer::bind() const
 {
-    glBindBuffer(GL_ARRAY_BUFFER, *bufferId);
+    glBindBuffer(GL_ARRAY_BUFFER, bufferId);
 }
 
 ElementBuffer::ElementBuffer(const std::vector<unsigned int> &indices)
 {
-    bufferId = new unsigned int;
-    glGenBuffers(1, bufferId);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *bufferId);
+    glGenBuffers(1, &bufferId);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferId);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
-    check_gl_error();
 }
 
 ElementBuffer::~ElementBuffer()
 {
-    glDeleteBuffers(1, bufferId);
-    delete bufferId;
+    glDeleteBuffers(1, &bufferId);
 }
 
 void ElementBuffer::bind() const
 {
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *bufferId);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferId);
 }
 
 OpenGLMesh::OpenGLMesh(const Mesh &_mesh, glm::mat4 modelMatrix)

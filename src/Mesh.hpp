@@ -15,11 +15,14 @@ struct Mesh
 class VertexBuffer
 {
 private:
-    unsigned int *bufferId;
+    unsigned int bufferId = 0;
 
 public:
     VertexBuffer(const std::vector<glm::vec3> &vertices);
     ~VertexBuffer();
+
+    VertexBuffer(const VertexBuffer &buffer) = delete;
+    VertexBuffer operator=(const VertexBuffer &buffer) = delete;
 
     void bind() const;
 };
@@ -27,11 +30,14 @@ public:
 class ElementBuffer
 {
 private:
-    unsigned int *bufferId;
+    unsigned int bufferId = 0;
 
 public:
     ElementBuffer(const std::vector<unsigned int> &indices);
     ~ElementBuffer();
+
+    ElementBuffer(const ElementBuffer &buffer) = delete;
+    ElementBuffer operator=(const ElementBuffer &buffer) = delete;
 
     void bind() const;
 };
