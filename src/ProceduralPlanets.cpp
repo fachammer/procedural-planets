@@ -49,7 +49,7 @@ struct State
     const float defaultRotateSpeed = 0.003f;
     float rotateSpeed = 1.5f;
 
-    float rho = 500;
+    float rho = 250;
     float theta = 0;
     float phi = 0;
 
@@ -317,7 +317,7 @@ Scene generateScene(const PlanetParameters &planetParameters, GLuint *textures, 
 
 int main(void)
 {
-    // Initialise GLFW
+
     if (!glfwInit())
     {
         fprintf(stderr, "Failed to initialize GLFW\n");
@@ -338,7 +338,9 @@ int main(void)
         return -1;
     }
     glfwMakeContextCurrent(window);
-    check_gl_error();
+
+    glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
+    glfwSetCursorPos(window, SCREENHEIGHT / 2, SCREENHEIGHT / 2);
 
     glewExperimental = true;
     if (glewInit() != GLEW_OK)
@@ -346,28 +348,7 @@ int main(void)
         fprintf(stderr, "Failed to initialize GLEW\n");
         return -1;
     }
-    check_gl_error();
 
-    // Ensure we can capture the escape key being pressed below
-    glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
-    glfwSetCursorPos(window, SCREENHEIGHT / 2, SCREENHEIGHT / 2);
-
-    // Dark blue background
-    glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
-
-    check_gl_error();
-
-    // Enable depth test
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
-
-    glEnable(GL_CULL_FACE);
-
-    GLuint VertexArrayID;
-    glGenVertexArrays(1, &VertexArrayID);
-    glBindVertexArray(VertexArrayID);
-
-    check_gl_error();
     const int textureCount = 4;
     GLuint textures[textureCount];
     const char *textureNames[textureCount] = {
@@ -381,16 +362,21 @@ int main(void)
         textures[i] = loadSoil(textureNames[i], "../textures/");
     }
 
-    check_gl_error();
-
     PlanetParameters planetParameters;
     State state;
     Scene scene = generateScene(planetParameters, textures, state.textureIndex);
     Camera camera;
+
     update(window, scene, camera, planetParameters, state);
     scene.lightPosition = camera.position;
 
-    srand(time(NULL));
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    glEnable(GL_CULL_FACE);
+
+    GLuint vertexArrayId;
+    glGenVertexArrays(1, &vertexArrayId);
+    glBindVertexArray(vertexArrayId);
 
     do
     {
@@ -406,7 +392,7 @@ int main(void)
     } while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
              glfwWindowShouldClose(window) == 0);
 
-    glDeleteVertexArrays(1, &VertexArrayID);
+    glDeleteVertexArrays(1, &vertexArrayId);
 
     glfwTerminate();
 
