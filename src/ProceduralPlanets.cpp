@@ -106,14 +106,23 @@ void reverseFaces(Mesh &mesh)
 
 struct Camera
 {
-    glm::mat4 viewMatrix;
-    glm::mat4 projectionMatrix;
-    glm::vec3 position;
-
     float fieldOfView = 45.0f;
-
+    float aspectRatio;
+    glm::vec3 position;
+    const glm::vec3 targetPosition = glm::vec3(0, 0, 0);
     const glm::vec3 up = glm::vec3(0, 1, 0);
-    const glm::vec3 targetPos = glm::vec3(0, 0, 0);
+
+    glm::mat4 viewMatrix() const
+    {
+        return glm::lookAt(
+            position,
+            targetPosition,
+            up);
+    }
+    glm::mat4 projectionMatrix() const
+    {
+        return glm::perspective(fieldOfView, aspectRatio, 0.1f, 10000.0f);
+    }
 };
 
 void update(GLFWwindow *window, Scene &scene, Camera &camera, PlanetParameters &planetParameters, State &state)
@@ -203,24 +212,17 @@ void update(GLFWwindow *window, Scene &scene, Camera &camera, PlanetParameters &
     // Projection matrix
     int width, height;
     glfwGetWindowSize(window, &width, &height);
-    camera.projectionMatrix = glm::perspective(camera.fieldOfView, (float)width / height, 0.1f, 10000.0f);
-    // Camera matrix
-    camera.viewMatrix = glm::lookAt(
-        camera.position,
-        camera.targetPos,
-        camera.up);
+    camera.aspectRatio = (float)width / height;
 
     state.lastTime = currentTime;
 }
 
-void render(GLFWwindow *window, const Scene &scene, const State &state, const Camera &camera, GLuint *textures, const PlanetParameters &planetParameters)
+void render(const Scene &scene, const State &state, const Camera &camera, GLuint *textures, const PlanetParameters &planetParameters)
 {
     std::vector<RenderObject> objects = scene.objects;
 
     glPolygonMode(GL_FRONT_AND_BACK, state.wireFrameMode ? GL_LINE : GL_FILL);
 
-    int width, height;
-    glfwGetWindowSize(window, &width, &height);
     glm::vec3 lightPosition = scene.lightPosition;
     for (RenderObject rs : objects)
     {
@@ -228,7 +230,8 @@ void render(GLFWwindow *window, const Scene &scene, const State &state, const Ca
         unsigned int meshId = rs.meshId;
         OpenGLMesh *mesh = scene.meshes.at(meshId);
         glm::mat4 modelMatrix = mesh->modelMatrix;
-        glm::mat4 MVP = camera.projectionMatrix * camera.viewMatrix * modelMatrix;
+        glm::mat4 viewMatrix = camera.viewMatrix();
+        glm::mat4 MVP = camera.projectionMatrix() * viewMatrix * modelMatrix;
 
         for (int j = 0; j < rs.shaderIds.size(); j++)
         {
@@ -243,7 +246,7 @@ void render(GLFWwindow *window, const Scene &scene, const State &state, const Ca
 
             glUniformMatrix4fv(effect.MVPId, 1, GL_FALSE, &MVP[0][0]);
             glUniformMatrix4fv(effect.MId, 1, GL_FALSE, &modelMatrix[0][0]);
-            glUniformMatrix4fv(effect.VId, 1, GL_FALSE, &camera.viewMatrix[0][0]);
+            glUniformMatrix4fv(effect.VId, 1, GL_FALSE, &viewMatrix[0][0]);
 
             glUniform1f(glGetUniformLocation(effect.programId, "maxNegativeHeight"), planetParameters.maxDepth);
             glUniform1f(glGetUniformLocation(effect.programId, "maxPositiveHeight"), planetParameters.maxHeight);
@@ -435,7 +438,7 @@ int main(void)
                     glClearColor(0.0, 0.0, 0.0, 1.0);
                     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-                    render(glfwWindow, scene, state, camera, textures, planetParameters);
+                    render(scene, state, camera, textures, planetParameters);
 
                     glfwSwapBuffers(glfwWindow);
                     glfwPollEvents();
