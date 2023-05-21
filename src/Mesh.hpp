@@ -46,7 +46,6 @@ private:
 public:
     glm::mat4 modelMatrix;
 
-public:
     OpenGLMesh(const Mesh &_mesh, glm::mat4 _modelMatrix);
 
     void draw() const;
