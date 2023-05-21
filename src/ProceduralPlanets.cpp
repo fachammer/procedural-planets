@@ -49,10 +49,6 @@ struct State
     const float defaultRotateSpeed = 0.003f;
     float rotateSpeed = 1.5f;
 
-    float rho = 250;
-    float theta = 0;
-    float phi = 0;
-
     glm::vec3 noiseOffset = glm::vec3(0, 0, 0);
     bool canChangeWireframeMode = true;
     bool canChangeDrawCoordinateMeshes = true;
@@ -75,21 +71,25 @@ struct RenderObject
 const glm::vec3 UP(0, 1, 0);
 struct Camera
 {
-    float fieldOfView;
-    float aspectRatio;
-    glm::vec3 position;
-    glm::vec3 targetPosition;
+    float fieldOfView = 45.0;
+    float distanceFromOrigin = 250;
+    float azimuthalAngle = 0;
+    float polarAngle = 0;
+
+    glm::vec3 position() const
+    {
+        return glm::vec3(
+            distanceFromOrigin * cos(azimuthalAngle) * cos(polarAngle),
+            distanceFromOrigin * sin(polarAngle),
+            distanceFromOrigin * sin(azimuthalAngle) * cos(polarAngle));
+    }
 
     glm::mat4 viewMatrix() const
     {
         return glm::lookAt(
-            position,
-            targetPosition,
+            position(),
+            glm::vec3(0, 0, 0),
             UP);
-    }
-    glm::mat4 projectionMatrix() const
-    {
-        return glm::perspective(fieldOfView, aspectRatio, 0.1f, 10000.0f);
     }
 };
 
@@ -227,7 +227,7 @@ struct Scene
                 .shaderIds = std::vector<unsigned int>{1},
                 .texId = textures[state.textureIndex]->id()}};
 
-        camera = Camera{.fieldOfView = 45.0, .targetPosition = glm::vec3(0, 0, 0)};
+        lightPosition = camera.position();
     }
 
     ~Scene()
@@ -249,41 +249,39 @@ void update(GLFWwindow *window, Scene &scene)
     double currentTime = glfwGetTime();
     float deltaTime = float(currentTime - scene.state.lastTime);
 
-    // update move speed based on distance
-    scene.state.rotateSpeed = scene.state.defaultRotateSpeed * scene.state.rho;
-    scene.state.speed = scene.state.defaultSpeed * scene.state.rho;
+    scene.state.rotateSpeed = scene.state.defaultRotateSpeed * scene.camera.distanceFromOrigin;
+    scene.state.speed = scene.state.defaultSpeed * scene.camera.distanceFromOrigin;
 
-    // change latitude
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
     {
-        scene.state.phi += deltaTime * scene.state.rotateSpeed;
+        scene.camera.polarAngle += deltaTime * scene.state.rotateSpeed;
     }
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
     {
-        scene.state.phi -= deltaTime * scene.state.rotateSpeed;
+        scene.camera.polarAngle -= deltaTime * scene.state.rotateSpeed;
     }
 
-    // change longitude
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
     {
-        scene.state.theta -= deltaTime * scene.state.rotateSpeed;
+        scene.camera.azimuthalAngle -= deltaTime * scene.state.rotateSpeed;
     }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
     {
-        scene.state.theta += deltaTime * scene.state.rotateSpeed;
+        scene.camera.azimuthalAngle += deltaTime * scene.state.rotateSpeed;
     }
 
-    // Move towards and away from planet
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
     {
-        scene.state.rho -= scene.state.speed * deltaTime;
+        scene.camera.distanceFromOrigin -= scene.state.speed * deltaTime;
     }
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
     {
-        scene.state.rho += scene.state.speed * deltaTime;
+        scene.camera.distanceFromOrigin += scene.state.speed * deltaTime;
     }
 
-    // toggle wireframe mode
+    scene.camera.polarAngle = glm::min(1.57f, glm::max(-1.57f, scene.camera.polarAngle));
+    scene.camera.distanceFromOrigin = glm::min(1000.f, glm::max(10.f, scene.camera.distanceFromOrigin));
+
     int changeMode = glfwGetKey(window, GLFW_KEY_F);
     if (changeMode == GLFW_PRESS && scene.state.canChangeWireframeMode)
     {
@@ -316,22 +314,8 @@ void update(GLFWwindow *window, Scene &scene)
 
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
     {
-        scene.lightPosition = scene.camera.position;
+        scene.lightPosition = scene.camera.position();
     }
-
-    // clamp distance and latitude
-    scene.state.phi = glm::min(1.57f, glm::max(-1.57f, scene.state.phi));
-    scene.state.rho = glm::min(1000.f, glm::max(10.f, scene.state.rho));
-
-    scene.camera.position = glm::vec3(
-        scene.state.rho * cos(scene.state.theta) * cos(scene.state.phi),
-        scene.state.rho * sin(scene.state.phi),
-        scene.state.rho * sin(scene.state.theta) * cos(scene.state.phi));
-
-    // Projection matrix
-    int width, height;
-    glfwGetWindowSize(window, &width, &height);
-    scene.camera.aspectRatio = (float)width / height;
 
     scene.state.lastTime = currentTime;
 }
@@ -342,7 +326,11 @@ void render(GLFWwindow *glfwWindow, const Scene &scene)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glPolygonMode(GL_FRONT_AND_BACK, scene.state.wireFrameMode ? GL_LINE : GL_FILL);
 
+    int width, height;
+    glfwGetWindowSize(glfwWindow, &width, &height);
+    float aspectRatio = (float)width / height;
     glm::vec3 lightPosition = scene.lightPosition;
+    glm::vec3 cameraPosition = scene.camera.position();
     for (RenderObject rs : scene.objects)
     {
         rs.texId = scene.textures[scene.state.textureIndex]->id();
@@ -350,7 +338,8 @@ void render(GLFWwindow *glfwWindow, const Scene &scene)
         OpenGLMesh *mesh = scene.meshes.at(meshId);
         glm::mat4 modelMatrix = mesh->modelMatrix;
         glm::mat4 viewMatrix = scene.camera.viewMatrix();
-        glm::mat4 MVP = scene.camera.projectionMatrix() * viewMatrix * modelMatrix;
+        glm::mat4 projectionMatrix = glm::perspective(scene.camera.fieldOfView, aspectRatio, 0.1f, 10000.0f);
+        glm::mat4 MVP = projectionMatrix * viewMatrix * modelMatrix;
 
         for (int j = 0; j < rs.shaderIds.size(); j++)
         {
@@ -373,7 +362,7 @@ void render(GLFWwindow *glfwWindow, const Scene &scene)
             glUniform1f(glGetUniformLocation(effect.programId, "atmosphereRadius"), scene.planetParameters.atmosphereRadius());
             glUniform3f(glGetUniformLocation(effect.programId, "noiseOffset"), scene.state.noiseOffset.x, scene.state.noiseOffset.y, scene.state.noiseOffset.z);
 
-            glUniform3f(glGetUniformLocation(effect.programId, "cameraPosition"), scene.camera.position.x, scene.camera.position.y, scene.camera.position.z);
+            glUniform3f(glGetUniformLocation(effect.programId, "cameraPosition"), cameraPosition.x, cameraPosition.y, cameraPosition.z);
             glUniform3f(glGetUniformLocation(effect.programId, "lightColor"), 1, 1, 1);
 
             mesh->draw();
@@ -484,9 +473,6 @@ int main(void)
 
                 Scene scene;
                 GLFWwindow *glfwWindow = window.glfwWindow();
-
-                update(glfwWindow, scene);
-                scene.lightPosition = scene.camera.position;
 
                 glEnable(GL_DEPTH_TEST);
                 glDepthFunc(GL_LESS);
