@@ -346,6 +346,7 @@ void render(GLFWwindow *glfwWindow, const Scene &scene)
         {
             unsigned int effectId = renderObject.shaderIds.at(j);
             ShaderProgram *shaderProgram = scene.shaderPrograms.at(effectId);
+
             glUseProgram(shaderProgram->id());
 
             glActiveTexture(GL_TEXTURE0);
