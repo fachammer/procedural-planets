@@ -334,15 +334,17 @@ void render(GLFWwindow *glfwWindow, const Scene &scene)
     glfwGetWindowSize(glfwWindow, &width, &height);
     float aspectRatio = (float)width / height;
     glm::vec3 cameraPosition = scene.camera.position();
+    glm::mat4 viewMatrix = scene.camera.viewMatrix();
+    glm::mat4 projectionMatrix = glm::perspective(scene.camera.fieldOfView, aspectRatio, 0.1f, 10000.0f);
+    glm::mat4 viewProjectionMatrix = projectionMatrix * viewMatrix;
     for (RenderObject renderObject : scene.objects)
     {
         renderObject.texId = scene.textures[scene.state.textureIndex]->id();
         unsigned int meshId = renderObject.meshId;
         OpenGLMesh *mesh = scene.meshes.at(meshId);
         glm::mat4 modelMatrix = mesh->modelMatrix;
-        glm::mat4 viewMatrix = scene.camera.viewMatrix();
-        glm::mat4 projectionMatrix = glm::perspective(scene.camera.fieldOfView, aspectRatio, 0.1f, 10000.0f);
-        glm::mat4 modelViewProjectionMatrix = projectionMatrix * viewMatrix * modelMatrix;
+
+        glm::mat4 modelViewProjectionMatrix = viewProjectionMatrix * modelMatrix;
 
         for (int j = 0; j < renderObject.shaderIds.size(); j++)
         {
