@@ -222,7 +222,6 @@ void render(GLFWwindow *window, const Scene &scene, const State &state, const Ca
     int width, height;
     glfwGetWindowSize(window, &width, &height);
     glm::vec3 lightPosition = scene.lightPosition;
-    check_gl_error();
     for (RenderObject rs : objects)
     {
         rs.texId = textures[state.textureIndex];
@@ -236,12 +235,10 @@ void render(GLFWwindow *window, const Scene &scene, const State &state, const Ca
             unsigned int effectId = rs.shaderIds.at(j);
             ShaderEffect effect = scene.shaders.at(effectId);
             glUseProgram(effect.programId);
-            check_gl_error();
 
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, rs.texId);
             glUniform1i(effect.textureSamplerId, 0);
-            check_gl_error();
             glUniform3f(effect.lightPositionId, lightPosition.x, lightPosition.y, lightPosition.z);
 
             glUniformMatrix4fv(effect.MVPId, 1, GL_FALSE, &MVP[0][0]);
@@ -257,13 +254,10 @@ void render(GLFWwindow *window, const Scene &scene, const State &state, const Ca
             glUniform3f(glGetUniformLocation(effect.programId, "cameraPosition"), camera.position.x, camera.position.y, camera.position.z);
             glUniform3f(glGetUniformLocation(effect.programId, "lightColor"), 1, 1, 1);
 
-            check_gl_error();
-
             mesh->draw();
-
-            check_gl_error();
         }
     }
+    check_gl_error();
 }
 
 ShaderEffect initializeTerrainGeneratorShader()
