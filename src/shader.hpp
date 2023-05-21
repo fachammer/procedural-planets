@@ -37,13 +37,6 @@ private:
     std::vector<Shader *> shaders;
 
 public:
-    unsigned int modelViewProjectionMatrixLocation;
-    unsigned int viewMatrixLocation;
-    unsigned int modelMatrixLocation;
-    unsigned int textureSamplerLocation;
-    unsigned int lightDirectionLocation;
-
-public:
     ShaderProgram(std::vector<Shader *> shaders)
     {
         programId = glCreateProgram();
@@ -52,14 +45,6 @@ public:
             glAttachShader(programId, shader->id());
         }
         glLinkProgram(programId);
-
-        glUseProgram(programId);
-        modelViewProjectionMatrixLocation = glGetUniformLocation(programId, "modelViewProjectionMatrix");
-        viewMatrixLocation = glGetUniformLocation(programId, "viewMatrix");
-        modelMatrixLocation = glGetUniformLocation(programId, "modelMatrix");
-        textureSamplerLocation = glGetUniformLocation(programId, "textureSampler");
-        lightDirectionLocation = glGetUniformLocation(programId, "lightDirectionInWorldSpace");
-        glUseProgram(0);
     }
 
     ShaderProgram(const ShaderProgram &shader) = delete;
