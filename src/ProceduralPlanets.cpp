@@ -329,7 +329,6 @@ void render(GLFWwindow *glfwWindow, const Scene &scene)
     int width, height;
     glfwGetWindowSize(glfwWindow, &width, &height);
     float aspectRatio = (float)width / height;
-    glm::vec3 lightPosition = scene.lightPosition;
     glm::vec3 cameraPosition = scene.camera.position();
     for (RenderObject rs : scene.objects)
     {
@@ -350,7 +349,7 @@ void render(GLFWwindow *glfwWindow, const Scene &scene)
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, rs.texId);
             glUniform1i(effect.textureSamplerId, 0);
-            glUniform3f(effect.lightPositionId, lightPosition.x, lightPosition.y, lightPosition.z);
+            glUniform3f(effect.lightPositionId, scene.lightPosition.x, scene.lightPosition.y, scene.lightPosition.z);
 
             glUniformMatrix4fv(effect.MVPId, 1, GL_FALSE, &MVP[0][0]);
             glUniformMatrix4fv(effect.MId, 1, GL_FALSE, &modelMatrix[0][0]);
