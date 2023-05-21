@@ -315,86 +315,130 @@ Scene generateScene(const PlanetParameters &planetParameters, GLuint *textures, 
     return scene;
 }
 
+class BoundVertexArrayObject
+{
+    GLuint vertexArrayId;
+
+public:
+    BoundVertexArrayObject()
+    {
+        glGenVertexArrays(1, &vertexArrayId);
+        glBindVertexArray(vertexArrayId);
+    }
+
+    ~BoundVertexArrayObject()
+    {
+        glDeleteVertexArrays(1, &vertexArrayId);
+    }
+};
+
+struct Glfw
+{
+    Glfw()
+    {
+        int initResult = glfwInit();
+        if (!initResult)
+        {
+            throw initResult;
+        }
+    }
+
+    ~Glfw()
+    {
+        glfwTerminate();
+    }
+};
+
+struct Glew
+{
+    Glew()
+    {
+        glewExperimental = true;
+        int initResult = glewInit();
+        if (initResult != GLEW_OK)
+        {
+            throw initResult;
+        }
+    }
+};
+
 int main(void)
 {
+    try
+    {
+        Glfw glfw;
+        glfwWindowHint(GLFW_SAMPLES, 8);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    if (!glfwInit())
+        GLFWwindow *window = glfwCreateWindow(SCREENHEIGHT, SCREENHEIGHT, "Procedural Planets", NULL, NULL);
+        if (window == NULL)
+        {
+            fprintf(stderr, "Failed to open GLFW window.\n");
+            glfwTerminate();
+            return -1;
+        }
+        glfwMakeContextCurrent(window);
+
+        glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
+        glfwSetCursorPos(window, SCREENHEIGHT / 2, SCREENHEIGHT / 2);
+
+        try
+        {
+            Glew glew;
+            const int textureCount = 4;
+            GLuint textures[textureCount];
+            const char *textureNames[textureCount] = {
+                "beachMountain.png",
+                "volcano.png",
+                "ice.png",
+                "tropic.png"};
+
+            for (int i = 0; i < textureCount; i++)
+            {
+                textures[i] = loadSoil(textureNames[i], "../textures/");
+            }
+
+            PlanetParameters planetParameters;
+            State state;
+            Scene scene = generateScene(planetParameters, textures, state.textureIndex);
+            Camera camera;
+
+            update(window, scene, camera, planetParameters, state);
+            scene.lightPosition = camera.position;
+
+            glEnable(GL_DEPTH_TEST);
+            glDepthFunc(GL_LESS);
+            glEnable(GL_CULL_FACE);
+
+            BoundVertexArrayObject vao;
+            do
+            {
+                update(window, scene, camera, planetParameters, state);
+
+                glClearColor(0.0, 0.0, 0.0, 1.0);
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+                render(window, scene, state, camera, textures, planetParameters);
+
+                glfwSwapBuffers(window);
+                glfwPollEvents();
+            } while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
+                     glfwWindowShouldClose(window) == 0);
+        }
+        catch (int exception)
+        {
+            fprintf(stderr, "Failed to initialize GLEW\n");
+            return -1;
+        }
+    }
+    catch (int exception)
     {
         fprintf(stderr, "Failed to initialize GLFW\n");
         return -1;
     }
-
-    glfwWindowHint(GLFW_SAMPLES, 8);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    GLFWwindow *window = glfwCreateWindow(SCREENHEIGHT, SCREENHEIGHT, "Procedural Planets", NULL, NULL);
-    if (window == NULL)
-    {
-        fprintf(stderr, "Failed to open GLFW window.\n");
-        glfwTerminate();
-        return -1;
-    }
-    glfwMakeContextCurrent(window);
-
-    glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
-    glfwSetCursorPos(window, SCREENHEIGHT / 2, SCREENHEIGHT / 2);
-
-    glewExperimental = true;
-    if (glewInit() != GLEW_OK)
-    {
-        fprintf(stderr, "Failed to initialize GLEW\n");
-        return -1;
-    }
-
-    const int textureCount = 4;
-    GLuint textures[textureCount];
-    const char *textureNames[textureCount] = {
-        "beachMountain.png",
-        "volcano.png",
-        "ice.png",
-        "tropic.png"};
-
-    for (int i = 0; i < textureCount; i++)
-    {
-        textures[i] = loadSoil(textureNames[i], "../textures/");
-    }
-
-    PlanetParameters planetParameters;
-    State state;
-    Scene scene = generateScene(planetParameters, textures, state.textureIndex);
-    Camera camera;
-
-    update(window, scene, camera, planetParameters, state);
-    scene.lightPosition = camera.position;
-
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
-    glEnable(GL_CULL_FACE);
-
-    GLuint vertexArrayId;
-    glGenVertexArrays(1, &vertexArrayId);
-    glBindVertexArray(vertexArrayId);
-
-    do
-    {
-        update(window, scene, camera, planetParameters, state);
-
-        glClearColor(0.0, 0.0, 0.0, 1.0);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        render(window, scene, state, camera, textures, planetParameters);
-
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    } while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
-             glfwWindowShouldClose(window) == 0);
-
-    glDeleteVertexArrays(1, &vertexArrayId);
-
-    glfwTerminate();
 
     return 0;
 }
