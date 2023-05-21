@@ -166,18 +166,16 @@ void reverseFaces(Mesh &mesh)
 
     mesh.indices = reversedIndices;
 }
-ShaderEffect initializeTerrainGeneratorShader()
+ShaderProgram *initializeTerrainGeneratorShader()
 {
-    GLuint terrainGeneratorProgramId = LoadShaders("../shaders/TerrainGenerator.vertex.glsl", "../shaders/TerrainGenerator.fragment.glsl");
-    ShaderEffect terrainGeneratorProgram = ShaderEffect(terrainGeneratorProgramId);
-    terrainGeneratorProgram.textureSamplerId = glGetUniformLocation(terrainGeneratorProgramId, "heightSlopeBasedColorMap");
+    ShaderProgram *terrainGeneratorProgram = LoadShaders("../shaders/TerrainGenerator.vertex.glsl", "../shaders/TerrainGenerator.fragment.glsl");
+    terrainGeneratorProgram->textureSamplerLocation = glGetUniformLocation(terrainGeneratorProgram->id(), "heightSlopeBasedColorMap");
     return terrainGeneratorProgram;
 }
 
-ShaderEffect initializeAtmosphericScatteringShader()
+ShaderProgram *initializeAtmosphericScatteringShader()
 {
-    GLuint atmosphericScatteringProgramId = LoadShaders("../shaders/AtmosphericScattering.vertex.glsl", "../shaders/AtmosphericScattering.fragment.glsl");
-    ShaderEffect atmosphericScatteringProgram = ShaderEffect(atmosphericScatteringProgramId);
+    ShaderProgram *atmosphericScatteringProgram = LoadShaders("../shaders/AtmosphericScattering.vertex.glsl", "../shaders/AtmosphericScattering.fragment.glsl");
     return atmosphericScatteringProgram;
 }
 
@@ -185,7 +183,7 @@ struct Scene
 {
     std::vector<RenderObject> objects;
     std::vector<OpenGLMesh *> meshes;
-    std::vector<ShaderEffect> shaders;
+    std::vector<ShaderProgram *> shaderPrograms;
     std::vector<Texture *> textures;
 
     Camera camera;
@@ -205,7 +203,7 @@ struct Scene
             new OpenGLMesh(atmosphereMesh, glm::mat4(1.0)),
             new OpenGLMesh(sphereMesh, glm::mat4(1.0))};
 
-        shaders = {
+        shaderPrograms = {
             initializeAtmosphericScatteringShader(),
             initializeTerrainGeneratorShader(),
         };
@@ -240,6 +238,11 @@ struct Scene
         for (Texture *texture : textures)
         {
             delete texture;
+        }
+
+        for (ShaderProgram *shaderProgram : shaderPrograms)
+        {
+            delete shaderProgram;
         }
     }
 };
@@ -349,26 +352,26 @@ void render(GLFWwindow *glfwWindow, const Scene &scene)
         for (int j = 0; j < renderObject.shaderIds.size(); j++)
         {
             unsigned int effectId = renderObject.shaderIds.at(j);
-            ShaderEffect effect = scene.shaders.at(effectId);
-            glUseProgram(effect.programId);
+            ShaderProgram *shaderProgram = scene.shaderPrograms.at(effectId);
+            glUseProgram(shaderProgram->id());
 
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, renderObject.texId);
-            glUniform1i(effect.textureSamplerId, 0);
-            glUniform3f(effect.lightDirectionId, scene.lightDirection.x, scene.lightDirection.y, scene.lightDirection.z);
+            glUniform1i(shaderProgram->textureSamplerLocation, 0);
+            glUniform3f(shaderProgram->lightDirectionLocation, scene.lightDirection.x, scene.lightDirection.y, scene.lightDirection.z);
 
-            glUniformMatrix4fv(effect.MVPId, 1, GL_FALSE, &modelViewProjectionMatrix[0][0]);
-            glUniformMatrix4fv(effect.MId, 1, GL_FALSE, &modelMatrix[0][0]);
-            glUniformMatrix4fv(effect.VId, 1, GL_FALSE, &viewMatrix[0][0]);
+            glUniformMatrix4fv(shaderProgram->modelViewProjectionMatrixLocation, 1, GL_FALSE, &modelViewProjectionMatrix[0][0]);
+            glUniformMatrix4fv(shaderProgram->modelMatrixLocation, 1, GL_FALSE, &modelMatrix[0][0]);
+            glUniformMatrix4fv(shaderProgram->viewMatrixLocation, 1, GL_FALSE, &viewMatrix[0][0]);
 
-            glUniform1f(glGetUniformLocation(effect.programId, "maxNegativeHeight"), scene.planetParameters.maxDepth);
-            glUniform1f(glGetUniformLocation(effect.programId, "maxPositiveHeight"), scene.planetParameters.maxHeight);
-            glUniform1f(glGetUniformLocation(effect.programId, "baseRadius"), scene.planetParameters.baseRadius);
-            glUniform1f(glGetUniformLocation(effect.programId, "atmosphereRadius"), scene.planetParameters.atmosphereRadius());
-            glUniform3f(glGetUniformLocation(effect.programId, "noiseOffset"), scene.state.noiseOffset.x, scene.state.noiseOffset.y, scene.state.noiseOffset.z);
+            glUniform1f(glGetUniformLocation(shaderProgram->id(), "maxNegativeHeight"), scene.planetParameters.maxDepth);
+            glUniform1f(glGetUniformLocation(shaderProgram->id(), "maxPositiveHeight"), scene.planetParameters.maxHeight);
+            glUniform1f(glGetUniformLocation(shaderProgram->id(), "baseRadius"), scene.planetParameters.baseRadius);
+            glUniform1f(glGetUniformLocation(shaderProgram->id(), "atmosphereRadius"), scene.planetParameters.atmosphereRadius());
+            glUniform3f(glGetUniformLocation(shaderProgram->id(), "noiseOffset"), scene.state.noiseOffset.x, scene.state.noiseOffset.y, scene.state.noiseOffset.z);
 
-            glUniform3f(glGetUniformLocation(effect.programId, "cameraPositionInWorldSpace"), cameraPosition.x, cameraPosition.y, cameraPosition.z);
-            glUniform3f(glGetUniformLocation(effect.programId, "lightColor"), 1, 1, 1);
+            glUniform3f(glGetUniformLocation(shaderProgram->id(), "cameraPositionInWorldSpace"), cameraPosition.x, cameraPosition.y, cameraPosition.z);
+            glUniform3f(glGetUniformLocation(shaderProgram->id(), "lightColor"), 1, 1, 1);
 
             mesh->draw();
         }
