@@ -20,11 +20,11 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "Shader.hpp"
-#include "Texture.hpp"
 #include "Mesh.hpp"
 #include "GLError.h"
 
 #include "SphereGenerator.hpp"
+#include <SOIL.h>
 
 struct PlanetParameters
 {
@@ -93,24 +93,65 @@ struct Camera
     }
 };
 
-struct Scene
+class Texture
 {
-    std::vector<RenderObject> objects;
-    std::vector<OpenGLMesh *> meshes;
-    std::vector<ShaderEffect> shaders;
-    Camera camera;
+private:
+    GLuint textureId = 0;
 
-    glm::vec3 lightPosition;
-
-    ~Scene()
+    void dispose()
     {
-        for (OpenGLMesh *mesh : meshes)
+        glDeleteTextures(1, &textureId);
+        invalidate();
+    }
+
+    void invalidate()
+    {
+        textureId = 0;
+    }
+
+public:
+    Texture();
+    Texture(std::string path)
+    {
+        textureId = SOIL_load_OGL_texture(
+            path.c_str(),
+            SOIL_LOAD_AUTO,
+            SOIL_CREATE_NEW_ID,
+            SOIL_FLAG_POWER_OF_TWO | SOIL_FLAG_MIPMAPS);
+        glBindTexture(GL_TEXTURE_2D, textureId);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    }
+    Texture(const Texture &) = delete;
+    Texture &operator=(const Texture &) = delete;
+
+    Texture(Texture &&other) : textureId(other.textureId)
+    {
+        other.invalidate();
+    }
+
+    Texture &operator=(Texture &&other)
+    {
+        if (this != &other)
         {
-            delete mesh;
+            dispose();
+            std::swap(textureId, other.textureId);
         }
+        return *this;
+    }
+
+    ~Texture()
+    {
+        dispose();
+    }
+
+    GLuint id() const
+    {
+        return textureId;
     }
 };
-
 void reverseFaces(Mesh &mesh)
 {
     std::vector<unsigned int> reversedIndices;
@@ -125,6 +166,80 @@ void reverseFaces(Mesh &mesh)
 
     mesh.indices = reversedIndices;
 }
+ShaderEffect initializeTerrainGeneratorShader()
+{
+    GLuint terrainGeneratorProgramId = LoadShaders("../shaders/TerrainGenerator.vertexshader", "../shaders/TerrainGenerator.geometryshader", "../shaders/TerrainGenerator.fragmentshader");
+    ShaderEffect terrainGeneratorProgram = ShaderEffect(terrainGeneratorProgramId);
+    terrainGeneratorProgram.textureSamplerId = glGetUniformLocation(terrainGeneratorProgramId, "heightSlopeBasedColorMap");
+    return terrainGeneratorProgram;
+}
+
+ShaderEffect initializeAtmosphericScatteringShader()
+{
+    GLuint atmosphericScatteringProgramId = LoadShaders("../shaders/AtmosphericScattering.vertexshader", "../shaders/AtmosphericScattering.fragmentshader");
+    ShaderEffect atmosphericScatteringProgram = ShaderEffect(atmosphericScatteringProgramId);
+    return atmosphericScatteringProgram;
+}
+
+struct Scene
+{
+    std::vector<RenderObject> objects;
+    std::vector<OpenGLMesh *> meshes;
+    std::vector<ShaderEffect> shaders;
+    std::vector<Texture *> textures;
+    Camera camera;
+
+    glm::vec3 lightPosition;
+
+    Scene(const PlanetParameters &planetParameters, unsigned int textureIndex)
+    {
+        Mesh atmosphereMesh = generateSphere(planetParameters.atmosphereRadius(), planetParameters.atmosphereSubdivisions);
+        reverseFaces(atmosphereMesh);
+
+        Mesh sphereMesh = generateSphere(planetParameters.baseRadius, planetParameters.planetSubdivisions);
+
+        meshes = {
+            new OpenGLMesh(atmosphereMesh, glm::mat4(1.0)),
+            new OpenGLMesh(sphereMesh, glm::mat4(1.0))};
+
+        shaders = {
+            initializeAtmosphericScatteringShader(),
+            initializeTerrainGeneratorShader(),
+        };
+
+        textures = {
+            new Texture("../textures/beachMountain.png"),
+            new Texture("../textures/ice.png"),
+            new Texture("../textures/tropic.png"),
+            new Texture("../textures/volcano.png")};
+
+        objects = {
+            RenderObject{
+                .meshId = 0,
+                .shaderIds = std::vector<unsigned int>{0},
+                .texId = textures[textureIndex]->id(),
+            },
+            RenderObject{
+                .meshId = 1,
+                .shaderIds = std::vector<unsigned int>{1},
+                .texId = textures[textureIndex]->id()}};
+
+        camera = Camera{.fieldOfView = 45.0, .targetPosition = glm::vec3(0, 0, 0)};
+    }
+
+    ~Scene()
+    {
+        for (OpenGLMesh *mesh : meshes)
+        {
+            delete mesh;
+        }
+
+        for (Texture *texture : textures)
+        {
+            delete texture;
+        }
+    }
+};
 
 void update(GLFWwindow *window, Scene &scene, PlanetParameters &planetParameters, State &state)
 {
@@ -218,7 +333,7 @@ void update(GLFWwindow *window, Scene &scene, PlanetParameters &planetParameters
     state.lastTime = currentTime;
 }
 
-void render(const Scene &scene, const State &state, GLuint *textures, const PlanetParameters &planetParameters)
+void render(const Scene &scene, const State &state, const PlanetParameters &planetParameters)
 {
     std::vector<RenderObject> objects = scene.objects;
 
@@ -227,7 +342,7 @@ void render(const Scene &scene, const State &state, GLuint *textures, const Plan
     glm::vec3 lightPosition = scene.lightPosition;
     for (RenderObject rs : objects)
     {
-        rs.texId = textures[state.textureIndex];
+        rs.texId = scene.textures[state.textureIndex]->id();
         unsigned int meshId = rs.meshId;
         OpenGLMesh *mesh = scene.meshes.at(meshId);
         glm::mat4 modelMatrix = mesh->modelMatrix;
@@ -262,57 +377,6 @@ void render(const Scene &scene, const State &state, GLuint *textures, const Plan
         }
     }
     check_gl_error();
-}
-
-ShaderEffect initializeTerrainGeneratorShader()
-{
-    GLuint terrainGeneratorProgramId = LoadShaders("../shaders/TerrainGenerator.vertexshader", "../shaders/TerrainGenerator.geometryshader", "../shaders/TerrainGenerator.fragmentshader");
-    ShaderEffect terrainGeneratorProgram = ShaderEffect(terrainGeneratorProgramId);
-    terrainGeneratorProgram.textureSamplerId = glGetUniformLocation(terrainGeneratorProgramId, "heightSlopeBasedColorMap");
-    return terrainGeneratorProgram;
-}
-
-ShaderEffect initializeAtmosphericScatteringShader()
-{
-    GLuint atmosphericScatteringProgramId = LoadShaders("../shaders/AtmosphericScattering.vertexshader", "../shaders/AtmosphericScattering.fragmentshader");
-    ShaderEffect atmosphericScatteringProgram = ShaderEffect(atmosphericScatteringProgramId);
-    return atmosphericScatteringProgram;
-}
-
-Scene generateScene(const PlanetParameters &planetParameters, GLuint *textures, unsigned int textureIndex)
-{
-    Mesh atmosphereMesh = generateSphere(planetParameters.atmosphereRadius(), planetParameters.atmosphereSubdivisions);
-    reverseFaces(atmosphereMesh);
-
-    Mesh sphereMesh = generateSphere(planetParameters.baseRadius, planetParameters.planetSubdivisions);
-
-    std::vector<OpenGLMesh *> openGlMeshes{
-        new OpenGLMesh(atmosphereMesh, glm::mat4(1.0)),
-        new OpenGLMesh(sphereMesh, glm::mat4(1.0))};
-
-    std::vector<ShaderEffect> shaders{
-        initializeAtmosphericScatteringShader(),
-        initializeTerrainGeneratorShader(),
-    };
-
-    std::vector<RenderObject> objects{
-        RenderObject{
-            .meshId = 0,
-            .shaderIds = std::vector<unsigned int>{0},
-            .texId = textures[textureIndex],
-        },
-        RenderObject{
-            .meshId = 1,
-            .shaderIds = std::vector<unsigned int>{1},
-            .texId = textures[textureIndex]}};
-
-    Camera camera{.fieldOfView = 45.0, .targetPosition = glm::vec3(0, 0, 0)};
-
-    return Scene{
-        .meshes = openGlMeshes,
-        .shaders = shaders,
-        .objects = objects,
-        .camera = camera};
 }
 
 class BoundVertexArrayObject
@@ -408,22 +472,10 @@ int main(void)
             try
             {
                 Glew glew;
-                const int textureCount = 4;
-                GLuint textures[textureCount];
-                const char *textureNames[textureCount] = {
-                    "beachMountain.png",
-                    "volcano.png",
-                    "ice.png",
-                    "tropic.png"};
-
-                for (int i = 0; i < textureCount; i++)
-                {
-                    textures[i] = loadSoil(textureNames[i], "../textures/");
-                }
 
                 PlanetParameters planetParameters;
                 State state;
-                Scene scene = generateScene(planetParameters, textures, state.textureIndex);
+                Scene scene(planetParameters, state.textureIndex);
                 GLFWwindow *glfwWindow = window.glfwWindow();
 
                 update(glfwWindow, scene, planetParameters, state);
@@ -441,7 +493,7 @@ int main(void)
                     glClearColor(0.0, 0.0, 0.0, 1.0);
                     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-                    render(scene, state, textures, planetParameters);
+                    render(scene, state, planetParameters);
 
                     glfwSwapBuffers(glfwWindow);
                     glfwPollEvents();
