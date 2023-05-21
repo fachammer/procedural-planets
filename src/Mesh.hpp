@@ -12,19 +12,42 @@ struct Mesh
     std::vector<glm::vec3> indexed_vertices;
 };
 
+class VertexBuffer
+{
+private:
+    unsigned int *bufferId;
+
+public:
+    VertexBuffer(const std::vector<glm::vec3> &vertices);
+    ~VertexBuffer();
+
+    void bind() const;
+};
+
+class ElementBuffer
+{
+private:
+    unsigned int *bufferId;
+
+public:
+    ElementBuffer(const std::vector<unsigned int> &indices);
+    ~ElementBuffer();
+
+    void bind() const;
+};
+
 class OpenGLMesh
 {
 private:
-    Mesh mesh;
-    unsigned int vertexBuffer;
-    unsigned int elementBuffer;
+    VertexBuffer vertexBuffer;
+    ElementBuffer elementBuffer;
+    unsigned int numberOfElements;
 
 public:
     glm::mat4 modelMatrix;
 
 public:
-    OpenGLMesh(Mesh _mesh, glm::mat4 _modelMatrix);
-    ~OpenGLMesh();
+    OpenGLMesh(const Mesh &_mesh, glm::mat4 _modelMatrix);
 
-    void draw();
+    void draw() const;
 };

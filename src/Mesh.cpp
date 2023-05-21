@@ -10,52 +10,70 @@
 // Include GLFW
 #include <glfw3.h>
 
-OpenGLMesh::OpenGLMesh(Mesh _mesh, glm::mat4 _modelMatrix) : mesh(_mesh), modelMatrix(_modelMatrix)
+VertexBuffer::VertexBuffer(const std::vector<glm::vec3> &vertices)
 {
-    glGenBuffers(1, &vertexBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, mesh.indexed_vertices.size() * sizeof(glm::vec3), &mesh.indexed_vertices[0], GL_STATIC_DRAW);
-    check_gl_error();
-
-    glGenBuffers(1, &elementBuffer);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh.indices.size() * sizeof(unsigned int), &mesh.indices[0], GL_STATIC_DRAW);
+    bufferId = new unsigned int;
+    glGenBuffers(1, bufferId);
+    glBindBuffer(GL_ARRAY_BUFFER, *bufferId);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices[0], GL_STATIC_DRAW);
     check_gl_error();
 }
 
-OpenGLMesh::~OpenGLMesh()
+VertexBuffer::~VertexBuffer()
 {
-    glDeleteBuffers(1, &vertexBuffer);
-    glDeleteBuffers(1, &elementBuffer);
+    glDeleteBuffers(1, bufferId);
+    delete bufferId;
 }
 
-void OpenGLMesh::draw()
+void VertexBuffer::bind() const
 {
-    // 1rst attribute buffer : vertices
+    glBindBuffer(GL_ARRAY_BUFFER, *bufferId);
+}
+
+ElementBuffer::ElementBuffer(const std::vector<unsigned int> &indices)
+{
+    bufferId = new unsigned int;
+    glGenBuffers(1, bufferId);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *bufferId);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
+    check_gl_error();
+}
+
+ElementBuffer::~ElementBuffer()
+{
+    glDeleteBuffers(1, bufferId);
+    delete bufferId;
+}
+
+void ElementBuffer::bind() const
+{
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *bufferId);
+}
+
+OpenGLMesh::OpenGLMesh(const Mesh &_mesh, glm::mat4 modelMatrix) : vertexBuffer(_mesh.indexed_vertices), elementBuffer(_mesh.indices), numberOfElements(_mesh.indices.size()), modelMatrix(glm::mat4(1.0))
+{
+}
+
+void OpenGLMesh::draw() const
+{
     glEnableVertexAttribArray(0);
 
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+    vertexBuffer.bind();
 
     glVertexAttribPointer(
-        0,        // attribute
-        3,        // size
-        GL_FLOAT, // type
-        GL_FALSE, // normalized?
-        0,        // stride
-        (void *)0 // array buffer offset
-    );
-    check_gl_error();
+        0,
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+        0,
+        (void *)0);
 
-    // Index buffer
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
+    elementBuffer.bind();
 
-    check_gl_error();
-    // Draw the triangles !
     glDrawElements(
-        GL_TRIANGLES,        // mode
-        mesh.indices.size(), // count
-        GL_UNSIGNED_INT,     // type
-        (void *)0            // element array buffer offset
-    );
+        GL_TRIANGLES,
+        numberOfElements,
+        GL_UNSIGNED_INT,
+        (void *)0);
     check_gl_error();
 }
