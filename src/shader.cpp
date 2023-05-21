@@ -250,9 +250,9 @@ GLuint LoadShaders(const char *vertex_file_name, const char *geometry_file_name,
 ShaderEffect::ShaderEffect(unsigned int _programId) : programId(_programId)
 {
     glUseProgram(programId);
-    MVPId = glGetUniformLocation(programId, "MVP");
-    VId = glGetUniformLocation(programId, "V");
-    MId = glGetUniformLocation(programId, "M");
-    textureSamplerId = glGetUniformLocation(programId, "myTextureSampler");
-    lightPositionId = glGetUniformLocation(programId, "LightPosition_worldspace");
+    MVPId = glGetUniformLocation(programId, "modelViewProjectionMatrix");
+    VId = glGetUniformLocation(programId, "viewMatrix");
+    MId = glGetUniformLocation(programId, "modelMatrix");
+    textureSamplerId = glGetUniformLocation(programId, "textureSampler");
+    lightPositionId = glGetUniformLocation(programId, "lightPositionInWorldSpace");
 }

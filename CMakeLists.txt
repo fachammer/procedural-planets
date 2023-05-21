@@ -37,11 +37,10 @@ add_executable(ProceduralPlanets
 	src/GLError.h
 	src/GLError.cpp
 	
-    shaders/TerrainGenerator.vertexshader
-    shaders/TerrainGenerator.geometryshader
-    shaders/TerrainGenerator.fragmentshader
-    shaders/AtmosphericScattering.vertexshader
-    shaders/AtmosphericScattering.fragmentshader
+    shaders/TerrainGenerator.vertex.glsl
+    shaders/TerrainGenerator.fragment.glsl
+    shaders/AtmosphericScattering.vertex.glsl
+    shaders/AtmosphericScattering.fragment.glsl
 )
 
 target_link_libraries(ProceduralPlanets

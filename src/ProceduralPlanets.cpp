@@ -168,7 +168,7 @@ void reverseFaces(Mesh &mesh)
 }
 ShaderEffect initializeTerrainGeneratorShader()
 {
-    GLuint terrainGeneratorProgramId = LoadShaders("../shaders/TerrainGenerator.vertexshader", "../shaders/TerrainGenerator.geometryshader", "../shaders/TerrainGenerator.fragmentshader");
+    GLuint terrainGeneratorProgramId = LoadShaders("../shaders/TerrainGenerator.vertex.glsl", "../shaders/TerrainGenerator.fragment.glsl");
     ShaderEffect terrainGeneratorProgram = ShaderEffect(terrainGeneratorProgramId);
     terrainGeneratorProgram.textureSamplerId = glGetUniformLocation(terrainGeneratorProgramId, "heightSlopeBasedColorMap");
     return terrainGeneratorProgram;
@@ -176,7 +176,7 @@ ShaderEffect initializeTerrainGeneratorShader()
 
 ShaderEffect initializeAtmosphericScatteringShader()
 {
-    GLuint atmosphericScatteringProgramId = LoadShaders("../shaders/AtmosphericScattering.vertexshader", "../shaders/AtmosphericScattering.fragmentshader");
+    GLuint atmosphericScatteringProgramId = LoadShaders("../shaders/AtmosphericScattering.vertex.glsl", "../shaders/AtmosphericScattering.fragment.glsl");
     ShaderEffect atmosphericScatteringProgram = ShaderEffect(atmosphericScatteringProgramId);
     return atmosphericScatteringProgram;
 }
