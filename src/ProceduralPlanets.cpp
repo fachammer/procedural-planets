@@ -189,7 +189,7 @@ struct Scene
     std::vector<Texture *> textures;
 
     Camera camera;
-    glm::vec3 lightPosition;
+    glm::vec3 lightDirection;
 
     State state;
     PlanetParameters planetParameters;
@@ -227,7 +227,7 @@ struct Scene
                 .shaderIds = std::vector<unsigned int>{1},
                 .texId = textures[state.textureIndex]->id()}};
 
-        lightPosition = camera.position();
+        lightDirection = camera.position();
     }
 
     ~Scene()
@@ -314,7 +314,7 @@ void update(GLFWwindow *window, Scene &scene)
 
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
     {
-        scene.lightPosition = scene.camera.position();
+        scene.lightDirection = scene.camera.position();
     }
 
     scene.state.lastTime = currentTime;
@@ -355,7 +355,7 @@ void render(GLFWwindow *glfwWindow, const Scene &scene)
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, renderObject.texId);
             glUniform1i(effect.textureSamplerId, 0);
-            glUniform3f(effect.lightPositionId, scene.lightPosition.x, scene.lightPosition.y, scene.lightPosition.z);
+            glUniform3f(effect.lightDirectionId, scene.lightDirection.x, scene.lightDirection.y, scene.lightDirection.z);
 
             glUniformMatrix4fv(effect.MVPId, 1, GL_FALSE, &modelViewProjectionMatrix[0][0]);
             glUniformMatrix4fv(effect.MId, 1, GL_FALSE, &modelMatrix[0][0]);

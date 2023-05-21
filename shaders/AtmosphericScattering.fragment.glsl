@@ -6,7 +6,7 @@ in vec3 positionInWorldSpace;
 out vec4 color;
 
 uniform vec3 cameraPositionInWorldSpace;
-uniform vec3 lightPositionInWorldSpace;
+uniform vec3 lightDirectionInWorldSpace;
 uniform float atmosphereRadius;
 uniform float baseRadius;
 
@@ -123,8 +123,7 @@ void main() {
     R_INNER = baseRadius;
     SCALE_H = 4.0 / (R - R_INNER);
     SCALE_L = 1.0 / (R - R_INNER);
-    vec3 lightDirection = lightPositionInWorldSpace - positionInWorldSpace;
-    E = lightPower / length(lightDirection);
+    E = lightPower / length(lightDirectionInWorldSpace);
 
     vec3 eye = cameraPositionInWorldSpace;
     vec3 dir = normalize(positionInWorldSpace - cameraPositionInWorldSpace);
@@ -133,7 +132,7 @@ void main() {
     vec2 f = ray_vs_sphere(eye, dir, baseRadius);
     e.y = min(e.y, f.x);
 
-    vec3 I = in_scatter(eye, dir, e, normalize(lightDirection));
+    vec3 I = in_scatter(eye, dir, e, normalize(lightDirectionInWorldSpace));
 
     I = 1.0 - exp(-0.2 * I);
 

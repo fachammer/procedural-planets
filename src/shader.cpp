@@ -254,5 +254,5 @@ ShaderEffect::ShaderEffect(unsigned int _programId) : programId(_programId)
     VId = glGetUniformLocation(programId, "viewMatrix");
     MId = glGetUniformLocation(programId, "modelMatrix");
     textureSamplerId = glGetUniformLocation(programId, "textureSampler");
-    lightPositionId = glGetUniformLocation(programId, "lightPositionInWorldSpace");
+    lightDirectionId = glGetUniformLocation(programId, "lightDirectionInWorldSpace");
 }

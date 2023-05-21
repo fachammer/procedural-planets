@@ -1,6 +1,6 @@
 #version 330 core
 
-layout(location = 0) in vec3 vertexPosition_modelspace;
+layout(location = 0) in vec3 vertexPositionInModelSpace;
 
 out vec3 positionInWorldSpace;
 out vec3 normalInCameraSpace;
@@ -10,7 +10,7 @@ out float vertexSlope;
 uniform mat4 modelViewProjectionMatrix;
 uniform mat4 viewMatrix;
 uniform mat4 modelMatrix;
-uniform vec3 lightPositionInWorldSpace;
+uniform vec3 lightDirectionInWorldSpace;
 uniform float maxNegativeHeight;
 uniform float maxPositiveHeight;
 uniform vec3 noiseOffset;
@@ -158,17 +158,13 @@ vec3 displacedPosition(vec3 position, float minElevation, float maxElevation, ou
 }
 
 void main() {
-    vec3 normal_modelspace;
-    vec3 positionInModelSpace = displacedPosition(vertexPosition_modelspace, -maxNegativeHeight, maxPositiveHeight, normal_modelspace, vertexSlope);
+    vec3 normalInModelSpace;
+    vec3 positionInModelSpace = displacedPosition(vertexPositionInModelSpace, -maxNegativeHeight, maxPositiveHeight, normalInModelSpace, vertexSlope);
     gl_Position = modelViewProjectionMatrix * vec4(positionInModelSpace, 1);
 
     positionInWorldSpace = (modelMatrix * vec4(positionInModelSpace, 1)).xyz;
 
-    vec3 vertexPosition_cameraspace = (viewMatrix * modelMatrix * vec4(positionInModelSpace, 1)).xyz;
-    vec3 eyeDirection_cameraspace = vec3(0, 0, 0) - vertexPosition_cameraspace;
+    lightDirectionInCameraSpace = (viewMatrix * vec4(lightDirectionInWorldSpace, 0)).xyz;
 
-    vec3 LightPosition_cameraspace = (viewMatrix * vec4(lightPositionInWorldSpace, 1)).xyz;
-    lightDirectionInCameraSpace = LightPosition_cameraspace + eyeDirection_cameraspace;
-
-    normalInCameraSpace = (viewMatrix * modelMatrix * vec4(normal_modelspace, 0)).xyz;
+    normalInCameraSpace = (viewMatrix * modelMatrix * vec4(normalInModelSpace, 0)).xyz;
 }

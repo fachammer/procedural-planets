@@ -13,5 +13,5 @@ struct ShaderEffect
     unsigned int VId;
     unsigned int MId;
     unsigned int textureSamplerId;
-    unsigned int lightPositionId;
+    unsigned int lightDirectionId;
 };
