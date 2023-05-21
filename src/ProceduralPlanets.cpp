@@ -330,24 +330,24 @@ void render(GLFWwindow *glfwWindow, const Scene &scene)
     glfwGetWindowSize(glfwWindow, &width, &height);
     float aspectRatio = (float)width / height;
     glm::vec3 cameraPosition = scene.camera.position();
-    for (RenderObject rs : scene.objects)
+    for (RenderObject renderObject : scene.objects)
     {
-        rs.texId = scene.textures[scene.state.textureIndex]->id();
-        unsigned int meshId = rs.meshId;
+        renderObject.texId = scene.textures[scene.state.textureIndex]->id();
+        unsigned int meshId = renderObject.meshId;
         OpenGLMesh *mesh = scene.meshes.at(meshId);
         glm::mat4 modelMatrix = mesh->modelMatrix;
         glm::mat4 viewMatrix = scene.camera.viewMatrix();
         glm::mat4 projectionMatrix = glm::perspective(scene.camera.fieldOfView, aspectRatio, 0.1f, 10000.0f);
         glm::mat4 MVP = projectionMatrix * viewMatrix * modelMatrix;
 
-        for (int j = 0; j < rs.shaderIds.size(); j++)
+        for (int j = 0; j < renderObject.shaderIds.size(); j++)
         {
-            unsigned int effectId = rs.shaderIds.at(j);
+            unsigned int effectId = renderObject.shaderIds.at(j);
             ShaderEffect effect = scene.shaders.at(effectId);
             glUseProgram(effect.programId);
 
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, rs.texId);
+            glBindTexture(GL_TEXTURE_2D, renderObject.texId);
             glUniform1i(effect.textureSamplerId, 0);
             glUniform3f(effect.lightPositionId, scene.lightPosition.x, scene.lightPosition.y, scene.lightPosition.z);
 
