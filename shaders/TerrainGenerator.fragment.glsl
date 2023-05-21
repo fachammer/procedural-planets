@@ -34,7 +34,7 @@ void main() {
 
     vec2 textureCoordinates = vec2(heightCoordinate, slopeCoordinate);
     vec4 MaterialDiffuseColor = texture(heightSlopeBasedColorMap, textureCoordinates);
-    vec4 MaterialAmbientColor = vec4(0.0, 0.0, 0.0, 1.0) * MaterialDiffuseColor;
+    vec4 MaterialAmbientColor = 0.03 * MaterialDiffuseColor;
 
     vec3 diffuseLight = calculateLight(lightDirectionInWorldSpace, LightPower, lightColor, lightDirectionInCameraSpace);
 
