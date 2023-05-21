@@ -68,7 +68,7 @@ struct State
 struct RenderObject
 {
     unsigned int meshId;
-    std::vector<int> shaderIds;
+    std::vector<unsigned int> shaderIds;
     unsigned int texId;
 };
 
@@ -277,30 +277,35 @@ ShaderEffect initializeAtmosphericScatteringShader()
 
 Scene generateScene(const PlanetParameters &planetParameters, GLuint *textures, unsigned int textureIndex)
 {
-    Scene scene;
-
-    ShaderEffect atmosphereShader = initializeAtmosphericScatteringShader();
-    scene.shaders.push_back(atmosphereShader);
     Mesh atmosphereMesh = generateSphere(planetParameters.atmosphereRadius(), planetParameters.atmosphereSubdivisions);
     reverseFaces(atmosphereMesh);
-    scene.meshes.push_back(new OpenGLMesh(atmosphereMesh, glm::mat4(1.0)));
-    RenderObject atmosphereRenderState = RenderObject();
-    atmosphereRenderState.meshId = scene.meshes.size() - 1;
-    atmosphereRenderState.shaderIds.push_back(scene.shaders.size() - 1);
-    atmosphereRenderState.texId = textures[textureIndex];
-    scene.objects.push_back(atmosphereRenderState);
 
-    ShaderEffect terrainGeneratorShader = initializeTerrainGeneratorShader();
-    scene.shaders.push_back(terrainGeneratorShader);
     Mesh sphereMesh = generateSphere(planetParameters.baseRadius, planetParameters.planetSubdivisions);
-    scene.meshes.push_back(new OpenGLMesh(sphereMesh, glm::mat4(1.0)));
-    RenderObject sphereRenderState = RenderObject();
-    sphereRenderState.meshId = scene.meshes.size() - 1;
-    sphereRenderState.shaderIds.push_back(scene.shaders.size() - 1);
-    sphereRenderState.texId = textures[textureIndex];
-    scene.objects.push_back(sphereRenderState);
 
-    return scene;
+    std::vector<OpenGLMesh *> openGlMeshes{
+        new OpenGLMesh(atmosphereMesh, glm::mat4(1.0)),
+        new OpenGLMesh(sphereMesh, glm::mat4(1.0))};
+
+    std::vector<ShaderEffect> shaders{
+        initializeAtmosphericScatteringShader(),
+        initializeTerrainGeneratorShader(),
+    };
+
+    std::vector<RenderObject> objects{
+        RenderObject{
+            .meshId = 0,
+            .shaderIds = std::vector<unsigned int>{0},
+            .texId = textures[textureIndex],
+        },
+        RenderObject{
+            .meshId = 1,
+            .shaderIds = std::vector<unsigned int>{1},
+            .texId = textures[textureIndex]}};
+
+    return Scene{
+        .meshes = openGlMeshes,
+        .shaders = shaders,
+        .objects = objects};
 }
 
 class BoundVertexArrayObject
