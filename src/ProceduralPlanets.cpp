@@ -322,6 +322,10 @@ void update(GLFWwindow *window, Scene &scene)
 
 void render(GLFWwindow *glfwWindow, const Scene &scene)
 {
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    glEnable(GL_CULL_FACE);
+
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glPolygonMode(GL_FRONT_AND_BACK, scene.state.wireFrameMode ? GL_LINE : GL_FILL);
@@ -469,14 +473,8 @@ int main(void)
             try
             {
                 Glew glew;
-
                 Scene scene;
                 GLFWwindow *glfwWindow = window.glfwWindow();
-
-                glEnable(GL_DEPTH_TEST);
-                glDepthFunc(GL_LESS);
-                glEnable(GL_CULL_FACE);
-
                 BoundVertexArrayObject vao;
                 do
                 {
