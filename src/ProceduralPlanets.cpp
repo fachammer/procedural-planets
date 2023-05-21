@@ -338,7 +338,7 @@ void render(GLFWwindow *glfwWindow, const Scene &scene)
         glm::mat4 modelMatrix = mesh->modelMatrix;
         glm::mat4 viewMatrix = scene.camera.viewMatrix();
         glm::mat4 projectionMatrix = glm::perspective(scene.camera.fieldOfView, aspectRatio, 0.1f, 10000.0f);
-        glm::mat4 MVP = projectionMatrix * viewMatrix * modelMatrix;
+        glm::mat4 modelViewProjectionMatrix = projectionMatrix * viewMatrix * modelMatrix;
 
         for (int j = 0; j < renderObject.shaderIds.size(); j++)
         {
@@ -351,7 +351,7 @@ void render(GLFWwindow *glfwWindow, const Scene &scene)
             glUniform1i(effect.textureSamplerId, 0);
             glUniform3f(effect.lightPositionId, scene.lightPosition.x, scene.lightPosition.y, scene.lightPosition.z);
 
-            glUniformMatrix4fv(effect.MVPId, 1, GL_FALSE, &MVP[0][0]);
+            glUniformMatrix4fv(effect.MVPId, 1, GL_FALSE, &modelViewProjectionMatrix[0][0]);
             glUniformMatrix4fv(effect.MId, 1, GL_FALSE, &modelMatrix[0][0]);
             glUniformMatrix4fv(effect.VId, 1, GL_FALSE, &viewMatrix[0][0]);
 
