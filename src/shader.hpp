@@ -65,5 +65,5 @@ public:
     }
 };
 
-ShaderProgram *LoadShaders(std::string vertexShaderPath, std::string fragmentShaderPath);
-unsigned int LoadShaders(const char *vertex_file_name, const char *geometry_file_name, const char *fragment_file_name);
+Shader *loadShader(GLenum shaderType, std::string path);
+ShaderProgram *createVertexFragmentShaderProgram(Shader *vertexShader, Shader *fragmentShader);

@@ -38,11 +38,8 @@ Shader *loadShader(GLenum shaderType, std::string path)
 }
 
 ShaderProgram *
-LoadShaders(std::string vertexShaderPath, std::string fragmentShaderPath)
+createVertexFragmentShaderProgram(Shader *vertexShader, Shader *fragmentShader)
 {
-    Shader *vertexShader = loadShader(GL_VERTEX_SHADER, vertexShaderPath);
-    Shader *fragmentShader = loadShader(GL_FRAGMENT_SHADER, fragmentShaderPath);
-
     printf("Linking program\n");
     ShaderProgram *shaderProgram = new ShaderProgram(std::vector<Shader *>{vertexShader, fragmentShader});
 

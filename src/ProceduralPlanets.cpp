@@ -152,6 +152,7 @@ public:
         return textureId;
     }
 };
+
 void reverseFaces(Mesh &mesh)
 {
     std::vector<unsigned int> reversedIndices;
@@ -165,15 +166,6 @@ void reverseFaces(Mesh &mesh)
     }
 
     mesh.indices = reversedIndices;
-}
-ShaderProgram *initializeTerrainGeneratorShader()
-{
-    return LoadShaders("../shaders/TerrainGenerator.vertex.glsl", "../shaders/TerrainGenerator.fragment.glsl");
-}
-
-ShaderProgram *initializeAtmosphericScatteringShader()
-{
-    return LoadShaders("../shaders/AtmosphericScattering.vertex.glsl", "../shaders/AtmosphericScattering.fragment.glsl");
 }
 
 struct Scene
@@ -201,8 +193,12 @@ struct Scene
             new OpenGLMesh(sphereMesh, glm::mat4(1.0))};
 
         shaderPrograms = {
-            initializeAtmosphericScatteringShader(),
-            initializeTerrainGeneratorShader(),
+            createVertexFragmentShaderProgram(
+                loadShader(GL_VERTEX_SHADER, "../shaders/AtmosphericScattering.vertex.glsl"),
+                loadShader(GL_FRAGMENT_SHADER, "../shaders/AtmosphericScattering.fragment.glsl")),
+            createVertexFragmentShaderProgram(
+                loadShader(GL_VERTEX_SHADER, "../shaders/TerrainGenerator.vertex.glsl"),
+                loadShader(GL_FRAGMENT_SHADER, "../shaders/TerrainGenerator.fragment.glsl")),
         };
 
         textures = {
