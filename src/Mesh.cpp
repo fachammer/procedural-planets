@@ -50,7 +50,11 @@ void ElementBuffer::bind() const
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *bufferId);
 }
 
-OpenGLMesh::OpenGLMesh(const Mesh &_mesh, glm::mat4 modelMatrix) : vertexBuffer(_mesh.indexed_vertices), elementBuffer(_mesh.indices), numberOfElements(_mesh.indices.size()), modelMatrix(glm::mat4(1.0))
+OpenGLMesh::OpenGLMesh(const Mesh &_mesh, glm::mat4 modelMatrix)
+    : vertexBuffer(_mesh.indexed_vertices),
+      elementBuffer(_mesh.indices),
+      numberOfElements(_mesh.indices.size()),
+      modelMatrix(glm::mat4(1.0))
 {
 }
 
