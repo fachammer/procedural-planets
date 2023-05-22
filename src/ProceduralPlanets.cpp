@@ -141,6 +141,13 @@ void reverseFaces(Mesh &mesh)
     mesh.indices = reversedIndices;
 }
 
+struct DirectionalLight
+{
+    glm::vec3 direction;
+    glm::vec3 color;
+    float power;
+};
+
 struct Scene
 {
     struct RenderObject
@@ -154,9 +161,7 @@ struct Scene
     std::vector<Texture> textures;
 
     Camera camera;
-    glm::vec3 lightDirection;
-    glm::vec3 lightColor;
-    float lightPower;
+    DirectionalLight light;
 
     State state;
     PlanetParameters planetParameters;
@@ -193,11 +198,14 @@ struct Scene
             RenderObject{
                 .meshIndex = 1,
                 .shaderIndices = std::vector<unsigned int>{1},
-            }};
+            },
+        };
 
-        lightDirection = camera.position();
-        lightPower = 40000.f;
-        lightColor = glm::vec3(1, 1, 1);
+        light = {
+            .direction = camera.position(),
+            .power = 40000.f,
+            .color = glm::vec3(1, 1, 1),
+        };
     }
 
     Scene(const Scene &) = delete;
@@ -277,7 +285,7 @@ void update(GLFWwindow *window, Scene &scene)
 
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
     {
-        scene.lightDirection = scene.camera.position();
+        scene.light.direction = scene.camera.position();
     }
 
     scene.state.lastTime = currentTime;
@@ -315,18 +323,22 @@ void render(GLFWwindow *glfwWindow, const Scene &scene)
             glBindTexture(GL_TEXTURE_2D, scene.textures[scene.state.textureIndex].id());
 
             glUniform1i(glGetUniformLocation(shaderProgram.id(), "heightSlopeBasedColorMap"), 0);
-            glUniform3f(glGetUniformLocation(shaderProgram.id(), "lightDirectionInWorldSpace"), scene.lightDirection.x, scene.lightDirection.y, scene.lightDirection.z);
+
+            glUniform3f(glGetUniformLocation(shaderProgram.id(), "lightDirectionInWorldSpace"), scene.light.direction.x, scene.light.direction.y, scene.light.direction.z);
+            glUniform3f(glGetUniformLocation(shaderProgram.id(), "lightColor"), scene.light.color.r, scene.light.color.g, scene.light.color.b);
+            glUniform1f(glGetUniformLocation(shaderProgram.id(), "lightPower"), scene.light.power);
+
             glUniformMatrix4fv(glGetUniformLocation(shaderProgram.id(), "modelViewProjectionMatrix"), 1, GL_FALSE, &modelViewProjectionMatrix[0][0]);
             glUniformMatrix4fv(glGetUniformLocation(shaderProgram.id(), "modelMatrix"), 1, GL_FALSE, &mesh.modelMatrix[0][0]);
+
+            glUniform3f(glGetUniformLocation(shaderProgram.id(), "cameraPositionInWorldSpace"), cameraPosition.x, cameraPosition.y, cameraPosition.z);
             glUniformMatrix4fv(glGetUniformLocation(shaderProgram.id(), "viewMatrix"), 1, GL_FALSE, &viewMatrix[0][0]);
+
             glUniform1f(glGetUniformLocation(shaderProgram.id(), "maxNegativeHeight"), scene.planetParameters.maxDepth);
             glUniform1f(glGetUniformLocation(shaderProgram.id(), "maxPositiveHeight"), scene.planetParameters.maxHeight);
             glUniform1f(glGetUniformLocation(shaderProgram.id(), "baseRadius"), scene.planetParameters.baseRadius);
             glUniform1f(glGetUniformLocation(shaderProgram.id(), "atmosphereRadius"), scene.planetParameters.atmosphereRadius());
-            glUniform1f(glGetUniformLocation(shaderProgram.id(), "lightPower"), scene.lightPower);
             glUniform3f(glGetUniformLocation(shaderProgram.id(), "noiseOffset"), scene.state.noiseOffset.x, scene.state.noiseOffset.y, scene.state.noiseOffset.z);
-            glUniform3f(glGetUniformLocation(shaderProgram.id(), "cameraPositionInWorldSpace"), cameraPosition.x, cameraPosition.y, cameraPosition.z);
-            glUniform3f(glGetUniformLocation(shaderProgram.id(), "lightColor"), scene.lightColor.r, scene.lightColor.g, scene.lightColor.b);
 
             glBindBuffer(GL_ARRAY_BUFFER, mesh.getVertexBuffer().id());
             glEnableVertexAttribArray(0);
