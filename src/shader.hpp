@@ -19,6 +19,23 @@ public:
     Shader(const Shader &shader) = delete;
     Shader operator=(const Shader &shader) = delete;
 
+    Shader(Shader &&shader)
+        : shaderId(shader.shaderId)
+
+    {
+        shader.shaderId = 0;
+    }
+
+    Shader &operator=(Shader &&other)
+    {
+        if (this != &other)
+        {
+            shaderId = other.shaderId;
+            other.shaderId = 0;
+        }
+        return *this;
+    }
+
     ~Shader()
     {
         glDeleteShader(shaderId);
@@ -34,28 +51,40 @@ struct ShaderProgram
 {
 private:
     GLuint programId;
-    std::vector<Shader *> shaders;
 
 public:
-    ShaderProgram(std::vector<Shader *> shaders)
+    ShaderProgram(const std::vector<Shader> &shaders)
     {
         programId = glCreateProgram();
-        for (Shader *shader : shaders)
+        for (const Shader &shader : shaders)
         {
-            glAttachShader(programId, shader->id());
+            glAttachShader(programId, shader.id());
         }
         glLinkProgram(programId);
     }
 
-    ShaderProgram(const ShaderProgram &shader) = delete;
-    ShaderProgram operator=(const ShaderProgram &shader) = delete;
+    ShaderProgram(const ShaderProgram &) = delete;
+    ShaderProgram operator=(const ShaderProgram &) = delete;
+
+    ShaderProgram(ShaderProgram &&program)
+        : programId(program.programId)
+
+    {
+        program.programId = 0;
+    }
+
+    ShaderProgram &operator=(ShaderProgram &&other)
+    {
+        if (this != &other)
+        {
+            programId = other.programId;
+            other.programId = 0;
+        }
+        return *this;
+    }
 
     ~ShaderProgram()
     {
-        for (Shader *shader : shaders)
-        {
-            delete shader;
-        }
         glDeleteProgram(programId);
     }
 
@@ -65,5 +94,5 @@ public:
     }
 };
 
-Shader *loadShader(GLenum shaderType, std::string path);
-ShaderProgram *createVertexFragmentShaderProgram(Shader *vertexShader, Shader *fragmentShader);
+Shader loadShader(GLenum shaderType, std::string path);
+ShaderProgram createVertexFragmentShaderProgram(Shader vertexShader, Shader fragmentShader);
