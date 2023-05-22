@@ -174,7 +174,7 @@ struct Scene
     std::vector<RenderObject> objects;
     std::vector<std::unique_ptr<OpenGLMesh>> meshes;
     std::vector<ShaderProgram *> shaderPrograms;
-    std::vector<Texture *> textures;
+    std::vector<std::unique_ptr<Texture>> textures;
 
     Camera camera;
     glm::vec3 lightDirection;
@@ -201,11 +201,10 @@ struct Scene
                 loadShader(GL_FRAGMENT_SHADER, "../shaders/TerrainGenerator.fragment.glsl")),
         };
 
-        textures = {
-            new Texture("../textures/beachMountain.png"),
-            new Texture("../textures/ice.png"),
-            new Texture("../textures/tropic.png"),
-            new Texture("../textures/volcano.png")};
+        textures.push_back(std::make_unique<Texture>("../textures/beachMountain.png"));
+        textures.push_back(std::make_unique<Texture>("../textures/ice.png"));
+        textures.push_back(std::make_unique<Texture>("../textures/tropic.png"));
+        textures.push_back(std::make_unique<Texture>("../textures/volcano.png"));
 
         objects = {
             RenderObject{
@@ -223,11 +222,6 @@ struct Scene
 
     ~Scene()
     {
-        for (Texture *texture : textures)
-        {
-            delete texture;
-        }
-
         for (ShaderProgram *shaderProgram : shaderPrograms)
         {
             delete shaderProgram;
