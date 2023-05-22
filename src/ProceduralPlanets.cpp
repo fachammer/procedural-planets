@@ -42,7 +42,7 @@ struct PlanetParameters
 struct State
 {
     glm::vec3 noiseOffset = glm::vec3(0, 0, 0);
-    bool canGenerateNewNoise = true;
+    bool isPlanetGenerationBlocked = true;
     int textureIndex = 0;
     float lastTime = 0;
 };
@@ -204,7 +204,7 @@ struct Scene
 
         light = {
             .direction = camera.position(),
-            .power = 40000.f,
+            .power = 1.f,
             .color = glm::vec3(1, 1, 1),
         };
     }
@@ -256,6 +256,16 @@ void updateCamera(Camera &camera, GLFWwindow *window, float deltaTime)
     camera.aspectRatio = (float)width / height;
 }
 
+float random_in_unit_interval()
+{
+    return static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+}
+
+float random_in_range(float min, float max)
+{
+    return min + random_in_unit_interval() * (max - min);
+}
+
 void update(GLFWwindow *window, Scene &scene)
 {
     double currentTime = glfwGetTime();
@@ -264,27 +274,16 @@ void update(GLFWwindow *window, Scene &scene)
     updateCamera(scene.camera, window, deltaTime);
 
     int newNoiseOffset = glfwGetKey(window, GLFW_KEY_R);
-    if (newNoiseOffset == GLFW_PRESS && scene.state.canGenerateNewNoise)
+    if (newNoiseOffset == GLFW_PRESS && !scene.state.isPlanetGenerationBlocked)
     {
         scene.state.noiseOffset = glm::vec3(rand() % 99, rand() % 99, rand() % 99);
-        scene.state.canGenerateNewNoise = false;
+        scene.state.textureIndex = rand() % scene.textures.size();
+        scene.light.direction = glm::vec3(random_in_range(-1, 1), random_in_range(-1, 1), random_in_range(-1, 1));
+        scene.state.isPlanetGenerationBlocked = true;
     }
     else if (newNoiseOffset == GLFW_RELEASE)
     {
-        scene.state.canGenerateNewNoise = true;
-    }
-
-    for (int i = 0; i < 4; i++)
-    {
-        if (glfwGetKey(window, GLFW_KEY_1 + i) == GLFW_PRESS)
-        {
-            scene.state.textureIndex = i;
-        }
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-    {
-        scene.light.direction = scene.camera.position();
+        scene.state.isPlanetGenerationBlocked = false;
     }
 
     scene.state.lastTime = currentTime;

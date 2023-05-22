@@ -7,7 +7,6 @@ in float vertexSlope;
 
 out vec4 color;
 
-uniform vec3 lightDirectionInWorldSpace;
 uniform vec3 lightColor;
 uniform sampler2D heightSlopeBasedColorMap;
 uniform float lightPower;
@@ -16,10 +15,7 @@ float map(float value, float inMin, float inMax, float outMin, float outMax) {
     return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);
 }
 
-vec3 calculateLight(vec3 lightDirection, float power, vec3 color, vec3 lightDirectionInCameraSpace) {
-    float distance = length(lightDirection);
-    power /= distance * distance;
-
+vec3 calculateLight(float power, vec3 color, vec3 lightDirectionInCameraSpace) {
     vec3 n = normalize(normalInCameraSpace);
     vec3 l = normalize(lightDirectionInCameraSpace);
     float ndotL = clamp(dot(n, l), 0, 1);
@@ -35,7 +31,7 @@ void main() {
     vec4 materialDiffuseColor = texture(heightSlopeBasedColorMap, textureCoordinates);
     vec4 materialAmbientColor = 0.03 * materialDiffuseColor;
 
-    vec3 diffuseLight = calculateLight(lightDirectionInWorldSpace, lightPower, lightColor, lightDirectionInCameraSpace);
+    vec3 diffuseLight = calculateLight(lightPower, lightColor, lightDirectionInCameraSpace);
 
     color = materialAmbientColor + materialDiffuseColor * vec4(diffuseLight, 1);
 }

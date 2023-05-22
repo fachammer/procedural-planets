@@ -123,7 +123,7 @@ void main() {
     R_INNER = baseRadius;
     SCALE_H = 4.0 / (R - R_INNER);
     SCALE_L = 1.0 / (R - R_INNER);
-    E = lightPower / length(lightDirectionInWorldSpace);
+    E = lightPower * 80;
 
     vec3 eye = cameraPositionInWorldSpace;
     vec3 dir = normalize(positionInWorldSpace - cameraPositionInWorldSpace);
