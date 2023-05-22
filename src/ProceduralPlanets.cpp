@@ -62,13 +62,6 @@ struct State
     float lastTime = 0;
 };
 
-struct RenderObject
-{
-    unsigned int meshId;
-    std::vector<unsigned int> shaderIds;
-    unsigned int textureId;
-};
-
 const glm::vec3 UP(0, 1, 0);
 struct Camera
 {
@@ -159,6 +152,12 @@ void reverseFaces(Mesh &mesh)
 
 struct Scene
 {
+    struct RenderObject
+    {
+        unsigned int meshIndex;
+        std::vector<unsigned int> shaderIndices;
+        unsigned int textureIndex;
+    };
     std::vector<RenderObject> objects;
     std::vector<OpenGLMesh> meshes;
     std::vector<ShaderProgram> shaderPrograms;
@@ -196,14 +195,14 @@ struct Scene
 
         objects = {
             RenderObject{
-                .meshId = 0,
-                .shaderIds = std::vector<unsigned int>{0},
-                .textureId = textures[state.textureIndex].id(),
+                .meshIndex = 0,
+                .shaderIndices = std::vector<unsigned int>{0},
+                .textureIndex = textures[state.textureIndex].id(),
             },
             RenderObject{
-                .meshId = 1,
-                .shaderIds = std::vector<unsigned int>{1},
-                .textureId = textures[state.textureIndex].id()}};
+                .meshIndex = 1,
+                .shaderIndices = std::vector<unsigned int>{1},
+                .textureIndex = textures[state.textureIndex].id()}};
 
         lightDirection = camera.position();
     }
@@ -308,22 +307,22 @@ void render(GLFWwindow *glfwWindow, const Scene &scene)
     glm::mat4 viewMatrix = scene.camera.viewMatrix();
     glm::mat4 projectionMatrix = glm::perspective(scene.camera.fieldOfView, aspectRatio, 0.1f, 10000.0f);
     glm::mat4 viewProjectionMatrix = projectionMatrix * viewMatrix;
-    for (RenderObject renderObject : scene.objects)
+    for (Scene::RenderObject renderObject : scene.objects)
     {
-        renderObject.textureId = scene.textures[scene.state.textureIndex].id();
-        unsigned int meshId = renderObject.meshId;
+        renderObject.textureIndex = scene.textures[scene.state.textureIndex].id();
+        unsigned int meshId = renderObject.meshIndex;
         const OpenGLMesh &mesh = scene.meshes[meshId];
 
         glm::mat4 modelViewProjectionMatrix = viewProjectionMatrix * mesh.modelMatrix;
 
-        for (unsigned int shaderId : renderObject.shaderIds)
+        for (unsigned int shaderIndex : renderObject.shaderIndices)
         {
-            const ShaderProgram &shaderProgram = scene.shaderPrograms[shaderId];
+            const ShaderProgram &shaderProgram = scene.shaderPrograms[shaderIndex];
 
             glUseProgram(shaderProgram.id());
 
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, renderObject.textureId);
+            glBindTexture(GL_TEXTURE_2D, renderObject.textureIndex);
 
             glUniform1i(glGetUniformLocation(shaderProgram.id(), "heightSlopeBasedColorMap"), 0);
             glUniform3f(glGetUniformLocation(shaderProgram.id(), "lightDirectionInWorldSpace"), scene.lightDirection.x, scene.lightDirection.y, scene.lightDirection.z);
