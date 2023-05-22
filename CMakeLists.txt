@@ -50,4 +50,4 @@ target_link_libraries(ProceduralPlanets
     SOIL
 )
 
-set_property(TARGET ProceduralPlanets PROPERTY CXX_STANDARD 11)
+set_property(TARGET ProceduralPlanets PROPERTY CXX_STANDARD 14)

@@ -15,14 +15,30 @@ struct Mesh
 class VertexBuffer
 {
 private:
-    unsigned int bufferId = 0;
+    unsigned int bufferId;
 
 public:
+    VertexBuffer() : bufferId(0) {}
     VertexBuffer(const std::vector<glm::vec3> &vertices);
     ~VertexBuffer();
 
-    VertexBuffer(const VertexBuffer &buffer) = delete;
-    VertexBuffer operator=(const VertexBuffer &buffer) = delete;
+    VertexBuffer(VertexBuffer &buffer) = delete;
+    VertexBuffer operator=(VertexBuffer &buffer) = delete;
+
+    VertexBuffer(VertexBuffer &&buffer) : bufferId(buffer.bufferId)
+    {
+        buffer.bufferId = 0;
+    }
+
+    VertexBuffer &operator=(VertexBuffer &&buffer)
+    {
+        if (this != &buffer)
+        {
+            bufferId = buffer.bufferId;
+            buffer.bufferId = 0;
+        }
+        return *this;
+    }
 
     void bind() const;
 };
@@ -30,14 +46,30 @@ public:
 class ElementBuffer
 {
 private:
-    unsigned int bufferId = 0;
+    unsigned int bufferId;
 
 public:
+    ElementBuffer() : bufferId(0) {}
     ElementBuffer(const std::vector<unsigned int> &indices);
     ~ElementBuffer();
 
-    ElementBuffer(const ElementBuffer &buffer) = delete;
-    ElementBuffer operator=(const ElementBuffer &buffer) = delete;
+    ElementBuffer(ElementBuffer &buffer) = delete;
+    ElementBuffer operator=(ElementBuffer &buffer) = delete;
+
+    ElementBuffer(ElementBuffer &&buffer) : bufferId(buffer.bufferId)
+    {
+        buffer.bufferId = 0;
+    }
+
+    ElementBuffer &operator=(ElementBuffer &&buffer)
+    {
+        if (this != &buffer)
+        {
+            bufferId = buffer.bufferId;
+            buffer.bufferId = 0;
+        }
+        return *this;
+    }
 
     void bind() const;
 };
@@ -52,7 +84,31 @@ private:
 public:
     glm::mat4 modelMatrix;
 
+    OpenGLMesh() : numberOfElements(0) {}
     OpenGLMesh(const Mesh &_mesh, glm::mat4 _modelMatrix);
+
+    OpenGLMesh(const OpenGLMesh &) = delete;
+    OpenGLMesh &operator=(const OpenGLMesh &) = delete;
+
+    OpenGLMesh(OpenGLMesh &&mesh)
+        : vertexBuffer(std::move(mesh.vertexBuffer)),
+          elementBuffer(std::move(mesh.elementBuffer)),
+          numberOfElements(mesh.numberOfElements)
+    {
+        mesh.numberOfElements = 0;
+    }
+
+    OpenGLMesh &operator=(OpenGLMesh &&mesh)
+    {
+        if (this != &mesh)
+        {
+            vertexBuffer = std::move(mesh.vertexBuffer);
+            elementBuffer = std::move(mesh.elementBuffer);
+            numberOfElements = mesh.numberOfElements;
+            mesh.numberOfElements = 0;
+        }
+        return *this;
+    }
 
     void draw() const;
 };

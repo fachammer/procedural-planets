@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <time.h>
+#include <memory>
 
 // Include GLEW
 #include <GL/glew.h>
@@ -28,13 +29,13 @@
 
 struct PlanetParameters
 {
-    const float baseRadius = 50;
-    const float maxDepth = 30;
-    const float maxHeight = 40;
-    const float seaLevelFromBaseRadius = 10;
-    const float atmospherePlanetRatio = 0.9;
-    const unsigned int atmosphereSubdivisions = 4;
-    const unsigned int planetSubdivisions = 7;
+    float baseRadius = 50;
+    float maxDepth = 30;
+    float maxHeight = 40;
+    float seaLevelFromBaseRadius = 10;
+    float atmospherePlanetRatio = 0.9;
+    unsigned int atmosphereSubdivisions = 4;
+    unsigned int planetSubdivisions = 7;
 
     float atmosphereRadius() const
     {
@@ -44,10 +45,10 @@ struct PlanetParameters
 
 struct State
 {
-    const float defaultSpeed = 0.75f;
+    float defaultSpeed = 0.75f;
     float speed = 300.f;
-    const float defaultRotateSpeed = 0.003f;
     float rotateSpeed = 1.5f;
+    float defaultRotateSpeed = 0.003f;
 
     glm::vec3 noiseOffset = glm::vec3(0, 0, 0);
     bool canChangeWireframeMode = true;
@@ -171,7 +172,7 @@ void reverseFaces(Mesh &mesh)
 struct Scene
 {
     std::vector<RenderObject> objects;
-    std::vector<OpenGLMesh *> meshes;
+    std::vector<std::unique_ptr<OpenGLMesh>> meshes;
     std::vector<ShaderProgram *> shaderPrograms;
     std::vector<Texture *> textures;
 
@@ -188,9 +189,8 @@ struct Scene
 
         Mesh sphereMesh = generateSphere(planetParameters.baseRadius, planetParameters.planetSubdivisions);
 
-        meshes = {
-            new OpenGLMesh(atmosphereMesh, glm::mat4(1.0)),
-            new OpenGLMesh(sphereMesh, glm::mat4(1.0))};
+        meshes.push_back(std::make_unique<OpenGLMesh>(atmosphereMesh, glm::mat4(1.0)));
+        meshes.push_back(std::make_unique<OpenGLMesh>(sphereMesh, glm::mat4(1.0)));
 
         shaderPrograms = {
             createVertexFragmentShaderProgram(
@@ -223,11 +223,6 @@ struct Scene
 
     ~Scene()
     {
-        for (OpenGLMesh *mesh : meshes)
-        {
-            delete mesh;
-        }
-
         for (Texture *texture : textures)
         {
             delete texture;
@@ -238,6 +233,12 @@ struct Scene
             delete shaderProgram;
         }
     }
+
+    Scene(const Scene &) = delete;
+    Scene &operator=(const Scene &) = delete;
+
+    Scene(Scene &&) = default;
+    Scene &operator=(Scene &&other) = default;
 };
 
 void update(GLFWwindow *window, Scene &scene)
@@ -337,7 +338,7 @@ void render(GLFWwindow *glfwWindow, const Scene &scene)
     {
         renderObject.textureId = scene.textures[scene.state.textureIndex]->id();
         unsigned int meshId = renderObject.meshId;
-        OpenGLMesh *mesh = scene.meshes.at(meshId);
+        const std::unique_ptr<OpenGLMesh> &mesh = scene.meshes[meshId];
         glm::mat4 modelMatrix = mesh->modelMatrix;
 
         glm::mat4 modelViewProjectionMatrix = viewProjectionMatrix * modelMatrix;
