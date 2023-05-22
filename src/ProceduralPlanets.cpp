@@ -204,7 +204,7 @@ struct Scene
         };
 
         light = {
-            .direction = camera.position(),
+            .direction = -UP,
             .power = 1.f,
             .color = glm::vec3(1, 1, 1),
         };

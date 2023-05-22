@@ -132,7 +132,7 @@ void main() {
     vec2 f = ray_vs_sphere(eye, dir, baseRadius);
     e.y = min(e.y, f.x);
 
-    vec3 I = in_scatter(eye, dir, e, normalize(lightDirectionInWorldSpace));
+    vec3 I = in_scatter(eye, dir, e, normalize(-lightDirectionInWorldSpace));
 
     I = 1.0 - exp(-0.2 * I);
 
