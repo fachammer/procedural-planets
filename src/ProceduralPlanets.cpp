@@ -41,10 +41,6 @@ struct PlanetParameters
 
 struct State
 {
-    float defaultSpeed = 0.75f;
-    float speed = 300.f;
-    float rotateSpeed = 1.5f;
-    float defaultRotateSpeed = 0.003f;
 
     glm::vec3 noiseOffset = glm::vec3(0, 0, 0);
     bool canChangeWireframeMode = true;
@@ -61,10 +57,16 @@ struct State
 const glm::vec3 UP(0, 1, 0);
 struct Camera
 {
-    float fieldOfView = 45.0;
     float distanceFromOrigin = 250;
     float azimuthalAngle = 0;
     float polarAngle = 0;
+
+    float defaultSpeed = 0.75f;
+    float speed = 300.f;
+    float rotateSpeed = 1.5f;
+    float defaultRotateSpeed = 0.003f;
+
+    float fieldOfView = 45.0;
     float aspectRatio = 1.f;
 
     glm::vec3 position() const
@@ -221,47 +223,52 @@ struct Scene
     Scene &operator=(Scene &&other) = default;
 };
 
+void updateCamera(Camera &camera, GLFWwindow *window, float deltaTime)
+{
+    camera.rotateSpeed = camera.defaultRotateSpeed * camera.distanceFromOrigin;
+    camera.speed = camera.defaultSpeed * camera.distanceFromOrigin;
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+    {
+        camera.polarAngle += deltaTime * camera.rotateSpeed;
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+    {
+        camera.polarAngle -= deltaTime * camera.rotateSpeed;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    {
+        camera.azimuthalAngle -= deltaTime * camera.rotateSpeed;
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    {
+        camera.azimuthalAngle += deltaTime * camera.rotateSpeed;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+    {
+        camera.distanceFromOrigin -= camera.speed * deltaTime;
+    }
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+    {
+        camera.distanceFromOrigin += camera.speed * deltaTime;
+    }
+
+    camera.polarAngle = glm::clamp(camera.polarAngle, -1.57f, 1.57f);
+    camera.distanceFromOrigin = glm::clamp(camera.distanceFromOrigin, 10.0f, 10000.0f);
+
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
+    camera.aspectRatio = (float)width / height;
+}
+
 void update(GLFWwindow *window, Scene &scene)
 {
     double currentTime = glfwGetTime();
     float deltaTime = float(currentTime - scene.state.lastTime);
 
-    scene.state.rotateSpeed = scene.state.defaultRotateSpeed * scene.camera.distanceFromOrigin;
-    scene.state.speed = scene.state.defaultSpeed * scene.camera.distanceFromOrigin;
-
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-    {
-        scene.camera.polarAngle += deltaTime * scene.state.rotateSpeed;
-    }
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-    {
-        scene.camera.polarAngle -= deltaTime * scene.state.rotateSpeed;
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-    {
-        scene.camera.azimuthalAngle -= deltaTime * scene.state.rotateSpeed;
-    }
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-    {
-        scene.camera.azimuthalAngle += deltaTime * scene.state.rotateSpeed;
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-    {
-        scene.camera.distanceFromOrigin -= scene.state.speed * deltaTime;
-    }
-    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-    {
-        scene.camera.distanceFromOrigin += scene.state.speed * deltaTime;
-    }
-
-    scene.camera.polarAngle = glm::clamp(scene.camera.polarAngle, -1.57f, 1.57f);
-    scene.camera.distanceFromOrigin = glm::clamp(scene.camera.distanceFromOrigin, 10.0f, 10000.0f);
-
-    int width, height;
-    glfwGetWindowSize(window, &width, &height);
-    scene.camera.aspectRatio = (float)width / height;
+    updateCamera(scene.camera, window, deltaTime);
 
     int changeMode = glfwGetKey(window, GLFW_KEY_F);
     if (changeMode == GLFW_PRESS && scene.state.canChangeWireframeMode)
