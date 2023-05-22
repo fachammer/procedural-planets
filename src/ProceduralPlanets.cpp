@@ -25,18 +25,17 @@
 
 struct PlanetParameters
 {
-    float baseRadius = 50;
+    float baseRadius = 90;
     float maxDepth = 30;
-    float maxHeight = 40;
-    float seaLevelFromBaseRadius = 10;
-    float atmospherePlanetRatio = 0.9;
+    float maxHeight = 25;
+    float atmospherePlanetRatio = 1.12;
     float rotateSpeed = 0.03f;
     unsigned int atmosphereSubdivisions = 4;
     unsigned int planetSubdivisions = 7;
 
     float atmosphereRadius() const
     {
-        return atmospherePlanetRatio * (baseRadius + maxHeight);
+        return atmospherePlanetRatio * (baseRadius);
     }
 };
 
