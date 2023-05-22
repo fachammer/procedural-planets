@@ -333,13 +333,11 @@ void render(GLFWwindow *glfwWindow, const Scene &scene)
             glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.getElementBuffer().id());
-
             glDrawElements(GL_TRIANGLES, mesh.getNumberOfElements(), GL_UNSIGNED_INT, 0);
         }
     }
 
     glfwSwapBuffers(glfwWindow);
-    glfwPollEvents();
     check_gl_error();
 }
 
@@ -444,6 +442,7 @@ int main(void)
                 BoundVertexArrayObject vao;
                 do
                 {
+                    glfwPollEvents();
                     update(glfwWindow, scene);
                     render(glfwWindow, scene);
                 } while (glfwGetKey(glfwWindow, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
