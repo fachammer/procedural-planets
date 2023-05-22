@@ -304,20 +304,17 @@ void render(GLFWwindow *glfwWindow, const Scene &scene)
     glm::mat4 viewProjectionMatrix = projectionMatrix * viewMatrix;
     for (Scene::RenderObject renderObject : scene.objects)
     {
-        renderObject.textureIndex = scene.textures[scene.state.textureIndex].id();
-        unsigned int meshId = renderObject.meshIndex;
-        const OpenGLMesh &mesh = scene.meshes[meshId];
+        const OpenGLMesh &mesh = scene.meshes[renderObject.meshIndex];
 
         glm::mat4 modelViewProjectionMatrix = viewProjectionMatrix * mesh.modelMatrix;
 
         for (unsigned int shaderIndex : renderObject.shaderIndices)
         {
             const ShaderProgram &shaderProgram = scene.shaderPrograms[shaderIndex];
-
             glUseProgram(shaderProgram.id());
 
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, renderObject.textureIndex);
+            glBindTexture(GL_TEXTURE_2D, scene.textures[scene.state.textureIndex].id());
 
             glUniform1i(glGetUniformLocation(shaderProgram.id(), "heightSlopeBasedColorMap"), 0);
             glUniform3f(glGetUniformLocation(shaderProgram.id(), "lightDirectionInWorldSpace"), scene.lightDirection.x, scene.lightDirection.y, scene.lightDirection.z);
