@@ -313,9 +313,8 @@ void render(GLFWwindow *glfwWindow, const Scene &scene)
         renderObject.textureId = scene.textures[scene.state.textureIndex].id();
         unsigned int meshId = renderObject.meshId;
         const OpenGLMesh &mesh = scene.meshes[meshId];
-        glm::mat4 modelMatrix = mesh.modelMatrix;
 
-        glm::mat4 modelViewProjectionMatrix = viewProjectionMatrix * modelMatrix;
+        glm::mat4 modelViewProjectionMatrix = viewProjectionMatrix * mesh.modelMatrix;
 
         for (int j = 0; j < renderObject.shaderIds.size(); j++)
         {
@@ -330,7 +329,7 @@ void render(GLFWwindow *glfwWindow, const Scene &scene)
             glUniform1i(glGetUniformLocation(shaderProgram.id(), "heightSlopeBasedColorMap"), 0);
             glUniform3f(glGetUniformLocation(shaderProgram.id(), "lightDirectionInWorldSpace"), scene.lightDirection.x, scene.lightDirection.y, scene.lightDirection.z);
             glUniformMatrix4fv(glGetUniformLocation(shaderProgram.id(), "modelViewProjectionMatrix"), 1, GL_FALSE, &modelViewProjectionMatrix[0][0]);
-            glUniformMatrix4fv(glGetUniformLocation(shaderProgram.id(), "modelMatrix"), 1, GL_FALSE, &modelMatrix[0][0]);
+            glUniformMatrix4fv(glGetUniformLocation(shaderProgram.id(), "modelMatrix"), 1, GL_FALSE, &mesh.modelMatrix[0][0]);
             glUniformMatrix4fv(glGetUniformLocation(shaderProgram.id(), "viewMatrix"), 1, GL_FALSE, &viewMatrix[0][0]);
             glUniform1f(glGetUniformLocation(shaderProgram.id(), "maxNegativeHeight"), scene.planetParameters.maxDepth);
             glUniform1f(glGetUniformLocation(shaderProgram.id(), "maxPositiveHeight"), scene.planetParameters.maxHeight);
