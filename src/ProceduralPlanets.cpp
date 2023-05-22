@@ -162,7 +162,7 @@ struct Scene
     std::vector<RenderObject> objects;
     std::vector<OpenGLMesh> meshes;
     std::vector<ShaderProgram *> shaderPrograms;
-    std::vector<std::unique_ptr<Texture>> textures;
+    std::vector<Texture> textures;
 
     Camera camera;
     glm::vec3 lightDirection;
@@ -189,21 +189,21 @@ struct Scene
                 loadShader(GL_FRAGMENT_SHADER, "../shaders/TerrainGenerator.fragment.glsl")),
         };
 
-        textures.push_back(std::make_unique<Texture>("../textures/beachMountain.png"));
-        textures.push_back(std::make_unique<Texture>("../textures/ice.png"));
-        textures.push_back(std::make_unique<Texture>("../textures/tropic.png"));
-        textures.push_back(std::make_unique<Texture>("../textures/volcano.png"));
+        textures.push_back(std::move(Texture("../textures/beachMountain.png")));
+        textures.push_back(std::move(Texture("../textures/ice.png")));
+        textures.push_back(std::move(Texture("../textures/tropic.png")));
+        textures.push_back(std::move(Texture("../textures/volcano.png")));
 
         objects = {
             RenderObject{
                 .meshId = 0,
                 .shaderIds = std::vector<unsigned int>{0},
-                .textureId = textures[state.textureIndex]->id(),
+                .textureId = textures[state.textureIndex].id(),
             },
             RenderObject{
                 .meshId = 1,
                 .shaderIds = std::vector<unsigned int>{1},
-                .textureId = textures[state.textureIndex]->id()}};
+                .textureId = textures[state.textureIndex].id()}};
 
         lightDirection = camera.position();
     }
@@ -318,7 +318,7 @@ void render(GLFWwindow *glfwWindow, const Scene &scene)
     glm::mat4 viewProjectionMatrix = projectionMatrix * viewMatrix;
     for (RenderObject renderObject : scene.objects)
     {
-        renderObject.textureId = scene.textures[scene.state.textureIndex]->id();
+        renderObject.textureId = scene.textures[scene.state.textureIndex].id();
         unsigned int meshId = renderObject.meshId;
         const OpenGLMesh &mesh = scene.meshes[meshId];
         glm::mat4 modelMatrix = mesh.modelMatrix;
