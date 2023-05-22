@@ -18,7 +18,6 @@ private:
     unsigned int bufferId;
 
 public:
-    VertexBuffer() : bufferId(0) {}
     VertexBuffer(const std::vector<glm::vec3> &vertices);
     ~VertexBuffer();
 
@@ -49,7 +48,6 @@ private:
     unsigned int bufferId;
 
 public:
-    ElementBuffer() : bufferId(0) {}
     ElementBuffer(const std::vector<unsigned int> &indices);
     ~ElementBuffer();
 
@@ -84,7 +82,6 @@ private:
 public:
     glm::mat4 modelMatrix;
 
-    OpenGLMesh() : numberOfElements(0) {}
     OpenGLMesh(const Mesh &_mesh, glm::mat4 _modelMatrix);
 
     OpenGLMesh(const OpenGLMesh &) = delete;
