@@ -151,7 +151,6 @@ struct Scene
     {
         unsigned int meshIndex;
         std::vector<unsigned int> shaderIndices;
-        unsigned int textureIndex;
     };
     std::vector<RenderObject> objects;
     std::vector<OpenGLMesh> meshes;
@@ -192,12 +191,11 @@ struct Scene
             RenderObject{
                 .meshIndex = 0,
                 .shaderIndices = std::vector<unsigned int>{0},
-                .textureIndex = textures[state.textureIndex].id(),
             },
             RenderObject{
                 .meshIndex = 1,
                 .shaderIndices = std::vector<unsigned int>{1},
-                .textureIndex = textures[state.textureIndex].id()}};
+            }};
 
         lightDirection = camera.position();
     }
