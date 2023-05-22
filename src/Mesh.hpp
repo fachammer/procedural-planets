@@ -39,7 +39,10 @@ public:
         return *this;
     }
 
-    void bind() const;
+    unsigned int id() const
+    {
+        return bufferId;
+    }
 };
 
 class ElementBuffer
@@ -69,7 +72,10 @@ public:
         return *this;
     }
 
-    void bind() const;
+    unsigned int id() const
+    {
+        return bufferId;
+    }
 };
 
 class OpenGLMesh
@@ -90,5 +96,18 @@ public:
     OpenGLMesh(OpenGLMesh &&mesh) = default;
     OpenGLMesh &operator=(OpenGLMesh &&mesh) = default;
 
-    void draw() const;
+    const VertexBuffer &getVertexBuffer() const
+    {
+        return vertexBuffer;
+    }
+
+    const ElementBuffer &getElementBuffer() const
+    {
+        return elementBuffer;
+    }
+
+    unsigned int getNumberOfElements() const
+    {
+        return numberOfElements;
+    }
 };
