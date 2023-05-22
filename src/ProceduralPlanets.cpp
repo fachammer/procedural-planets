@@ -54,10 +54,7 @@ struct Camera
     float azimuthalAngle = 0;
     float polarAngle = 0;
 
-    float defaultSpeed = 0.75f;
-    float speed = 300.f;
     float rotateSpeed = 1.5f;
-    float defaultRotateSpeed = 0.003f;
 
     float fieldOfView = 45.0;
     float aspectRatio = 1.f;
@@ -218,9 +215,6 @@ struct Scene
 
 void updateCamera(Camera &camera, GLFWwindow *window, float deltaTime)
 {
-    camera.rotateSpeed = camera.defaultRotateSpeed * camera.distanceFromOrigin;
-    camera.speed = camera.defaultSpeed * camera.distanceFromOrigin;
-
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
     {
         camera.polarAngle += deltaTime * camera.rotateSpeed;
@@ -237,15 +231,6 @@ void updateCamera(Camera &camera, GLFWwindow *window, float deltaTime)
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
     {
         camera.azimuthalAngle += deltaTime * camera.rotateSpeed;
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-    {
-        camera.distanceFromOrigin -= camera.speed * deltaTime;
-    }
-    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-    {
-        camera.distanceFromOrigin += camera.speed * deltaTime;
     }
 
     camera.polarAngle = glm::clamp(camera.polarAngle, -1.57f, 1.57f);
