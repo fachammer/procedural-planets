@@ -41,16 +41,9 @@ struct PlanetParameters
 
 struct State
 {
-
     glm::vec3 noiseOffset = glm::vec3(0, 0, 0);
-    bool canChangeWireframeMode = true;
-    bool canChangeDrawCoordinateMeshes = true;
     bool canGenerateNewNoise = true;
-
-    bool wireFrameMode = false;
-
     int textureIndex = 0;
-
     float lastTime = 0;
 };
 
@@ -270,17 +263,6 @@ void update(GLFWwindow *window, Scene &scene)
 
     updateCamera(scene.camera, window, deltaTime);
 
-    int changeMode = glfwGetKey(window, GLFW_KEY_F);
-    if (changeMode == GLFW_PRESS && scene.state.canChangeWireframeMode)
-    {
-        scene.state.wireFrameMode = !scene.state.wireFrameMode;
-        scene.state.canChangeWireframeMode = false;
-    }
-    else if (changeMode == GLFW_RELEASE)
-    {
-        scene.state.canChangeWireframeMode = true;
-    }
-
     int newNoiseOffset = glfwGetKey(window, GLFW_KEY_R);
     if (newNoiseOffset == GLFW_PRESS && scene.state.canGenerateNewNoise)
     {
@@ -316,7 +298,7 @@ void render(GLFWwindow *glfwWindow, const Scene &scene)
 
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glPolygonMode(GL_FRONT_AND_BACK, scene.state.wireFrameMode ? GL_LINE : GL_FILL);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     glm::vec3 cameraPosition = scene.camera.position();
     glm::mat4 viewMatrix = scene.camera.viewMatrix();
