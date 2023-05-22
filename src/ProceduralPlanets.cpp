@@ -329,23 +329,12 @@ void render(GLFWwindow *glfwWindow, const Scene &scene)
             glUniform3f(glGetUniformLocation(shaderProgram.id(), "lightColor"), 1, 1, 1);
 
             glBindBuffer(GL_ARRAY_BUFFER, mesh.getVertexBuffer().id());
-
             glEnableVertexAttribArray(0);
-            glVertexAttribPointer(
-                0,
-                3,
-                GL_FLOAT,
-                GL_FALSE,
-                0,
-                0);
+            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.getElementBuffer().id());
 
-            glDrawElements(
-                GL_TRIANGLES,
-                mesh.getNumberOfElements(),
-                GL_UNSIGNED_INT,
-                0);
+            glDrawElements(GL_TRIANGLES, mesh.getNumberOfElements(), GL_UNSIGNED_INT, 0);
         }
     }
 

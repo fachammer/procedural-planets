@@ -160,11 +160,9 @@ vec3 displacedPosition(vec3 position, float minElevation, float maxElevation, ou
 void main() {
     vec3 normalInModelSpace;
     vec3 positionInModelSpace = displacedPosition(vertexPositionInModelSpace, -maxNegativeHeight, maxPositiveHeight, normalInModelSpace, vertexSlope);
-    gl_Position = modelViewProjectionMatrix * vec4(positionInModelSpace, 1);
 
     positionInWorldSpace = (modelMatrix * vec4(positionInModelSpace, 1)).xyz;
-
     lightDirectionInCameraSpace = (viewMatrix * vec4(lightDirectionInWorldSpace, 0)).xyz;
-
     normalInCameraSpace = (viewMatrix * modelMatrix * vec4(normalInModelSpace, 0)).xyz;
+    gl_Position = modelViewProjectionMatrix * vec4(positionInModelSpace, 1);
 }

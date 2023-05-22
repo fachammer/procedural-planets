@@ -8,6 +8,6 @@ uniform mat4 modelViewProjectionMatrix;
 uniform mat4 modelMatrix;
 
 void main() {
-    gl_Position = modelViewProjectionMatrix * vec4(vertexPositionInModelSpace, 1);
     positionInWorldSpace = (modelMatrix * vec4(vertexPositionInModelSpace, 1)).xyz;
+    gl_Position = modelViewProjectionMatrix * vec4(vertexPositionInModelSpace, 1);
 }
