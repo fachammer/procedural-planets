@@ -238,8 +238,8 @@ void update(GLFWwindow *window, Scene &scene)
         scene.camera.distanceFromOrigin += scene.state.speed * deltaTime;
     }
 
-    scene.camera.polarAngle = glm::min(1.57f, glm::max(-1.57f, scene.camera.polarAngle));
-    scene.camera.distanceFromOrigin = glm::min(1000.f, glm::max(10.f, scene.camera.distanceFromOrigin));
+    scene.camera.polarAngle = glm::clamp(scene.camera.polarAngle, -1.57f, 1.57f);
+    scene.camera.distanceFromOrigin = glm::clamp(scene.camera.distanceFromOrigin, 10.0f, 10000.0f);
 
     int changeMode = glfwGetKey(window, GLFW_KEY_F);
     if (changeMode == GLFW_PRESS && scene.state.canChangeWireframeMode)
