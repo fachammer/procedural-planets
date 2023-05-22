@@ -30,6 +30,7 @@ struct PlanetParameters
     float maxHeight = 40;
     float seaLevelFromBaseRadius = 10;
     float atmospherePlanetRatio = 0.9;
+    float rotateSpeed = 0.03f;
     unsigned int atmosphereSubdivisions = 4;
     unsigned int planetSubdivisions = 7;
 
@@ -256,6 +257,11 @@ void updateCamera(Camera &camera, GLFWwindow *window, float deltaTime)
     camera.aspectRatio = (float)width / height;
 }
 
+void updatePlanetMovement(Scene &scene, float deltaTime)
+{
+    scene.meshes[1].modelMatrix = glm::rotate(scene.meshes[1].modelMatrix, scene.planetParameters.rotateSpeed * deltaTime, UP);
+}
+
 float random_in_unit_interval()
 {
     return static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
@@ -285,6 +291,8 @@ void update(GLFWwindow *window, Scene &scene)
     {
         scene.state.isPlanetGenerationBlocked = false;
     }
+
+    updatePlanetMovement(scene, deltaTime);
 
     scene.state.lastTime = currentTime;
 }
