@@ -65,6 +65,7 @@ struct Camera
     float distanceFromOrigin = 250;
     float azimuthalAngle = 0;
     float polarAngle = 0;
+    float aspectRatio = 1.f;
 
     glm::vec3 position() const
     {
@@ -80,6 +81,11 @@ struct Camera
             position(),
             glm::vec3(0, 0, 0),
             UP);
+    }
+
+    glm::mat4 projectionMatrix() const
+    {
+        return glm::perspective(fieldOfView, aspectRatio, 0.1f, 10000.0f);
     }
 };
 
@@ -253,6 +259,10 @@ void update(GLFWwindow *window, Scene &scene)
     scene.camera.polarAngle = glm::clamp(scene.camera.polarAngle, -1.57f, 1.57f);
     scene.camera.distanceFromOrigin = glm::clamp(scene.camera.distanceFromOrigin, 10.0f, 10000.0f);
 
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
+    scene.camera.aspectRatio = (float)width / height;
+
     int changeMode = glfwGetKey(window, GLFW_KEY_F);
     if (changeMode == GLFW_PRESS && scene.state.canChangeWireframeMode)
     {
@@ -301,12 +311,9 @@ void render(GLFWwindow *glfwWindow, const Scene &scene)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glPolygonMode(GL_FRONT_AND_BACK, scene.state.wireFrameMode ? GL_LINE : GL_FILL);
 
-    int width, height;
-    glfwGetWindowSize(glfwWindow, &width, &height);
-    float aspectRatio = (float)width / height;
     glm::vec3 cameraPosition = scene.camera.position();
     glm::mat4 viewMatrix = scene.camera.viewMatrix();
-    glm::mat4 projectionMatrix = glm::perspective(scene.camera.fieldOfView, aspectRatio, 0.1f, 10000.0f);
+    glm::mat4 projectionMatrix = scene.camera.projectionMatrix();
     glm::mat4 viewProjectionMatrix = projectionMatrix * viewMatrix;
     for (Scene::RenderObject renderObject : scene.objects)
     {
@@ -445,7 +452,7 @@ int main(void)
         Glfw glfw;
         try
         {
-            Window window(1280, 1024);
+            Window window(1024, 1024);
             try
             {
                 Glew glew;
