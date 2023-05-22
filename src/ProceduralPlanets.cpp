@@ -170,8 +170,8 @@ struct Scene
 
         Mesh sphereMesh = generateSphere(planetParameters.baseRadius, planetParameters.planetSubdivisions);
 
-        meshes.push_back(std::move(OpenGLMesh(atmosphereMesh, glm::mat4(1.0))));
-        meshes.push_back(std::move(OpenGLMesh(sphereMesh, glm::mat4(1.0))));
+        meshes.push_back(OpenGLMesh(atmosphereMesh, glm::mat4(1.0)));
+        meshes.push_back(OpenGLMesh(sphereMesh, glm::mat4(1.0)));
 
         shaderPrograms.push_back(
             createVertexFragmentShaderProgram(
@@ -182,10 +182,10 @@ struct Scene
                 loadShader(GL_VERTEX_SHADER, "../shaders/TerrainGenerator.vertex.glsl"),
                 loadShader(GL_FRAGMENT_SHADER, "../shaders/TerrainGenerator.fragment.glsl")));
 
-        textures.push_back(std::move(Texture("../textures/beachMountain.png")));
-        textures.push_back(std::move(Texture("../textures/ice.png")));
-        textures.push_back(std::move(Texture("../textures/tropic.png")));
-        textures.push_back(std::move(Texture("../textures/volcano.png")));
+        textures.push_back(Texture("../textures/beachMountain.png"));
+        textures.push_back(Texture("../textures/ice.png"));
+        textures.push_back(Texture("../textures/tropic.png"));
+        textures.push_back(Texture("../textures/volcano.png"));
 
         objects = {
             RenderObject{
