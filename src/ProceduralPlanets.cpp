@@ -467,7 +467,6 @@ int main(void)
                 {
                     update(glfwWindow, scene);
                     render(glfwWindow, scene);
-
                 } while (glfwGetKey(glfwWindow, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
                          glfwWindowShouldClose(glfwWindow) == 0);
             }
