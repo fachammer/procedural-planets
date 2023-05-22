@@ -155,6 +155,8 @@ struct Scene
 
     Camera camera;
     glm::vec3 lightDirection;
+    glm::vec3 lightColor;
+    float lightPower;
 
     State state;
     PlanetParameters planetParameters;
@@ -194,6 +196,8 @@ struct Scene
             }};
 
         lightDirection = camera.position();
+        lightPower = 40000.f;
+        lightColor = glm::vec3(1, 1, 1);
     }
 
     Scene(const Scene &) = delete;
@@ -319,10 +323,10 @@ void render(GLFWwindow *glfwWindow, const Scene &scene)
             glUniform1f(glGetUniformLocation(shaderProgram.id(), "maxPositiveHeight"), scene.planetParameters.maxHeight);
             glUniform1f(glGetUniformLocation(shaderProgram.id(), "baseRadius"), scene.planetParameters.baseRadius);
             glUniform1f(glGetUniformLocation(shaderProgram.id(), "atmosphereRadius"), scene.planetParameters.atmosphereRadius());
-            glUniform1f(glGetUniformLocation(shaderProgram.id(), "lightPower"), 40000.0f);
+            glUniform1f(glGetUniformLocation(shaderProgram.id(), "lightPower"), scene.lightPower);
             glUniform3f(glGetUniformLocation(shaderProgram.id(), "noiseOffset"), scene.state.noiseOffset.x, scene.state.noiseOffset.y, scene.state.noiseOffset.z);
             glUniform3f(glGetUniformLocation(shaderProgram.id(), "cameraPositionInWorldSpace"), cameraPosition.x, cameraPosition.y, cameraPosition.z);
-            glUniform3f(glGetUniformLocation(shaderProgram.id(), "lightColor"), 1, 1, 1);
+            glUniform3f(glGetUniformLocation(shaderProgram.id(), "lightColor"), scene.lightColor.r, scene.lightColor.g, scene.lightColor.b);
 
             glBindBuffer(GL_ARRAY_BUFFER, mesh.getVertexBuffer().id());
             glEnableVertexAttribArray(0);
