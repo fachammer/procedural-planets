@@ -9,10 +9,6 @@
 // Include GLEW
 #include <GL/glew.h>
 
-#define RESOLUTION_SCALE 1
-#define SCREENWIDTH 1280
-#define SCREENHEIGHT 1024
-
 // Include GLFW
 #include <glfw3.h>
 
@@ -397,14 +393,14 @@ private:
     GLFWwindow *window;
 
 public:
-    Window()
+    Window(unsigned int initialWidth, unsigned int initialHeight)
     {
         glfwWindowHint(GLFW_SAMPLES, 8);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-        window = glfwCreateWindow(SCREENHEIGHT, SCREENHEIGHT, "Procedural Planets", NULL, NULL);
+        window = glfwCreateWindow(initialWidth, initialHeight, "Procedural Planets", NULL, NULL);
         if (window == NULL)
         {
             throw -1;
@@ -412,7 +408,7 @@ public:
         glfwMakeContextCurrent(window);
 
         glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
-        glfwSetCursorPos(window, SCREENHEIGHT / 2, SCREENHEIGHT / 2);
+        glfwSetCursorPos(window, initialWidth / 2, initialHeight / 2);
     }
 
     ~Window()
@@ -433,7 +429,7 @@ int main(void)
         Glfw glfw;
         try
         {
-            Window window;
+            Window window(1280, 1024);
             try
             {
                 Glew glew;
