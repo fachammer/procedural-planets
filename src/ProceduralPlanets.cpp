@@ -316,9 +316,8 @@ void render(GLFWwindow *glfwWindow, const Scene &scene)
 
         glm::mat4 modelViewProjectionMatrix = viewProjectionMatrix * mesh.modelMatrix;
 
-        for (int j = 0; j < renderObject.shaderIds.size(); j++)
+        for (unsigned int shaderId : renderObject.shaderIds)
         {
-            unsigned int shaderId = renderObject.shaderIds.at(j);
             const ShaderProgram &shaderProgram = scene.shaderPrograms[shaderId];
 
             glUseProgram(shaderProgram.id());
