@@ -97,21 +97,9 @@ struct Camera
 class Texture
 {
 private:
-    GLuint textureId = 0;
-
-    void dispose()
-    {
-        glDeleteTextures(1, &textureId);
-        invalidate();
-    }
-
-    void invalidate()
-    {
-        textureId = 0;
-    }
+    GLuint textureId;
 
 public:
-    Texture();
     Texture(std::string path)
     {
         textureId = SOIL_load_OGL_texture(
@@ -130,22 +118,22 @@ public:
 
     Texture(Texture &&other) : textureId(other.textureId)
     {
-        other.invalidate();
+        other.textureId = 0;
     }
 
     Texture &operator=(Texture &&other)
     {
         if (this != &other)
         {
-            dispose();
-            std::swap(textureId, other.textureId);
+            textureId = other.textureId;
+            other.textureId = 0;
         }
         return *this;
     }
 
     ~Texture()
     {
-        dispose();
+        glDeleteTextures(1, &textureId);
     }
 
     GLuint id() const
