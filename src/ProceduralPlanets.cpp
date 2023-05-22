@@ -441,8 +441,7 @@ int main(void)
                     glfwPollEvents();
                     update(glfwWindow, scene);
                     render(glfwWindow, scene);
-                } while (glfwGetKey(glfwWindow, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
-                         glfwWindowShouldClose(glfwWindow) == 0);
+                } while (!glfwWindowShouldClose(glfwWindow));
             }
             catch (int exception)
             {
