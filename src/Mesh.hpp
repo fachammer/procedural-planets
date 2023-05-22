@@ -90,25 +90,8 @@ public:
     OpenGLMesh(const OpenGLMesh &) = delete;
     OpenGLMesh &operator=(const OpenGLMesh &) = delete;
 
-    OpenGLMesh(OpenGLMesh &&mesh)
-        : vertexBuffer(std::move(mesh.vertexBuffer)),
-          elementBuffer(std::move(mesh.elementBuffer)),
-          numberOfElements(mesh.numberOfElements)
-    {
-        mesh.numberOfElements = 0;
-    }
-
-    OpenGLMesh &operator=(OpenGLMesh &&mesh)
-    {
-        if (this != &mesh)
-        {
-            vertexBuffer = std::move(mesh.vertexBuffer);
-            elementBuffer = std::move(mesh.elementBuffer);
-            numberOfElements = mesh.numberOfElements;
-            mesh.numberOfElements = 0;
-        }
-        return *this;
-    }
+    OpenGLMesh(OpenGLMesh &&mesh) = default;
+    OpenGLMesh &operator=(OpenGLMesh &&mesh) = default;
 
     void draw() const;
 };

@@ -172,7 +172,7 @@ void reverseFaces(Mesh &mesh)
 struct Scene
 {
     std::vector<RenderObject> objects;
-    std::vector<std::unique_ptr<OpenGLMesh>> meshes;
+    std::vector<OpenGLMesh> meshes;
     std::vector<ShaderProgram *> shaderPrograms;
     std::vector<std::unique_ptr<Texture>> textures;
 
@@ -189,8 +189,8 @@ struct Scene
 
         Mesh sphereMesh = generateSphere(planetParameters.baseRadius, planetParameters.planetSubdivisions);
 
-        meshes.push_back(std::make_unique<OpenGLMesh>(atmosphereMesh, glm::mat4(1.0)));
-        meshes.push_back(std::make_unique<OpenGLMesh>(sphereMesh, glm::mat4(1.0)));
+        meshes.push_back(std::move(OpenGLMesh(atmosphereMesh, glm::mat4(1.0))));
+        meshes.push_back(std::move(OpenGLMesh(sphereMesh, glm::mat4(1.0))));
 
         shaderPrograms = {
             createVertexFragmentShaderProgram(
@@ -332,8 +332,8 @@ void render(GLFWwindow *glfwWindow, const Scene &scene)
     {
         renderObject.textureId = scene.textures[scene.state.textureIndex]->id();
         unsigned int meshId = renderObject.meshId;
-        const std::unique_ptr<OpenGLMesh> &mesh = scene.meshes[meshId];
-        glm::mat4 modelMatrix = mesh->modelMatrix;
+        const OpenGLMesh &mesh = scene.meshes[meshId];
+        glm::mat4 modelMatrix = mesh.modelMatrix;
 
         glm::mat4 modelViewProjectionMatrix = viewProjectionMatrix * modelMatrix;
 
@@ -361,7 +361,7 @@ void render(GLFWwindow *glfwWindow, const Scene &scene)
             glUniform3f(glGetUniformLocation(shaderProgram->id(), "cameraPositionInWorldSpace"), cameraPosition.x, cameraPosition.y, cameraPosition.z);
             glUniform3f(glGetUniformLocation(shaderProgram->id(), "lightColor"), 1, 1, 1);
 
-            mesh->draw();
+            mesh.draw();
         }
     }
 
