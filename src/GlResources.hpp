@@ -177,13 +177,10 @@ private:
     unsigned int numberOfElements;
 
 public:
-    glm::mat4 modelMatrix;
-
-    GlMesh(const std::vector<glm::vec3> &vertices, const std::vector<unsigned int> &indices, glm::mat4 modelMatrix)
+    GlMesh(const std::vector<glm::vec3> &vertices, const std::vector<unsigned int> &indices)
         : vertexBuffer(vertices),
           elementBuffer(indices),
-          numberOfElements(indices.size()),
-          modelMatrix(modelMatrix)
+          numberOfElements(indices.size())
     {
     }
 

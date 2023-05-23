@@ -211,6 +211,7 @@ struct Scene
     {
         unsigned int meshIndex;
         std::vector<unsigned int> shaderIndices;
+        glm::mat4 modelMatrix;
     };
     std::vector<RenderObject> objects;
     std::vector<GlMesh> meshes;
@@ -230,8 +231,8 @@ struct Scene
 
         Mesh sphereMesh = generateSphere(planetParameters.baseRadius, planetParameters.planetSubdivisions);
 
-        meshes.push_back(GlMesh(atmosphereMesh.indexed_vertices, atmosphereMesh.indices, glm::mat4(1.0)));
-        meshes.push_back(GlMesh(sphereMesh.indexed_vertices, sphereMesh.indices, glm::mat4(1.0)));
+        meshes.push_back(GlMesh(atmosphereMesh.indexed_vertices, atmosphereMesh.indices));
+        meshes.push_back(GlMesh(sphereMesh.indexed_vertices, sphereMesh.indices));
 
         shaderPrograms.push_back(
             createVertexFragmentShaderProgram(
@@ -251,10 +252,12 @@ struct Scene
             RenderObject{
                 .meshIndex = 0,
                 .shaderIndices = std::vector<unsigned int>{0},
+                .modelMatrix = glm::mat4(1.0f),
             },
             RenderObject{
                 .meshIndex = 1,
                 .shaderIndices = std::vector<unsigned int>{1},
+                .modelMatrix = glm::mat4(1.0f),
             },
         };
 
@@ -302,7 +305,7 @@ void updateCamera(Camera &camera, GLFWwindow *window, float deltaTime)
 
 void updatePlanetMovement(Scene &scene, float deltaTime)
 {
-    scene.meshes[1].modelMatrix = glm::rotate(scene.meshes[1].modelMatrix, scene.planetParameters.rotateSpeed * deltaTime, UP);
+    scene.objects[1].modelMatrix = glm::rotate(scene.objects[1].modelMatrix, scene.planetParameters.rotateSpeed * deltaTime, UP);
 }
 
 float random_in_unit_interval()
@@ -357,7 +360,7 @@ void render(GLFWwindow *glfwWindow, const Scene &scene)
     for (Scene::RenderObject renderObject : scene.objects)
     {
         const GlMesh &mesh = scene.meshes[renderObject.meshIndex];
-        glm::mat4 modelViewProjectionMatrix = viewProjectionMatrix * mesh.modelMatrix;
+        glm::mat4 modelViewProjectionMatrix = viewProjectionMatrix * renderObject.modelMatrix;
 
         for (unsigned int shaderIndex : renderObject.shaderIndices)
         {
@@ -373,7 +376,7 @@ void render(GLFWwindow *glfwWindow, const Scene &scene)
             glUniform1f(glGetUniformLocation(shaderProgram.id(), "lightPower"), scene.light.power);
 
             glUniformMatrix4fv(glGetUniformLocation(shaderProgram.id(), "modelViewProjectionMatrix"), 1, GL_FALSE, &modelViewProjectionMatrix[0][0]);
-            glUniformMatrix4fv(glGetUniformLocation(shaderProgram.id(), "modelMatrix"), 1, GL_FALSE, &mesh.modelMatrix[0][0]);
+            glUniformMatrix4fv(glGetUniformLocation(shaderProgram.id(), "modelMatrix"), 1, GL_FALSE, &renderObject.modelMatrix[0][0]);
 
             glUniform3f(glGetUniformLocation(shaderProgram.id(), "cameraPositionInWorldSpace"), cameraPosition.x, cameraPosition.y, cameraPosition.z);
             glUniformMatrix4fv(glGetUniformLocation(shaderProgram.id(), "viewMatrix"), 1, GL_FALSE, &viewMatrix[0][0]);
