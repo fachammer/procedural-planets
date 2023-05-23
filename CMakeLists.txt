@@ -28,12 +28,7 @@ add_definitions(
 
 add_executable(ProceduralPlanets
 	src/ProceduralPlanets.cpp
-	src/SphereGenerator.hpp
-	src/SphereGenerator.cpp
-	src/Shader.cpp
-	src/Shader.hpp
-	src/Mesh.hpp
-	src/Mesh.cpp
+	src/GlResources.hpp
 	src/GLError.h
 	src/GLError.cpp
 	

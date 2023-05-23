@@ -10,12 +10,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "Shader.hpp"
-#include "Mesh.hpp"
 #include "GLError.h"
 
-#include "SphereGenerator.hpp"
-#include <SOIL.h>
+#include "GlResources.hpp"
 
 struct PlanetParameters
 {
@@ -75,48 +72,126 @@ struct Camera
     }
 };
 
-class GlTexture
+struct DirectionalLight
 {
-private:
-    GLuint textureId;
-
-public:
-    GlTexture(std::string path)
-    {
-        textureId = SOIL_load_OGL_texture(
-            path.c_str(),
-            SOIL_LOAD_AUTO,
-            SOIL_CREATE_NEW_ID,
-            SOIL_FLAG_POWER_OF_TWO | SOIL_FLAG_MIPMAPS);
-    }
-    GlTexture(const GlTexture &) = delete;
-    GlTexture &operator=(const GlTexture &) = delete;
-
-    GlTexture(GlTexture &&other) : textureId(other.textureId)
-    {
-        other.textureId = 0;
-    }
-
-    GlTexture &operator=(GlTexture &&other)
-    {
-        if (this != &other)
-        {
-            textureId = other.textureId;
-            other.textureId = 0;
-        }
-        return *this;
-    }
-
-    ~GlTexture()
-    {
-        glDeleteTextures(1, &textureId);
-    }
-
-    GLuint id() const
-    {
-        return textureId;
-    }
+    glm::vec3 direction;
+    glm::vec3 color;
+    float power;
 };
+
+struct Mesh
+{
+    std::vector<unsigned int> indices;
+    std::vector<glm::vec3> indexed_vertices;
+};
+
+static const GLdouble theta = 0.5 * (1.0 + sqrt(5.0));
+static const glm::vec3 ICOSAHEDRON_VERTICES[12] = {
+    glm::vec3(-1, theta, 0),
+    glm::vec3(1, theta, 0),
+    glm::vec3(-1, -theta, 0),
+    glm::vec3(1, -theta, 0),
+
+    glm::vec3(0, -1, theta),
+    glm::vec3(0, 1, theta),
+    glm::vec3(0, -1, -theta),
+    glm::vec3(0, 1, -theta),
+
+    glm::vec3(theta, 0, -1),
+    glm::vec3(theta, 0, 1),
+    glm::vec3(-theta, 0, -1),
+    glm::vec3(-theta, 0, 1)};
+
+static const unsigned int ICOSAHEDRON_INDICES[60] = {
+    0, 11, 5,
+    0, 5, 1,
+    0, 1, 7,
+    0, 7, 10,
+    0, 10, 11,
+
+    1, 5, 9,
+    5, 11, 4,
+    11, 10, 2,
+    10, 7, 6,
+    7, 1, 8,
+
+    3, 9, 4,
+    3, 4, 2,
+    3, 2, 6,
+    3, 6, 8,
+    3, 8, 9,
+
+    4, 9, 5,
+    2, 4, 11,
+    6, 2, 10,
+    8, 6, 7,
+    9, 8, 1};
+
+static int addSphereVertex(Mesh &mesh, glm::vec3 vertex, GLfloat radius)
+{
+    glm::vec3 normalizedVertex = glm::normalize(vertex * radius);
+    mesh.indexed_vertices.push_back(normalizedVertex * radius);
+    return mesh.indexed_vertices.size() - 1;
+}
+
+Mesh generateSphere(GLfloat radius, int subdivisions)
+{
+    Mesh sphere;
+
+    for (int i = 0; i < 12; i++)
+    {
+        addSphereVertex(sphere, ICOSAHEDRON_VERTICES[i], radius);
+    }
+
+    for (int i = 0; i < 60; i++)
+    {
+        sphere.indices.push_back(ICOSAHEDRON_INDICES[i]);
+    }
+
+    for (int s = 0; s < subdivisions; s++)
+    {
+        std::vector<unsigned int> subdividedSphereIndices;
+
+        for (int i = 0; (i + 2) < sphere.indices.size(); i += 3)
+        {
+            int aIndex = sphere.indices[i];
+            int bIndex = sphere.indices[i + 1];
+            int cIndex = sphere.indices[i + 2];
+
+            glm::vec3 a = sphere.indexed_vertices[aIndex];
+            glm::vec3 b = sphere.indexed_vertices[bIndex];
+            glm::vec3 c = sphere.indexed_vertices[cIndex];
+
+            glm::vec3 ab = a + b;
+            glm::vec3 bc = b + c;
+            glm::vec3 ca = c + a;
+
+            int abIndex = addSphereVertex(sphere, ab, radius);
+            int bcIndex = addSphereVertex(sphere, bc, radius);
+            int caIndex = addSphereVertex(sphere, ca, radius);
+
+            subdividedSphereIndices.push_back(aIndex);
+            subdividedSphereIndices.push_back(abIndex);
+            subdividedSphereIndices.push_back(caIndex);
+
+            subdividedSphereIndices.push_back(bIndex);
+            subdividedSphereIndices.push_back(bcIndex);
+            subdividedSphereIndices.push_back(abIndex);
+
+            subdividedSphereIndices.push_back(cIndex);
+            subdividedSphereIndices.push_back(caIndex);
+            subdividedSphereIndices.push_back(bcIndex);
+
+            subdividedSphereIndices.push_back(abIndex);
+            subdividedSphereIndices.push_back(bcIndex);
+            subdividedSphereIndices.push_back(caIndex);
+        }
+
+        sphere.indices = subdividedSphereIndices;
+    }
+
+    return sphere;
+}
 
 void reverseFaces(Mesh &mesh)
 {
@@ -132,13 +207,6 @@ void reverseFaces(Mesh &mesh)
 
     mesh.indices = reversedIndices;
 }
-
-struct DirectionalLight
-{
-    glm::vec3 direction;
-    glm::vec3 color;
-    float power;
-};
 
 struct Scene
 {
@@ -165,8 +233,8 @@ struct Scene
 
         Mesh sphereMesh = generateSphere(planetParameters.baseRadius, planetParameters.planetSubdivisions);
 
-        meshes.push_back(GlMesh(atmosphereMesh, glm::mat4(1.0)));
-        meshes.push_back(GlMesh(sphereMesh, glm::mat4(1.0)));
+        meshes.push_back(GlMesh(atmosphereMesh.indexed_vertices, atmosphereMesh.indices, glm::mat4(1.0)));
+        meshes.push_back(GlMesh(sphereMesh.indexed_vertices, sphereMesh.indices, glm::mat4(1.0)));
 
         shaderPrograms.push_back(
             createVertexFragmentShaderProgram(
@@ -332,95 +400,6 @@ void render(GLFWwindow *glfwWindow, const Scene &scene)
     check_gl_error();
 }
 
-class GlVertexArrayObject
-{
-    GLuint vertexArrayId;
-
-public:
-    GlVertexArrayObject()
-    {
-        glGenVertexArrays(1, &vertexArrayId);
-    }
-
-    ~GlVertexArrayObject()
-    {
-        glDeleteVertexArrays(1, &vertexArrayId);
-    }
-
-    GLuint id() const
-    {
-        return vertexArrayId;
-    }
-};
-
-struct Glfw
-{
-    Glfw()
-    {
-        int initResult = glfwInit();
-        if (!initResult)
-        {
-            throw initResult;
-        }
-    }
-
-    Glfw(const Glfw &) = delete;
-    Glfw operator=(const Glfw &) = delete;
-
-    ~Glfw()
-    {
-        glfwTerminate();
-    }
-};
-
-struct Glew
-{
-    Glew()
-    {
-        glewExperimental = true;
-        int initResult = glewInit();
-        if (initResult != GLEW_OK)
-        {
-            throw initResult;
-        }
-    }
-};
-
-struct GlfwWindow
-{
-private:
-    GLFWwindow *window;
-
-public:
-    GlfwWindow(unsigned int initialWidth, unsigned int initialHeight)
-    {
-        glfwWindowHint(GLFW_SAMPLES, 8);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-        window = glfwCreateWindow(initialWidth, initialHeight, "Procedural Planets", NULL, NULL);
-        if (window == NULL)
-        {
-            throw -1;
-        }
-        glfwMakeContextCurrent(window);
-
-        glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
-        glfwSetCursorPos(window, initialWidth / 2, initialHeight / 2);
-    }
-
-    ~GlfwWindow()
-    {
-        glfwDestroyWindow(window);
-    }
-
-    GLFWwindow *glfwWindow() const
-    {
-        return window;
-    }
-};
-
 int main(void)
 {
     try
@@ -428,7 +407,7 @@ int main(void)
         Glfw glfw;
         try
         {
-            GlfwWindow window(1024, 1024);
+            GlfwWindow window(1024, 1024, "Procedural Celestial Bodies");
             try
             {
                 Glew glew;
