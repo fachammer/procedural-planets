@@ -273,6 +273,8 @@ struct Scene
 
     Scene(Scene &&) = default;
     Scene &operator=(Scene &&other) = default;
+
+    RenderObject &planet() { return objects[1]; }
 };
 
 void updateCamera(Camera &camera, GLFWwindow *window, float deltaTime)
@@ -305,7 +307,7 @@ void updateCamera(Camera &camera, GLFWwindow *window, float deltaTime)
 
 void updatePlanetMovement(Scene &scene, float deltaTime)
 {
-    scene.objects[1].modelMatrix = glm::rotate(scene.objects[1].modelMatrix, scene.planetParameters.rotateSpeed * deltaTime, UP);
+    scene.planet().modelMatrix = glm::rotate(scene.planet().modelMatrix, scene.planetParameters.rotateSpeed * deltaTime, UP);
 }
 
 float random_in_unit_interval()
