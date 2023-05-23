@@ -3,7 +3,6 @@
 #include <vector>
 #include <string>
 #include <time.h>
-#include <memory>
 
 #include <GL/glew.h>
 #include <glfw3.h>
