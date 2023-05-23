@@ -260,8 +260,8 @@ struct Scene
 
         light = {
             .direction = -UP,
-            .power = 1.f,
             .color = glm::vec3(1, 1, 1),
+            .power = 1.f,
         };
     }
 
@@ -307,7 +307,7 @@ void updatePlanetMovement(Scene &scene, float deltaTime)
 
 float random_in_unit_interval()
 {
-    return static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+    return static_cast<float>(arc4random()) / static_cast<float>(RAND_MAX);
 }
 
 float random_in_range(float min, float max)
@@ -326,7 +326,7 @@ void update(GLFWwindow *window, Scene &scene)
     if (newNoiseOffset == GLFW_PRESS && !scene.state.isPlanetGenerationBlocked)
     {
         scene.state.noiseOffset = glm::vec3(rand() % 99, rand() % 99, rand() % 99);
-        scene.state.textureIndex = rand() % scene.textures.size();
+        scene.state.textureIndex = arc4random() % scene.textures.size();
         scene.light.direction = glm::vec3(random_in_range(-1, 1), random_in_range(-1, 1), random_in_range(-1, 1));
         scene.state.isPlanetGenerationBlocked = true;
     }
