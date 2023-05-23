@@ -29,8 +29,6 @@ add_definitions(
 add_executable(ProceduralPlanets
 	src/ProceduralPlanets.cpp
 	src/GlResources.hpp
-	src/GLError.h
-	src/GLError.cpp
 	
     shaders/TerrainGenerator.vertex.glsl
     shaders/TerrainGenerator.fragment.glsl

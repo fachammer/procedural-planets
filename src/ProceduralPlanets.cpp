@@ -9,8 +9,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "GLError.h"
-
 #include "GlResources.hpp"
 
 struct PlanetParameters
