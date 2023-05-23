@@ -149,7 +149,7 @@ Mesh generateSphere(GLfloat radius, int subdivisions)
     {
         std::vector<unsigned int> subdividedSphereIndices;
 
-        for (int i = 0; (i + 2) < sphere.indices.size(); i += 3)
+        for (unsigned int i = 0; (i + 2) < sphere.indices.size(); i += 3)
         {
             int aIndex = sphere.indices[i];
             int bIndex = sphere.indices[i + 1];
@@ -194,7 +194,7 @@ void reverseFaces(Mesh &mesh)
 {
     std::vector<unsigned int> reversedIndices;
 
-    for (int i = 0; i < mesh.indices.size(); i += 3)
+    for (unsigned int i = 0; i < mesh.indices.size(); i += 3)
     {
         for (int j = 2; j >= 0; j--)
         {

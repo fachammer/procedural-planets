@@ -183,7 +183,7 @@ public:
         : vertexBuffer(vertices),
           elementBuffer(indices),
           numberOfElements(indices.size()),
-          modelMatrix(glm::mat4(1.0))
+          modelMatrix(modelMatrix)
     {
     }
 

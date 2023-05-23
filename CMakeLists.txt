@@ -44,3 +44,4 @@ target_link_libraries(ProceduralPlanets
 )
 
 set_property(TARGET ProceduralPlanets PROPERTY CXX_STANDARD 14)
+target_compile_options(ProceduralPlanets PRIVATE "-Wall" "-Wextra" "-Wpedantic")
