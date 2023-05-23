@@ -12,24 +12,24 @@ struct Mesh
     std::vector<glm::vec3> indexed_vertices;
 };
 
-class VertexBuffer
+class GlVertexBuffer
 {
 private:
     unsigned int bufferId;
 
 public:
-    VertexBuffer(const std::vector<glm::vec3> &vertices);
-    ~VertexBuffer();
+    GlVertexBuffer(const std::vector<glm::vec3> &vertices);
+    ~GlVertexBuffer();
 
-    VertexBuffer(VertexBuffer &buffer) = delete;
-    VertexBuffer operator=(VertexBuffer &buffer) = delete;
+    GlVertexBuffer(GlVertexBuffer &buffer) = delete;
+    GlVertexBuffer operator=(GlVertexBuffer &buffer) = delete;
 
-    VertexBuffer(VertexBuffer &&buffer) : bufferId(buffer.bufferId)
+    GlVertexBuffer(GlVertexBuffer &&buffer) : bufferId(buffer.bufferId)
     {
         buffer.bufferId = 0;
     }
 
-    VertexBuffer &operator=(VertexBuffer &&buffer)
+    GlVertexBuffer &operator=(GlVertexBuffer &&buffer)
     {
         if (this != &buffer)
         {
@@ -45,24 +45,24 @@ public:
     }
 };
 
-class ElementBuffer
+class GlElementBuffer
 {
 private:
     unsigned int bufferId;
 
 public:
-    ElementBuffer(const std::vector<unsigned int> &indices);
-    ~ElementBuffer();
+    GlElementBuffer(const std::vector<unsigned int> &indices);
+    ~GlElementBuffer();
 
-    ElementBuffer(ElementBuffer &buffer) = delete;
-    ElementBuffer operator=(ElementBuffer &buffer) = delete;
+    GlElementBuffer(GlElementBuffer &buffer) = delete;
+    GlElementBuffer operator=(GlElementBuffer &buffer) = delete;
 
-    ElementBuffer(ElementBuffer &&buffer) : bufferId(buffer.bufferId)
+    GlElementBuffer(GlElementBuffer &&buffer) : bufferId(buffer.bufferId)
     {
         buffer.bufferId = 0;
     }
 
-    ElementBuffer &operator=(ElementBuffer &&buffer)
+    GlElementBuffer &operator=(GlElementBuffer &&buffer)
     {
         if (this != &buffer)
         {
@@ -78,30 +78,30 @@ public:
     }
 };
 
-class OpenGLMesh
+class GlMesh
 {
 private:
-    VertexBuffer vertexBuffer;
-    ElementBuffer elementBuffer;
+    GlVertexBuffer vertexBuffer;
+    GlElementBuffer elementBuffer;
     unsigned int numberOfElements;
 
 public:
     glm::mat4 modelMatrix;
 
-    OpenGLMesh(const Mesh &_mesh, glm::mat4 _modelMatrix);
+    GlMesh(const Mesh &_mesh, glm::mat4 _modelMatrix);
 
-    OpenGLMesh(const OpenGLMesh &) = delete;
-    OpenGLMesh &operator=(const OpenGLMesh &) = delete;
+    GlMesh(const GlMesh &) = delete;
+    GlMesh &operator=(const GlMesh &) = delete;
 
-    OpenGLMesh(OpenGLMesh &&mesh) = default;
-    OpenGLMesh &operator=(OpenGLMesh &&mesh) = default;
+    GlMesh(GlMesh &&mesh) = default;
+    GlMesh &operator=(GlMesh &&mesh) = default;
 
-    const VertexBuffer &getVertexBuffer() const
+    const GlVertexBuffer &getVertexBuffer() const
     {
         return vertexBuffer;
     }
 
-    const ElementBuffer &getElementBuffer() const
+    const GlElementBuffer &getElementBuffer() const
     {
         return elementBuffer;
     }

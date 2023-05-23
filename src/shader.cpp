@@ -14,7 +14,7 @@ using namespace std;
 #include "Shader.hpp"
 #include "GLError.h"
 
-Shader loadShader(GLenum shaderType, std::string path)
+GlShader loadShader(GLenum shaderType, std::string path)
 {
     std::ifstream shaderStream(path);
     std::string shaderCode((std::istreambuf_iterator<char>(shaderStream)),
@@ -23,7 +23,7 @@ Shader loadShader(GLenum shaderType, std::string path)
     GLint Result = GL_FALSE;
     int InfoLogLength;
 
-    Shader shader = Shader(shaderType, shaderCode);
+    GlShader shader = GlShader(shaderType, shaderCode);
 
     glGetShaderiv(shader.id(), GL_COMPILE_STATUS, &Result);
     glGetShaderiv(shader.id(), GL_INFO_LOG_LENGTH, &InfoLogLength);
@@ -37,13 +37,13 @@ Shader loadShader(GLenum shaderType, std::string path)
     return shader;
 }
 
-ShaderProgram
-createVertexFragmentShaderProgram(Shader vertexShader, Shader fragmentShader)
+GlShaderProgram
+createVertexFragmentShaderProgram(GlShader vertexShader, GlShader fragmentShader)
 {
-    std::vector<Shader> shaders;
+    std::vector<GlShader> shaders;
     shaders.push_back(std::move(vertexShader));
     shaders.push_back(std::move(fragmentShader));
-    ShaderProgram shaderProgram = ShaderProgram(shaders);
+    GlShaderProgram shaderProgram = GlShaderProgram(shaders);
 
     GLint Result = GL_FALSE;
     int InfoLogLength;

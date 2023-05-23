@@ -2,13 +2,13 @@
 
 #include <GL/glew.h>
 
-struct Shader
+struct GlShader
 {
 private:
     GLuint shaderId = 0;
 
 public:
-    Shader(GLenum shaderType, std::string shaderCode)
+    GlShader(GLenum shaderType, std::string shaderCode)
     {
         shaderId = glCreateShader(shaderType);
         const char *shaderCodeCStr = shaderCode.c_str();
@@ -16,17 +16,17 @@ public:
         glCompileShader(shaderId);
     }
 
-    Shader(const Shader &shader) = delete;
-    Shader operator=(const Shader &shader) = delete;
+    GlShader(const GlShader &) = delete;
+    GlShader operator=(const GlShader &) = delete;
 
-    Shader(Shader &&shader)
+    GlShader(GlShader &&shader)
         : shaderId(shader.shaderId)
 
     {
         shader.shaderId = 0;
     }
 
-    Shader &operator=(Shader &&other)
+    GlShader &operator=(GlShader &&other)
     {
         if (this != &other)
         {
@@ -36,7 +36,7 @@ public:
         return *this;
     }
 
-    ~Shader()
+    ~GlShader()
     {
         glDeleteShader(shaderId);
     }
@@ -47,33 +47,33 @@ public:
     }
 };
 
-struct ShaderProgram
+struct GlShaderProgram
 {
 private:
     GLuint programId;
 
 public:
-    ShaderProgram(const std::vector<Shader> &shaders)
+    GlShaderProgram(const std::vector<GlShader> &shaders)
     {
         programId = glCreateProgram();
-        for (const Shader &shader : shaders)
+        for (const GlShader &shader : shaders)
         {
             glAttachShader(programId, shader.id());
         }
         glLinkProgram(programId);
     }
 
-    ShaderProgram(const ShaderProgram &) = delete;
-    ShaderProgram operator=(const ShaderProgram &) = delete;
+    GlShaderProgram(const GlShaderProgram &) = delete;
+    GlShaderProgram operator=(const GlShaderProgram &) = delete;
 
-    ShaderProgram(ShaderProgram &&program)
+    GlShaderProgram(GlShaderProgram &&program)
         : programId(program.programId)
 
     {
         program.programId = 0;
     }
 
-    ShaderProgram &operator=(ShaderProgram &&other)
+    GlShaderProgram &operator=(GlShaderProgram &&other)
     {
         if (this != &other)
         {
@@ -83,7 +83,7 @@ public:
         return *this;
     }
 
-    ~ShaderProgram()
+    ~GlShaderProgram()
     {
         glDeleteProgram(programId);
     }
@@ -94,5 +94,5 @@ public:
     }
 };
 
-Shader loadShader(GLenum shaderType, std::string path);
-ShaderProgram createVertexFragmentShaderProgram(Shader vertexShader, Shader fragmentShader);
+GlShader loadShader(GLenum shaderType, std::string path);
+GlShaderProgram createVertexFragmentShaderProgram(GlShader vertexShader, GlShader fragmentShader);

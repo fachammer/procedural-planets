@@ -81,13 +81,13 @@ struct Camera
     }
 };
 
-class Texture
+class GlTexture
 {
 private:
     GLuint textureId;
 
 public:
-    Texture(std::string path)
+    GlTexture(std::string path)
     {
         textureId = SOIL_load_OGL_texture(
             path.c_str(),
@@ -95,15 +95,15 @@ public:
             SOIL_CREATE_NEW_ID,
             SOIL_FLAG_POWER_OF_TWO | SOIL_FLAG_MIPMAPS);
     }
-    Texture(const Texture &) = delete;
-    Texture &operator=(const Texture &) = delete;
+    GlTexture(const GlTexture &) = delete;
+    GlTexture &operator=(const GlTexture &) = delete;
 
-    Texture(Texture &&other) : textureId(other.textureId)
+    GlTexture(GlTexture &&other) : textureId(other.textureId)
     {
         other.textureId = 0;
     }
 
-    Texture &operator=(Texture &&other)
+    GlTexture &operator=(GlTexture &&other)
     {
         if (this != &other)
         {
@@ -113,7 +113,7 @@ public:
         return *this;
     }
 
-    ~Texture()
+    ~GlTexture()
     {
         glDeleteTextures(1, &textureId);
     }
@@ -154,9 +154,9 @@ struct Scene
         std::vector<unsigned int> shaderIndices;
     };
     std::vector<RenderObject> objects;
-    std::vector<OpenGLMesh> meshes;
-    std::vector<ShaderProgram> shaderPrograms;
-    std::vector<Texture> textures;
+    std::vector<GlMesh> meshes;
+    std::vector<GlShaderProgram> shaderPrograms;
+    std::vector<GlTexture> textures;
 
     Camera camera;
     DirectionalLight light;
@@ -171,8 +171,8 @@ struct Scene
 
         Mesh sphereMesh = generateSphere(planetParameters.baseRadius, planetParameters.planetSubdivisions);
 
-        meshes.push_back(OpenGLMesh(atmosphereMesh, glm::mat4(1.0)));
-        meshes.push_back(OpenGLMesh(sphereMesh, glm::mat4(1.0)));
+        meshes.push_back(GlMesh(atmosphereMesh, glm::mat4(1.0)));
+        meshes.push_back(GlMesh(sphereMesh, glm::mat4(1.0)));
 
         shaderPrograms.push_back(
             createVertexFragmentShaderProgram(
@@ -183,10 +183,10 @@ struct Scene
                 loadShader(GL_VERTEX_SHADER, "../shaders/TerrainGenerator.vertex.glsl"),
                 loadShader(GL_FRAGMENT_SHADER, "../shaders/TerrainGenerator.fragment.glsl")));
 
-        textures.push_back(Texture("../textures/beachMountain.png"));
-        textures.push_back(Texture("../textures/ice.png"));
-        textures.push_back(Texture("../textures/tropic.png"));
-        textures.push_back(Texture("../textures/volcano.png"));
+        textures.push_back(GlTexture("../textures/beachMountain.png"));
+        textures.push_back(GlTexture("../textures/ice.png"));
+        textures.push_back(GlTexture("../textures/tropic.png"));
+        textures.push_back(GlTexture("../textures/volcano.png"));
 
         objects = {
             RenderObject{
@@ -297,13 +297,12 @@ void render(GLFWwindow *glfwWindow, const Scene &scene)
     glm::mat4 viewProjectionMatrix = projectionMatrix * viewMatrix;
     for (Scene::RenderObject renderObject : scene.objects)
     {
-        const OpenGLMesh &mesh = scene.meshes[renderObject.meshIndex];
-
+        const GlMesh &mesh = scene.meshes[renderObject.meshIndex];
         glm::mat4 modelViewProjectionMatrix = viewProjectionMatrix * mesh.modelMatrix;
 
         for (unsigned int shaderIndex : renderObject.shaderIndices)
         {
-            const ShaderProgram &shaderProgram = scene.shaderPrograms[shaderIndex];
+            const GlShaderProgram &shaderProgram = scene.shaderPrograms[shaderIndex];
             glUseProgram(shaderProgram.id());
 
             glActiveTexture(GL_TEXTURE0);
@@ -340,20 +339,24 @@ void render(GLFWwindow *glfwWindow, const Scene &scene)
     check_gl_error();
 }
 
-class BoundVertexArrayObject
+class GlVertexArrayObject
 {
     GLuint vertexArrayId;
 
 public:
-    BoundVertexArrayObject()
+    GlVertexArrayObject()
     {
         glGenVertexArrays(1, &vertexArrayId);
-        glBindVertexArray(vertexArrayId);
     }
 
-    ~BoundVertexArrayObject()
+    ~GlVertexArrayObject()
     {
         glDeleteVertexArrays(1, &vertexArrayId);
+    }
+
+    GLuint id() const
+    {
+        return vertexArrayId;
     }
 };
 
@@ -390,13 +393,13 @@ struct Glew
     }
 };
 
-struct Window
+struct GlfwWindow
 {
 private:
     GLFWwindow *window;
 
 public:
-    Window(unsigned int initialWidth, unsigned int initialHeight)
+    GlfwWindow(unsigned int initialWidth, unsigned int initialHeight)
     {
         glfwWindowHint(GLFW_SAMPLES, 8);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -414,7 +417,7 @@ public:
         glfwSetCursorPos(window, initialWidth / 2, initialHeight / 2);
     }
 
-    ~Window()
+    ~GlfwWindow()
     {
         glfwDestroyWindow(window);
     }
@@ -432,13 +435,14 @@ int main(void)
         Glfw glfw;
         try
         {
-            Window window(1024, 1024);
+            GlfwWindow window(1024, 1024);
             try
             {
                 Glew glew;
                 Scene scene;
                 GLFWwindow *glfwWindow = window.glfwWindow();
-                BoundVertexArrayObject vao;
+                GlVertexArrayObject vao;
+                glBindVertexArray(vao.id());
                 do
                 {
                     glfwPollEvents();
