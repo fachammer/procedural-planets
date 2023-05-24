@@ -11,6 +11,9 @@
 
 #include "GlResources.hpp"
 
+const glm::vec3 UP(0, 1, 0);
+const glm::mat4 IDENTITY(1.0f);
+
 struct Planet
 {
     float baseRadius = 90;
@@ -22,11 +25,14 @@ struct Planet
     unsigned int planetSubdivisions = 7;
     glm::vec3 noiseOffset = glm::vec3(0, 0, 0);
     int textureIndex = 0;
+    float angle = 0;
 
     float atmosphereRadius() const
     {
-        return atmospherePlanetRatio * (baseRadius);
+        return atmospherePlanetRatio * baseRadius;
     }
+
+    glm::mat4 modelMatrix() const { return glm::rotate(IDENTITY, angle, UP); }
 };
 
 struct State
@@ -35,7 +41,6 @@ struct State
     float lastTime = 0;
 };
 
-const glm::vec3 UP(0, 1, 0);
 struct Camera
 {
     float distanceFromOrigin = 250;
@@ -307,7 +312,8 @@ void updateCamera(Camera &camera, GLFWwindow *window, float deltaTime)
 
 void updatePlanetMovement(Scene &scene, float deltaTime)
 {
-    scene.planet().modelMatrix = glm::rotate(scene.planet().modelMatrix, scene.planetParameters.rotateSpeed * deltaTime, UP);
+    scene.planetParameters.angle += scene.planetParameters.rotateSpeed * deltaTime;
+    scene.planet().modelMatrix = scene.planetParameters.modelMatrix();
 }
 
 float random_in_unit_interval()
