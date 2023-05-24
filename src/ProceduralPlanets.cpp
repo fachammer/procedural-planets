@@ -21,8 +21,7 @@ struct Planet
     float maxHeight = 25;
     float atmospherePlanetRatio = 1.12;
     float rotateSpeed = 0.03f;
-    unsigned int atmosphereSubdivisions = 4;
-    unsigned int planetSubdivisions = 7;
+    unsigned int sphereSubdivisions = 7;
     glm::vec3 noiseOffset = glm::vec3(0, 0, 0);
     int textureIndex = 0;
     float angle = 0;
@@ -33,6 +32,13 @@ struct Planet
     }
 
     glm::mat4 modelMatrix() const { return glm::rotate(IDENTITY, angle, UP); }
+};
+
+struct Atmosphere
+{
+    unsigned int sphereSubdivisions = 4;
+    float innerRadius;
+    float outerRadius;
 };
 
 struct State
@@ -228,13 +234,14 @@ struct Scene
 
     State state;
     Planet planetParameters;
+    Atmosphere atmosphere;
 
     Scene()
     {
-        Mesh atmosphereMesh = generateSphere(planetParameters.atmosphereRadius(), planetParameters.atmosphereSubdivisions);
+        Mesh atmosphereMesh = generateSphere(planetParameters.atmosphereRadius(), atmosphere.sphereSubdivisions);
         reverseFaces(atmosphereMesh);
 
-        Mesh sphereMesh = generateSphere(planetParameters.baseRadius, planetParameters.planetSubdivisions);
+        Mesh sphereMesh = generateSphere(planetParameters.baseRadius, planetParameters.sphereSubdivisions);
 
         meshes.push_back(GlMesh(atmosphereMesh.indexed_vertices, atmosphereMesh.indices));
         meshes.push_back(GlMesh(sphereMesh.indexed_vertices, sphereMesh.indices));
