@@ -222,6 +222,30 @@ void reverseFaces(Mesh &mesh)
     mesh.indices = reversedIndices;
 }
 
+struct AtmosphericScatteringUniformLocations
+{
+    GLint lightDirectionInWorldSpace;
+    GLint lightPower;
+    GLint modelViewProjectionMatrix;
+    GLint modelMatrix;
+    GLint cameraPositionInWorldSpace;
+    GLint baseRadius;
+    GLint atmosphereRadius;
+
+    AtmosphericScatteringUniformLocations() {}
+
+    AtmosphericScatteringUniformLocations(const GlShaderProgram &program)
+    {
+        lightDirectionInWorldSpace = glGetUniformLocation(program.id(), "lightDirectionInWorldSpace");
+        lightPower = glGetUniformLocation(program.id(), "lightPower");
+        modelViewProjectionMatrix = glGetUniformLocation(program.id(), "modelViewProjectionMatrix");
+        modelMatrix = glGetUniformLocation(program.id(), "modelMatrix");
+        cameraPositionInWorldSpace = glGetUniformLocation(program.id(), "cameraPositionInWorldSpace");
+        baseRadius = glGetUniformLocation(program.id(), "baseRadius");
+        atmosphereRadius = glGetUniformLocation(program.id(), "atmosphereRadius");
+    }
+};
+
 struct TerrainGeneratorUniformLocations
 {
     GLint heightSlopeBasedColorMap;
@@ -269,6 +293,7 @@ struct Scene
     Planet planet;
     Atmosphere atmosphere;
     TerrainGeneratorUniformLocations terrainGeneratorUniformLocations;
+    AtmosphericScatteringUniformLocations atmosphericScatteringUniformLocations;
 
     Scene()
     {
@@ -286,10 +311,11 @@ struct Scene
         meshes.push_back(GlMesh(sphereMesh.indexed_vertices, sphereMesh.indices));
         planet.meshIndex = 1;
 
-        shaderPrograms.push_back(
-            createVertexFragmentShaderProgram(
-                loadShader(GL_VERTEX_SHADER, "../shaders/AtmosphericScattering.vertex.glsl"),
-                loadShader(GL_FRAGMENT_SHADER, "../shaders/AtmosphericScattering.fragment.glsl")));
+        GlShaderProgram atmosphericScattering = createVertexFragmentShaderProgram(
+            loadShader(GL_VERTEX_SHADER, "../shaders/AtmosphericScattering.vertex.glsl"),
+            loadShader(GL_FRAGMENT_SHADER, "../shaders/AtmosphericScattering.fragment.glsl"));
+        atmosphericScatteringUniformLocations = AtmosphericScatteringUniformLocations(atmosphericScattering);
+        shaderPrograms.push_back(std::move(atmosphericScattering));
         atmosphere.shaderIndex = 0;
 
         GlShaderProgram terrainGenerator = createVertexFragmentShaderProgram(
@@ -399,17 +425,18 @@ void renderAtmosphere(const Scene &scene)
 
     const GlShaderProgram &shaderProgram = scene.shaderPrograms[scene.atmosphere.shaderIndex];
     glUseProgram(shaderProgram.id());
+    const AtmosphericScatteringUniformLocations &uniformLocations = scene.atmosphericScatteringUniformLocations;
 
-    glUniform3f(glGetUniformLocation(shaderProgram.id(), "lightDirectionInWorldSpace"), scene.light.direction.x, scene.light.direction.y, scene.light.direction.z);
-    glUniform1f(glGetUniformLocation(shaderProgram.id(), "lightPower"), scene.light.power);
+    glUniform3f(uniformLocations.lightDirectionInWorldSpace, scene.light.direction.x, scene.light.direction.y, scene.light.direction.z);
+    glUniform1f(uniformLocations.lightPower, scene.light.power);
 
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram.id(), "modelViewProjectionMatrix"), 1, GL_FALSE, &modelViewProjectionMatrix[0][0]);
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram.id(), "modelMatrix"), 1, GL_FALSE, &scene.atmosphere.modelMatrix[0][0]);
+    glUniformMatrix4fv(uniformLocations.modelViewProjectionMatrix, 1, GL_FALSE, &modelViewProjectionMatrix[0][0]);
+    glUniformMatrix4fv(uniformLocations.modelMatrix, 1, GL_FALSE, &scene.atmosphere.modelMatrix[0][0]);
 
-    glUniform3f(glGetUniformLocation(shaderProgram.id(), "cameraPositionInWorldSpace"), cameraPosition.x, cameraPosition.y, cameraPosition.z);
+    glUniform3f(uniformLocations.cameraPositionInWorldSpace, cameraPosition.x, cameraPosition.y, cameraPosition.z);
 
-    glUniform1f(glGetUniformLocation(shaderProgram.id(), "baseRadius"), scene.atmosphere.innerRadius);
-    glUniform1f(glGetUniformLocation(shaderProgram.id(), "atmosphereRadius"), scene.atmosphere.outerRadius);
+    glUniform1f(uniformLocations.baseRadius, scene.atmosphere.innerRadius);
+    glUniform1f(uniformLocations.atmosphereRadius, scene.atmosphere.outerRadius);
 
     glBindBuffer(GL_ARRAY_BUFFER, mesh.getVertexBuffer().id());
     glEnableVertexAttribArray(0);
