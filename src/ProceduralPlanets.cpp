@@ -11,7 +11,7 @@
 
 #include "GlResources.hpp"
 
-struct PlanetParameters
+struct Planet
 {
     float baseRadius = 90;
     float maxDepth = 30;
@@ -222,7 +222,7 @@ struct Scene
     DirectionalLight light;
 
     State state;
-    PlanetParameters planetParameters;
+    Planet planetParameters;
 
     Scene()
     {
