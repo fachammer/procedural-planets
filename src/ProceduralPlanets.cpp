@@ -8,6 +8,7 @@
 #include <glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/easing.hpp>
 
 #include "GlResources.hpp"
 
@@ -280,6 +281,30 @@ struct TerrainGeneratorUniformLocations
     }
 };
 
+struct AnimationParameters
+{
+    glm::vec3 noiseOffset;
+    glm::vec3 lightDirection;
+};
+
+struct Animation
+{
+    bool active = false;
+    AnimationParameters source;
+    AnimationParameters target;
+    float progress;
+    float duration;
+
+    AnimationParameters current() const
+    {
+        const float parameter = glm::sineEaseInOut(glm::clamp(progress, 0.0f, 1.0f));
+        return AnimationParameters{
+            .noiseOffset = parameter * target.noiseOffset + (1 - parameter) * source.noiseOffset,
+            .lightDirection = parameter * target.lightDirection + (1 - parameter) * source.lightDirection,
+        };
+    }
+};
+
 struct Scene
 {
     std::vector<GlMesh> meshes;
@@ -294,6 +319,7 @@ struct Scene
     Atmosphere atmosphere;
     TerrainGeneratorUniformLocations terrainGeneratorUniformLocations;
     AtmosphericScatteringUniformLocations atmosphericScatteringUniformLocations;
+    Animation animation;
 
     Scene()
     {
@@ -335,6 +361,19 @@ struct Scene
             .direction = -UP,
             .color = glm::vec3(1, 1, 1),
             .power = 1.f,
+        };
+
+        animation = Animation{
+            .active = false,
+            .progress = 0,
+            .source = AnimationParameters{
+                .lightDirection = light.direction,
+                .noiseOffset = planet.noiseOffset,
+            },
+            .target = AnimationParameters{
+                .lightDirection = light.direction,
+                .noiseOffset = planet.noiseOffset,
+            },
         };
     }
 
@@ -389,6 +428,22 @@ float random_in_range(float min, float max)
     return min + random_in_unit_interval() * (max - min);
 }
 
+void updateAnimation(Scene &scene, float deltaTime)
+{
+    if (!scene.animation.active)
+    {
+        return;
+    }
+    scene.animation.progress += deltaTime / scene.animation.duration;
+    if (scene.animation.progress >= 1)
+    {
+        scene.animation.active = false;
+    }
+    const AnimationParameters parameters = scene.animation.current();
+    scene.planet.noiseOffset = parameters.noiseOffset;
+    scene.light.direction = parameters.lightDirection;
+}
+
 void update(GLFWwindow *window, Scene &scene)
 {
     double currentTime = glfwGetTime();
@@ -399,9 +454,21 @@ void update(GLFWwindow *window, Scene &scene)
     int newNoiseOffset = glfwGetKey(window, GLFW_KEY_R);
     if (newNoiseOffset == GLFW_PRESS && !scene.state.isPlanetGenerationBlocked)
     {
-        scene.planet.noiseOffset = glm::vec3(rand() % 99, rand() % 99, rand() % 99);
+        scene.animation.source = AnimationParameters{
+            .noiseOffset = scene.planet.noiseOffset,
+            .lightDirection = scene.light.direction,
+        };
+        float phi = random_in_range(0, 3.14);
+        float theta = random_in_range(-1.57, 1.57);
+        scene.animation.target = AnimationParameters{
+            .noiseOffset = glm::vec3(random_in_range(-0.5, 0.5), random_in_range(-0.5, 0.5), random_in_range(-0.5, 0.5)),
+            .lightDirection = glm::vec3(glm::sin(theta) * glm::cos(phi), glm::sin(theta) * glm::sin(phi), glm::cos(phi)),
+        };
+        scene.animation.progress = 0;
+        scene.animation.duration = 0.5;
+        scene.animation.active = true;
+
         scene.planet.textureIndex = arc4random() % scene.textures.size();
-        scene.light.direction = glm::vec3(random_in_range(-1, 1), random_in_range(-1, 1), random_in_range(-1, 1));
         scene.state.isPlanetGenerationBlocked = true;
     }
     else if (newNoiseOffset == GLFW_RELEASE)
@@ -410,6 +477,7 @@ void update(GLFWwindow *window, Scene &scene)
     }
 
     updatePlanetMovement(scene, deltaTime);
+    updateAnimation(scene, deltaTime);
 
     scene.state.lastTime = currentTime;
 }
