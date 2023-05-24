@@ -465,6 +465,14 @@ glm::vec3 orthogonal(const glm::vec3 vector)
     }
 }
 
+glm::vec3 random_orthogonal_direction(const glm::vec3 vector)
+{
+    float phi = random_in_range(0, 3.14);
+    glm::vec3 normal = orthogonal(vector);
+    glm::vec3 binormal = glm::cross(vector, normal);
+    return glm::cos(phi) * normal + glm::sin(phi) * binormal;
+}
+
 void update(GLFWwindow *window, Scene &scene)
 {
     double currentTime = glfwGetTime();
@@ -481,9 +489,7 @@ void update(GLFWwindow *window, Scene &scene)
         };
         float phi = random_in_range(0, 3.14);
         float theta = random_in_range(-1.57, 1.57);
-        glm::vec3 normal = orthogonal(scene.light.direction);
-        glm::vec3 binormal = glm::cross(scene.light.direction, normal);
-        glm::vec3 rotation_axis = glm::cos(phi) * normal + glm::sin(phi) * binormal;
+        glm::vec3 rotation_axis = random_orthogonal_direction(scene.light.direction);
 
         scene.animation.target = AnimationParameters{
             .noiseOffset = scene.planet.noiseOffset + glm::vec3(0.5 * glm::sin(theta) * glm::cos(phi), 0.5 * glm::sin(theta) * glm::sin(phi), 0.5 * glm::cos(phi)),
