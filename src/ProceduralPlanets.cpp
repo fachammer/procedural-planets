@@ -20,6 +20,8 @@ struct PlanetParameters
     float rotateSpeed = 0.03f;
     unsigned int atmosphereSubdivisions = 4;
     unsigned int planetSubdivisions = 7;
+    glm::vec3 noiseOffset = glm::vec3(0, 0, 0);
+    int textureIndex = 0;
 
     float atmosphereRadius() const
     {
@@ -29,9 +31,7 @@ struct PlanetParameters
 
 struct State
 {
-    glm::vec3 noiseOffset = glm::vec3(0, 0, 0);
     bool isPlanetGenerationBlocked = true;
-    int textureIndex = 0;
     float lastTime = 0;
 };
 
@@ -330,8 +330,8 @@ void update(GLFWwindow *window, Scene &scene)
     int newNoiseOffset = glfwGetKey(window, GLFW_KEY_R);
     if (newNoiseOffset == GLFW_PRESS && !scene.state.isPlanetGenerationBlocked)
     {
-        scene.state.noiseOffset = glm::vec3(rand() % 99, rand() % 99, rand() % 99);
-        scene.state.textureIndex = arc4random() % scene.textures.size();
+        scene.planetParameters.noiseOffset = glm::vec3(rand() % 99, rand() % 99, rand() % 99);
+        scene.planetParameters.textureIndex = arc4random() % scene.textures.size();
         scene.light.direction = glm::vec3(random_in_range(-1, 1), random_in_range(-1, 1), random_in_range(-1, 1));
         scene.state.isPlanetGenerationBlocked = true;
     }
@@ -370,7 +370,7 @@ void render(GLFWwindow *glfwWindow, const Scene &scene)
             glUseProgram(shaderProgram.id());
 
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, scene.textures[scene.state.textureIndex].id());
+            glBindTexture(GL_TEXTURE_2D, scene.textures[scene.planetParameters.textureIndex].id());
             glUniform1i(glGetUniformLocation(shaderProgram.id(), "heightSlopeBasedColorMap"), 0);
 
             glUniform3f(glGetUniformLocation(shaderProgram.id(), "lightDirectionInWorldSpace"), scene.light.direction.x, scene.light.direction.y, scene.light.direction.z);
@@ -387,7 +387,7 @@ void render(GLFWwindow *glfwWindow, const Scene &scene)
             glUniform1f(glGetUniformLocation(shaderProgram.id(), "maxPositiveHeight"), scene.planetParameters.maxHeight);
             glUniform1f(glGetUniformLocation(shaderProgram.id(), "baseRadius"), scene.planetParameters.baseRadius);
             glUniform1f(glGetUniformLocation(shaderProgram.id(), "atmosphereRadius"), scene.planetParameters.atmosphereRadius());
-            glUniform3f(glGetUniformLocation(shaderProgram.id(), "noiseOffset"), scene.state.noiseOffset.x, scene.state.noiseOffset.y, scene.state.noiseOffset.z);
+            glUniform3f(glGetUniformLocation(shaderProgram.id(), "noiseOffset"), scene.planetParameters.noiseOffset.x, scene.planetParameters.noiseOffset.y, scene.planetParameters.noiseOffset.z);
 
             glBindBuffer(GL_ARRAY_BUFFER, mesh.getVertexBuffer().id());
             glEnableVertexAttribArray(0);
