@@ -386,20 +386,20 @@ struct Scene
 
 void updateCamera(Camera &camera, GLFWwindow *window, float deltaTime)
 {
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
     {
         camera.polarAngle += deltaTime * camera.rotateSpeed;
     }
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
     {
         camera.polarAngle -= deltaTime * camera.rotateSpeed;
     }
 
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
     {
         camera.azimuthalAngle -= deltaTime * camera.rotateSpeed;
     }
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
     {
         camera.azimuthalAngle += deltaTime * camera.rotateSpeed;
     }
@@ -451,7 +451,7 @@ void update(GLFWwindow *window, Scene &scene)
 
     updateCamera(scene.camera, window, deltaTime);
 
-    int newNoiseOffset = glfwGetKey(window, GLFW_KEY_R);
+    int newNoiseOffset = glfwGetKey(window, GLFW_KEY_SPACE);
     if (newNoiseOffset == GLFW_PRESS && !scene.state.isPlanetGenerationBlocked)
     {
         scene.animation.source = AnimationParameters{
