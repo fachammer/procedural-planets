@@ -434,6 +434,7 @@ void updateAnimation(Scene &scene, float deltaTime)
     {
         return;
     }
+
     scene.animation.progress += deltaTime / scene.animation.duration;
     if (scene.animation.progress >= 1)
     {
@@ -461,7 +462,7 @@ void update(GLFWwindow *window, Scene &scene)
         float phi = random_in_range(0, 3.14);
         float theta = random_in_range(-1.57, 1.57);
         scene.animation.target = AnimationParameters{
-            .noiseOffset = glm::vec3(random_in_range(-0.5, 0.5), random_in_range(-0.5, 0.5), random_in_range(-0.5, 0.5)),
+            .noiseOffset = scene.planet.noiseOffset + glm::vec3(0.5 * glm::sin(theta) * glm::cos(phi), 0.5 * glm::sin(theta) * glm::sin(phi), 0.5 * glm::cos(phi)),
             .lightDirection = glm::vec3(glm::sin(theta) * glm::cos(phi), glm::sin(theta) * glm::sin(phi), glm::cos(phi)),
         };
         scene.animation.progress = 0;
