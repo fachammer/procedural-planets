@@ -50,29 +50,17 @@ struct State
 
 struct Camera
 {
-    float distanceFromOrigin = 250;
-    float azimuthalAngle = 0;
-    float polarAngle = 0;
+    glm::vec3 position;
+    glm::vec3 up;
 
     float rotateSpeed = 1.5f;
 
     float fieldOfView = 45.0;
     float aspectRatio = 1.f;
 
-    glm::vec3 position() const
-    {
-        return glm::vec3(
-            distanceFromOrigin * cos(azimuthalAngle) * cos(polarAngle),
-            distanceFromOrigin * sin(polarAngle),
-            distanceFromOrigin * sin(azimuthalAngle) * cos(polarAngle));
-    }
-
     glm::mat4 viewMatrix() const
     {
-        return glm::lookAt(
-            position(),
-            glm::vec3(0, 0, 0),
-            UP);
+        return glm::lookAt(position, glm::vec3(0), up);
     }
 
     glm::mat4 projectionMatrix() const
@@ -291,6 +279,11 @@ struct Scene
                 .noiseOffset = planet.noiseOffset,
             },
         };
+
+        camera = Camera{
+            .position = glm::vec3(0, 0, -250.0),
+            .up = glm::vec3(0, 1, 0),
+        };
     }
 
     Scene(const Scene &) = delete;
@@ -304,24 +297,30 @@ void updateCamera(Camera &camera, GLFWwindow *window, float deltaTime)
 {
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
     {
-        camera.polarAngle += deltaTime * camera.rotateSpeed;
+        glm::mat4 rotationMatrix = glm::rotate(IDENTITY, deltaTime * camera.rotateSpeed, glm::cross(camera.position, camera.up));
+        camera.position = rotationMatrix * glm::vec4(camera.position, 0);
+        camera.up = rotationMatrix * glm::vec4(camera.up, 0);
     }
+
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
     {
-        camera.polarAngle -= deltaTime * camera.rotateSpeed;
+        glm::mat4 rotationMatrix = glm::rotate(IDENTITY, -deltaTime * camera.rotateSpeed, glm::cross(camera.position, camera.up));
+        camera.position = rotationMatrix * glm::vec4(camera.position, 0);
+        camera.up = rotationMatrix * glm::vec4(camera.up, 0);
     }
 
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
     {
-        camera.azimuthalAngle -= deltaTime * camera.rotateSpeed;
+        glm::mat4 rotationMatrix = glm::rotate(IDENTITY, deltaTime * camera.rotateSpeed, camera.up);
+        camera.position = rotationMatrix * glm::vec4(camera.position, 0);
+        camera.up = rotationMatrix * glm::vec4(camera.up, 0);
     }
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
     {
-        camera.azimuthalAngle += deltaTime * camera.rotateSpeed;
+        glm::mat4 rotationMatrix = glm::rotate(IDENTITY, -deltaTime * camera.rotateSpeed, camera.up);
+        camera.position = rotationMatrix * glm::vec4(camera.position, 0);
+        camera.up = rotationMatrix * glm::vec4(camera.up, 0);
     }
-
-    camera.polarAngle = glm::clamp(camera.polarAngle, -1.57f, 1.57f);
-    camera.distanceFromOrigin = glm::clamp(camera.distanceFromOrigin, 10.0f, 10000.0f);
 
     int width, height;
     glfwGetWindowSize(window, &width, &height);
@@ -431,7 +430,7 @@ void update(GLFWwindow *window, Scene &scene)
 
 void renderAtmosphere(const Scene &scene)
 {
-    const glm::vec3 cameraPosition = scene.camera.position();
+    const glm::vec3 cameraPosition = scene.camera.position;
     const glm::mat4 viewMatrix = scene.camera.viewMatrix();
     const glm::mat4 projectionMatrix = scene.camera.projectionMatrix();
     const glm::mat4 viewProjectionMatrix = projectionMatrix * viewMatrix;
@@ -462,7 +461,7 @@ void renderAtmosphere(const Scene &scene)
 
 void renderPlanet(const Scene &scene)
 {
-    const glm::vec3 cameraPosition = scene.camera.position();
+    const glm::vec3 cameraPosition = scene.camera.position;
     const glm::mat4 viewMatrix = scene.camera.viewMatrix();
     const glm::mat4 projectionMatrix = scene.camera.projectionMatrix();
     const glm::mat4 viewProjectionMatrix = projectionMatrix * viewMatrix;
