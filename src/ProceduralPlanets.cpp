@@ -20,7 +20,6 @@ struct Planet
     float baseRadius = 90;
     float maxDepth = 30;
     float maxHeight = 25;
-    float atmospherePlanetRatio = 1.12;
     float rotateSpeed = 0.03f;
     unsigned int sphereSubdivisions = 7;
     glm::vec3 noiseOffset = glm::vec3(0, 0, 0);
@@ -30,11 +29,6 @@ struct Planet
     unsigned int meshIndex;
     unsigned int shaderIndex;
     glm::mat4 modelMatrix;
-
-    float atmosphereRadius() const
-    {
-        return atmospherePlanetRatio * baseRadius;
-    }
 };
 
 struct Atmosphere
@@ -208,21 +202,6 @@ Mesh generateSphere(GLfloat radius, int subdivisions)
     return sphere;
 }
 
-void reverseFaces(Mesh &mesh)
-{
-    std::vector<unsigned int> reversedIndices;
-
-    for (unsigned int i = 0; i < mesh.indices.size(); i += 3)
-    {
-        for (int j = 2; j >= 0; j--)
-        {
-            reversedIndices.push_back(mesh.indices[i + j]);
-        }
-    }
-
-    mesh.indices = reversedIndices;
-}
-
 struct AnimationParameters
 {
     glm::vec3 noiseOffset;
@@ -264,12 +243,11 @@ struct Scene
     Scene()
     {
         atmosphere.innerRadius = planet.baseRadius;
-        atmosphere.outerRadius = planet.baseRadius * planet.atmospherePlanetRatio;
+        atmosphere.outerRadius = planet.baseRadius + 5;
         atmosphere.modelMatrix = IDENTITY;
         planet.modelMatrix = IDENTITY;
 
         Mesh atmosphereMesh = generateSphere(atmosphere.outerRadius, atmosphere.sphereSubdivisions);
-        reverseFaces(atmosphereMesh);
         meshes.push_back(GlMesh(atmosphereMesh.indexed_vertices, atmosphereMesh.indices));
         atmosphere.meshIndex = 0;
 
@@ -524,15 +502,14 @@ void renderPlanet(const Scene &scene)
 
 void render(GLFWwindow *glfwWindow, const Scene &scene)
 {
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
-    glEnable(GL_CULL_FACE);
-
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
+    glDisable(GL_DEPTH_TEST);
     renderAtmosphere(scene);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
     renderPlanet(scene);
 
     glfwSwapBuffers(glfwWindow);
