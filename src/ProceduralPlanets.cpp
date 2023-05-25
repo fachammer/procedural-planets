@@ -244,21 +244,21 @@ struct Scene
         planet.meshIndex = 1;
 
         GlShaderProgram atmosphericScattering = createVertexFragmentShaderProgram(
-            loadShader(GL_VERTEX_SHADER, "../shaders/AtmosphericScattering.vertex.glsl"),
-            loadShader(GL_FRAGMENT_SHADER, "../shaders/AtmosphericScattering.fragment.glsl"));
+            loadShader(GL_VERTEX_SHADER, "assets/shaders/AtmosphericScattering.vertex.glsl"),
+            loadShader(GL_FRAGMENT_SHADER, "assets/shaders/AtmosphericScattering.fragment.glsl"));
         shaderPrograms.push_back(std::move(atmosphericScattering));
         atmosphere.shaderIndex = 0;
 
         GlShaderProgram terrainGenerator = createVertexFragmentShaderProgram(
-            loadShader(GL_VERTEX_SHADER, "../shaders/TerrainGenerator.vertex.glsl"),
-            loadShader(GL_FRAGMENT_SHADER, "../shaders/TerrainGenerator.fragment.glsl"));
+            loadShader(GL_VERTEX_SHADER, "assets/shaders/TerrainGenerator.vertex.glsl"),
+            loadShader(GL_FRAGMENT_SHADER, "assets/shaders/TerrainGenerator.fragment.glsl"));
         shaderPrograms.push_back(std::move(terrainGenerator));
         planet.shaderIndex = 1;
 
-        textures.push_back(GlTexture("../textures/beachMountain.png"));
-        textures.push_back(GlTexture("../textures/ice.png"));
-        textures.push_back(GlTexture("../textures/tropic.png"));
-        textures.push_back(GlTexture("../textures/volcano.png"));
+        textures.push_back(GlTexture("assets/textures/beachMountain.png"));
+        textures.push_back(GlTexture("assets/textures/ice.png"));
+        textures.push_back(GlTexture("assets/textures/tropic.png"));
+        textures.push_back(GlTexture("assets/textures/volcano.png"));
         planet.textureIndex = 0;
 
         light = {

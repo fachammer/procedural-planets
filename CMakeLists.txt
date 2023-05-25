@@ -7,7 +7,6 @@ if(CMAKE_BINARY_DIR STREQUAL CMAKE_SOURCE_DIR)
     message( FATAL_ERROR "Please select another Build Directory! (e.g. build/)" )
 endif()
 
-
 add_subdirectory(external)
 
 include_directories(
@@ -29,11 +28,6 @@ add_definitions(
 add_executable(ProceduralPlanets
 	src/ProceduralPlanets.cpp
 	src/GlResources.hpp
-	
-    shaders/TerrainGenerator.vertex.glsl
-    shaders/TerrainGenerator.fragment.glsl
-    shaders/AtmosphericScattering.vertex.glsl
-    shaders/AtmosphericScattering.fragment.glsl
 )
 
 target_link_libraries(ProceduralPlanets
@@ -45,3 +39,4 @@ target_link_libraries(ProceduralPlanets
 
 set_property(TARGET ProceduralPlanets PROPERTY CXX_STANDARD 14)
 target_compile_options(ProceduralPlanets PRIVATE "-Wall" "-Wextra" "-Wpedantic")
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/assets DESTINATION ${CMAKE_BINARY_DIR})
