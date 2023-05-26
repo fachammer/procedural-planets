@@ -125,9 +125,9 @@ static const unsigned int ICOSAHEDRON_INDICES[60] = {
     8, 6, 7,
     9, 8, 1};
 
-static int addSphereVertex(Mesh &mesh, glm::vec3 vertex, GLfloat radius)
+int addSphereVertex(Mesh &mesh, glm::vec3 vertex, GLfloat radius)
 {
-    glm::vec3 normalizedVertex = glm::normalize(vertex * radius);
+    glm::vec3 normalizedVertex = glm::normalize(vertex);
     mesh.indexed_vertices.push_back(normalizedVertex * radius);
     return mesh.indexed_vertices.size() - 1;
 }
