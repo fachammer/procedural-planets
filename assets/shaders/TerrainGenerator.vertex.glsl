@@ -86,12 +86,13 @@ float psrdnoise(vec3 x, vec3 period, float alpha, out vec3 gradient) {
     gradient = 39.5 * (dn0 + dn1 + dn2 + dn3);
     return 39.5 * n;
 }
+
 float map(float value, float inMin, float inMax, float outMin, float outMax) {
     return outMin + (outMax - outMin) * (value - inMin) / (inMax - inMin);
 }
 
 float noise(vec3 position, out vec3 gradient) {
-    return psdrnoise(position, 1, 1, gradient);
+    return psrdnoise(position + noiseOffset, vec3(100), 0, gradient);
 }
 
 float smax(float a, float b, float k, out float h) {
