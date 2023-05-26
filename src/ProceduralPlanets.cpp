@@ -335,7 +335,7 @@ void updatePlanetMovement(Scene &scene, float deltaTime)
 
 float random_in_unit_interval()
 {
-    return static_cast<float>(arc4random()) / static_cast<float>(RAND_MAX);
+    return static_cast<float>(random()) / static_cast<float>(RAND_MAX);
 }
 
 float random_in_range(float min, float max)
@@ -414,7 +414,7 @@ void update(GLFWwindow *window, Scene &scene)
         scene.animation.duration = 0.5;
         scene.animation.active = true;
 
-        scene.planet.textureIndex = arc4random() % scene.textures.size();
+        scene.planet.textureIndex = random() % scene.textures.size();
         scene.state.isPlanetGenerationBlocked = true;
     }
     else if (newNoiseOffset == GLFW_RELEASE)
