@@ -17,8 +17,4 @@ https://github.com/fachammer/procedural-celestial-bodies/assets/6183947/d17c1bc5
 - Arrow Keys: Move Camera
 - Space: Generate new planet and light direction
 
-## How to build
-
-```
-cmake -S . -B build
-```
+Use [CMake](https://cmake.org/) to build the source code
