@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <time.h>
+#include <random>
 
 #include <GL/glew.h>
 #include <glfw3.h>
@@ -332,14 +333,19 @@ void updatePlanetMovement(Scene &scene, float deltaTime)
     scene.planet.modelMatrix = glm::rotate(IDENTITY, scene.planet.angle, UP);
 }
 
-float random_in_unit_interval()
+std::random_device device;
+std::mt19937 generator(device());
+
+long random_int_in_range_inclusive(int min, int max)
 {
-    return static_cast<float>(random()) / static_cast<float>(RAND_MAX);
+    std::uniform_int_distribution<> dist(min, max);
+    return dist(generator);
 }
 
 float random_in_range(float min, float max)
 {
-    return min + random_in_unit_interval() * (max - min);
+    std::uniform_real_distribution<> dist(min, max);
+    return dist(generator);
 }
 
 void updateAnimation(Scene &scene, float deltaTime)
@@ -381,7 +387,7 @@ glm::vec3 orthogonal(const glm::vec3 vector)
 
 glm::vec3 random_orthogonal_direction(const glm::vec3 vector)
 {
-    float phi = random_in_range(0, 3.14);
+    float phi = random_in_range(0.0, 3.14);
     glm::vec3 normal = orthogonal(vector);
     glm::vec3 binormal = glm::cross(vector, normal);
     return glm::cos(phi) * normal + glm::sin(phi) * binormal;
@@ -406,14 +412,14 @@ void update(GLFWwindow *window, Scene &scene)
         glm::vec3 rotation_axis = random_orthogonal_direction(scene.light.direction);
 
         scene.animation.target = AnimationParameters{
-            .noiseOffset = scene.planet.noiseOffset + glm::vec3(0.5 * glm::sin(theta) * glm::cos(phi), 0.5 * glm::sin(theta) * glm::sin(phi), 0.5 * glm::cos(phi)),
+            .noiseOffset = scene.planet.noiseOffset + 0.5f * glm::vec3(glm::sin(theta) * glm::cos(phi), glm::sin(theta) * glm::sin(phi), glm::cos(phi)),
             .lightDirection = glm::rotate(IDENTITY, 1.0f, rotation_axis) * glm::vec4(scene.light.direction, 0),
         };
         scene.animation.progress = 0;
         scene.animation.duration = 0.5;
         scene.animation.active = true;
 
-        scene.planet.textureIndex = random() % scene.textures.size();
+        scene.planet.textureIndex = random_int_in_range_inclusive(0, scene.textures.size() - 1);
         scene.state.isPlanetGenerationBlocked = true;
     }
     else if (newNoiseOffset == GLFW_RELEASE)
