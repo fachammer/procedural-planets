@@ -527,7 +527,7 @@ int main(void)
         Glfw glfw;
         try
         {
-            GlfwWindow window(1024, 1024, "Procedural Celestial Bodies");
+            GlfwWindow window(1024, 1024, "Procedural Planets");
             try
             {
                 Glew glew;
