@@ -37,6 +37,5 @@ target_link_libraries(ProceduralPlanets
     SOIL
 )
 
-set_property(TARGET ProceduralPlanets PROPERTY CXX_STANDARD 14)
-target_compile_options(ProceduralPlanets PRIVATE "-Wall" "-Wextra" "-Wpedantic")
+set_property(TARGET ProceduralPlanets PROPERTY CXX_STANDARD 20)
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/assets DESTINATION ${CMAKE_BINARY_DIR})
