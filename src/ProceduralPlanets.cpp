@@ -270,13 +270,13 @@ struct Scene
 
         animation.active = false;
         animation.source = AnimationParameters{
-            .lightDirection = light.direction,
             .noiseOffset = planet.noiseOffset,
+            .lightDirection = light.direction,
         };
 
         animation.target = AnimationParameters{
-            .lightDirection = light.direction,
             .noiseOffset = planet.noiseOffset,
+            .lightDirection = light.direction,
         };
         animation.progress = 0;
 
