@@ -261,24 +261,23 @@ struct Scene
         textures.push_back(GlTexture("assets/textures/volcano.png"));
         planet.textureIndex = 0;
 
-        light = {
+        light = DirectionalLight{
             .direction = -UP,
             .color = glm::vec3(1, 1, 1),
             .power = 1.f,
         };
 
-        animation = Animation{
-            .active = false,
-            .progress = 0,
-            .source = AnimationParameters{
-                .lightDirection = light.direction,
-                .noiseOffset = planet.noiseOffset,
-            },
-            .target = AnimationParameters{
-                .lightDirection = light.direction,
-                .noiseOffset = planet.noiseOffset,
-            },
+        animation.active = false;
+        animation.source = AnimationParameters{
+            .lightDirection = light.direction,
+            .noiseOffset = planet.noiseOffset,
         };
+
+        animation.target = AnimationParameters{
+            .lightDirection = light.direction,
+            .noiseOffset = planet.noiseOffset,
+        };
+        animation.progress = 0;
 
         camera = Camera{
             .position = glm::vec3(0, 0, -250.0),
