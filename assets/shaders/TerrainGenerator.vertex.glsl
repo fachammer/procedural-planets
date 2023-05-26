@@ -102,8 +102,8 @@ float smax(float a, float b, float k, out float h) {
     return result;
 }
 
-float[] amplitudes = float[](1, 4, 4, 3, 1, 1, 0.5);
-float[] frequencies = float[](4 / 1000.0, 8 / 1000.0, 16 / 1000.0, 32 / 1000.0, 64 / 1000.0, 128 / 1000.0, 256 / 1000.0);
+float[] amplitudes = float[](0.5, 2, 4, 3, 1, 1, 0.5);
+float[] frequencies = float[](2 / 1000.0, 4 / 1000.0, 8 / 1000.0, 32 / 1000.0, 64 / 1000.0, 128 / 1000.0, 256 / 1000.0);
 float elevation(vec3 position, float minElevation, float maxElevation, out vec3 gradient) {
     float totalElevation = 0;
     gradient = vec3(0, 0, 0);
@@ -115,8 +115,8 @@ float elevation(vec3 position, float minElevation, float maxElevation, out vec3 
         totalAmplitude += amplitudes[i];
     }
 
-    gradient *= (maxElevation - minElevation) / (4 * totalAmplitude);
     float elevationValue = map(totalElevation, -totalAmplitude, totalAmplitude, minElevation, maxElevation);
+    gradient *= (maxElevation - minElevation) / (2 * totalAmplitude);
 
     float threshold = 0;
     float interpolationFactor;
@@ -125,21 +125,43 @@ float elevation(vec3 position, float minElevation, float maxElevation, out vec3 
     return elevationValue;
 }
 
+vec3 orthogonal(vec3 vector) {
+    if(vector.x != 0 || vector.y != 0) {
+        return vec3(-vector.y, vector.x, 0);
+    } else if(vector.z != 0 || vector.y != 0) {
+        return vec3(0, -vector.z, vector.y);
+    } else {
+        return vec3(-vector.z, 0, vector.x);
+    }
+}
+
+void orthogonals(vec3 vector, out vec3 u, out vec3 v) {
+    u = orthogonal(vector);
+    v = cross(vector, u);
+}
+
 vec3 normal(vec3 position, vec3 gradient, float elevation, out float slope) {
     vec3 unitPosition = normalize(position);
-    float radialGradientComponent = length(gradient);
-    slope = radialGradientComponent;
-    vec3 radialGradient = radialGradientComponent * unitPosition;
-    vec3 tangentialGradient = gradient - radialGradient;
-    vec3 unnormalizedNormal = position - elevation * tangentialGradient;
-    return normalize(unnormalizedNormal);
+    float radius = length(position);
+    vec3 u, v;
+    orthogonals(unitPosition, u, v);
+    mat3 jacobian;
+    jacobian[0] = (1 + elevation / radius) * vec3(1, 0, 0) + position.x / radius * (gradient - (elevation / (radius * radius)) * position);
+    jacobian[1] = (1 + elevation / radius) * vec3(0, 1, 0) + position.y / radius * (gradient - (elevation / (radius * radius)) * position);
+    jacobian[2] = (1 + elevation / radius) * vec3(0, 0, 1) + position.z / radius * (gradient - (elevation / (radius * radius)) * position);
+    vec3 u_tangent = normalize(u) * jacobian;
+    vec3 v_tangent = normalize(v) * jacobian;
+    vec3 normal = normalize(cross(u_tangent, v_tangent));
+    slope = length(gradient - dot(gradient, unitPosition) * unitPosition);
+
+    return normal;
 }
 
 vec3 displacedPosition(vec3 position, float minElevation, float maxElevation, out vec3 displacedNormal, out float slope) {
     vec3 gradient;
     float elevation = elevation(position, minElevation, maxElevation, gradient);
     vec3 newPosition = position * (1 + elevation / length(position));
-    displacedNormal = normal(position, gradient, (maxElevation - minElevation) / 2, slope);
+    displacedNormal = normal(position, gradient, elevation, slope);
     return newPosition;
 }
 
