@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.26)
 project(procedural-planets)
 
 find_package(OpenGL REQUIRED)
@@ -38,4 +38,9 @@ target_link_libraries(ProceduralPlanets
 )
 
 set_property(TARGET ProceduralPlanets PROPERTY CXX_STANDARD 20)
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/assets DESTINATION ${CMAKE_BINARY_DIR})
+
+add_custom_target(copy_assets
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/assets ${CMAKE_CURRENT_BINARY_DIR}/assets
+)
+add_dependencies(ProceduralPlanets copy_assets)
+
