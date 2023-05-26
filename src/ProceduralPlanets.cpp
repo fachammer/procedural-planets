@@ -20,7 +20,7 @@ struct Planet
 {
     float baseRadius = 90;
     float maxDepth = 30;
-    float maxHeight = 25;
+    float maxHeight = 20;
     float rotateSpeed = 0.03f;
     unsigned int sphereSubdivisions = 7;
     glm::vec3 noiseOffset = glm::vec3(0, 0, 0);

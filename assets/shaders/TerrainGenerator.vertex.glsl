@@ -3,6 +3,7 @@
 layout(location = 0) in vec3 vertexPositionInModelSpace;
 
 out vec3 positionInWorldSpace;
+out vec3 positionInModelSpace;
 out vec3 normalInCameraSpace;
 out vec3 lightDirectionInCameraSpace;
 out float vertexSlope;
@@ -167,7 +168,7 @@ vec3 displacedPosition(vec3 position, float minElevation, float maxElevation, ou
 
 void main() {
     vec3 normalInModelSpace;
-    vec3 positionInModelSpace = displacedPosition(vertexPositionInModelSpace, -maxNegativeHeight, maxPositiveHeight, normalInModelSpace, vertexSlope);
+    positionInModelSpace = displacedPosition(vertexPositionInModelSpace, -maxNegativeHeight, maxPositiveHeight, normalInModelSpace, vertexSlope);
 
     positionInWorldSpace = (modelMatrix * vec4(positionInModelSpace, 1)).xyz;
     lightDirectionInCameraSpace = (viewMatrix * vec4(-lightDirectionInWorldSpace, 0)).xyz;
