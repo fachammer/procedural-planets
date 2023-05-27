@@ -219,7 +219,6 @@ struct Scene
 {
     std::vector<GlMesh> meshes;
     std::vector<GlShaderProgram> shaderPrograms;
-    std::vector<GlTexture> textures;
 
     Camera camera;
     DirectionalLight light;
@@ -255,12 +254,6 @@ struct Scene
             loadShader(GL_FRAGMENT_SHADER, "assets/shaders/TerrainGenerator.fragment.glsl"));
         shaderPrograms.push_back(std::move(terrainGenerator));
         planet.shaderIndex = 1;
-
-        textures.push_back(GlTexture("assets/textures/beachMountain.png"));
-        textures.push_back(GlTexture("assets/textures/ice.png"));
-        textures.push_back(GlTexture("assets/textures/tropic.png"));
-        textures.push_back(GlTexture("assets/textures/volcano.png"));
-        planet.textureIndex = 0;
 
         light = DirectionalLight{
             .direction = -UP,
@@ -419,7 +412,6 @@ void update(GLFWwindow *window, Scene &scene)
         scene.animation.duration = 0.5;
         scene.animation.active = true;
 
-        scene.planet.textureIndex = random_int_in_range_inclusive(0, scene.textures.size() - 1);
         scene.state.isPlanetGenerationBlocked = true;
     }
     else if (newNoiseOffset == GLFW_RELEASE)
@@ -475,11 +467,6 @@ void renderPlanet(const Scene &scene)
 
     const GlShaderProgram &shaderProgram = scene.shaderPrograms[scene.planet.shaderIndex];
     glUseProgram(shaderProgram.id());
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, scene.textures[scene.planet.textureIndex].id());
-
-    glUniform1i(glGetUniformLocation(shaderProgram.id(), "heightSlopeBasedColorMap"), 0);
 
     glUniform3f(glGetUniformLocation(shaderProgram.id(), "lightDirectionInWorldSpace"), scene.light.direction.x, scene.light.direction.y, scene.light.direction.z);
     glUniform3f(glGetUniformLocation(shaderProgram.id(), "lightColor"), scene.light.color.r, scene.light.color.g, scene.light.color.b);

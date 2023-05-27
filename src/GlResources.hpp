@@ -4,7 +4,6 @@
 #include <string>
 #include <glm/glm.hpp>
 #include <GL/glew.h>
-#include <SOIL.h>
 #include <fstream>
 #include <iostream>
 
@@ -43,49 +42,6 @@ void _check_gl_error(const char *file, int line)
 }
 
 #define check_gl_error() _check_gl_error(__FILE__, __LINE__)
-
-class GlTexture
-{
-private:
-    GLuint textureId;
-
-public:
-    GlTexture(std::string path)
-    {
-        textureId = SOIL_load_OGL_texture(
-            path.c_str(),
-            SOIL_LOAD_AUTO,
-            SOIL_CREATE_NEW_ID,
-            SOIL_FLAG_POWER_OF_TWO | SOIL_FLAG_MIPMAPS);
-    }
-    GlTexture(const GlTexture &) = delete;
-    GlTexture &operator=(const GlTexture &) = delete;
-
-    GlTexture(GlTexture &&other) : textureId(other.textureId)
-    {
-        other.textureId = 0;
-    }
-
-    GlTexture &operator=(GlTexture &&other)
-    {
-        if (this != &other)
-        {
-            textureId = other.textureId;
-            other.textureId = 0;
-        }
-        return *this;
-    }
-
-    ~GlTexture()
-    {
-        glDeleteTextures(1, &textureId);
-    }
-
-    GLuint id() const
-    {
-        return textureId;
-    }
-};
 
 class GlVertexBuffer
 {

@@ -49,29 +49,3 @@ target_link_libraries(GLEW_190
 	${OPENGL_LIBRARY}
 	${EXTRA_LIBS}
 )
-
-### SOIL ###
-set(SOIL_SOURCE
-	Soil/src/image_DXT.c
-	Soil/src/image_helper.c
-	Soil/src/SOIL.c
-	Soil/src/stb_image_aug.c
-)
-
-set(SOIL_HEADERS
-	Soil/src/image_DXT.h
-	Soil/src/image_helper.h
-	Soil/src/SOIL.h
-	Soil/src/stb_image_aug.h
-	Soil/src/stbi_DDS_aug.h
-	Soil/src/stbi_DDS_aug_c.h
-	)
-	
-include_directories(
-	${CMAKE_SOURCE_DIR}/external/Soil/src/
-)
-
-add_library( SOIL STATIC
-	${SOIL_SOURCE}
-	${SOIL_HEADERS}
-)

@@ -1,6 +1,5 @@
 #version 330 core
 
-in vec3 positionInWorldSpace;
 in vec3 positionInModelSpace;
 in vec3 normalInCameraSpace;
 in vec3 lightDirectionInCameraSpace;
@@ -9,10 +8,8 @@ in float vertexSlope;
 out vec4 color;
 
 uniform vec3 lightColor;
-uniform sampler2D heightSlopeBasedColorMap;
 uniform float lightPower;
 uniform float baseRadius;
-uniform float maxNegativeHeight;
 uniform float maxPositiveHeight;
 uniform vec3 noiseOffset;
 
