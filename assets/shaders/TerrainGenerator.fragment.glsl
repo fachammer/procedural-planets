@@ -96,8 +96,7 @@ float map(float value, float inMin, float inMax, float outMin, float outMax) {
 vec3 calculateLight(float power, vec3 color, vec3 lightDirectionInCameraSpace) {
     vec3 n = normalize(normalInCameraSpace);
     vec3 l = normalize(lightDirectionInCameraSpace);
-    float ndotL = dot(n, l);
-    return power * ndotL * color;
+    return power * dot(n, l) * color;
 }
 
 vec4 diffuseColor() {

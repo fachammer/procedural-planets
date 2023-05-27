@@ -231,7 +231,7 @@ struct Scene
     Scene()
     {
         atmosphere.innerRadius = planet.baseRadius;
-        atmosphere.outerRadius = planet.baseRadius + 10;
+        atmosphere.outerRadius = planet.baseRadius + 6;
         atmosphere.modelMatrix = IDENTITY;
         planet.modelMatrix = IDENTITY;
 
