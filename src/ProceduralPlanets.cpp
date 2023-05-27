@@ -18,9 +18,9 @@ const glm::mat4 IDENTITY(1.0f);
 
 struct Planet
 {
-    float baseRadius = 90;
-    float maxDepth = 30;
-    float maxHeight = 20;
+    float baseRadius = 100;
+    float maxDepth = 20;
+    float maxHeight = 15;
     float rotateSpeed = 0.03f;
     unsigned int sphereSubdivisions = 7;
     glm::vec3 noiseOffset = glm::vec3(0, 0, 0);
@@ -232,7 +232,7 @@ struct Scene
     Scene()
     {
         atmosphere.innerRadius = planet.baseRadius;
-        atmosphere.outerRadius = planet.baseRadius + 5;
+        atmosphere.outerRadius = planet.baseRadius + 10;
         atmosphere.modelMatrix = IDENTITY;
         planet.modelMatrix = IDENTITY;
 

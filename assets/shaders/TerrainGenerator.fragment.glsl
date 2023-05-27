@@ -99,47 +99,41 @@ float map(float value, float inMin, float inMax, float outMin, float outMax) {
 vec3 calculateLight(float power, vec3 color, vec3 lightDirectionInCameraSpace) {
     vec3 n = normalize(normalInCameraSpace);
     vec3 l = normalize(lightDirectionInCameraSpace);
-    float ndotL = clamp(dot(n, l), 0, 1);
-
+    float ndotL = dot(n, l);
     return power * ndotL * color;
 }
 
 vec4 diffuseColor() {
     float height = length(positionInModelSpace);
-    float heightCoordinate = clamp(map(height, baseRadius, baseRadius + maxPositiveHeight - 10, 0, 1), 0, 1);
-    float slopeCoordinate = clamp(map(log(vertexSlope + 1), 0, log(3.0), 0, 1), 0, 1);
-    if(heightCoordinate <= 0.05 && slopeCoordinate <= 0.1) {
-        vec3 baseColor = vec3(0.20, 0.227, 0.259);
-        vec3 gradient;
-        return vec4(baseColor + 0.1 * noise(0.015 * positionInModelSpace, gradient), 1);
-    } else if(heightCoordinate <= 0.1 && slopeCoordinate <= 0.1) {
-        vec3 baseColor = vec3(0.184, 0.239, 0.29);
-        vec3 gradient;
-        return vec4(baseColor + 0.1 * noise(0.015 * positionInModelSpace, gradient), 1);
-    } else if(heightCoordinate <= 0.1 && slopeCoordinate <= 0.2) {
-        vec3 baseColor = vec3(1.0f, 0.94f, 0.49f);
-        vec3 gradient;
-        return vec4(baseColor + 0.25 * noise(4 * positionInModelSpace, gradient), 1);
-    } else if(heightCoordinate > 0.6 && slopeCoordinate < 0.3) {
-        vec3 baseColor = vec3(1, 1, 1);
-        vec3 gradient;
-        return vec4(baseColor + 0.1 * noise(0.1 * positionInModelSpace, gradient), 1);
-    } else {
-        vec3 baseColor = vec3(mix(0.3, 0.6, slopeCoordinate));
-        vec3 gradient;
-        return vec4(baseColor + 0.1 * noise(0.2 * positionInModelSpace, gradient), 1);
+    vec3 gradient;
+    float heightCoordinate = clamp(map(height, baseRadius, baseRadius + maxPositiveHeight - 10, 0, 1), 0, 1) + 0.05 * noise(positionInModelSpace, gradient);
+    if(heightCoordinate <= 0.05 && vertexSlope <= 0.1) {
+        vec3 baseColor = vec3(0.2f, 0.41f, 0.64f);
+        return vec4(baseColor, 1);
+    } else if(heightCoordinate <= 0.05 && vertexSlope <= 0.2) {
+        vec3 baseColor = vec3(0.26f, 0.54f, 0.84f);
+        return vec4(baseColor, 1);
+    } else if(heightCoordinate <= 0.3 && vertexSlope <= 0.3) {
+        vec3 baseColor = vec3(1.0f, 0.86f, 0.34f);
+        return vec4(baseColor, 1);
+    } else if(heightCoordinate <= 0.45 && vertexSlope <= 0.45) {
+        vec3 baseColor = vec3(0.87f, 0.76f, 0.15f);
+        return vec4(baseColor, 1);
+    } else if(heightCoordinate > 0.6 && vertexSlope <= .5) {
+        vec3 baseColor = vec3(0.93f);
+        return vec4(baseColor, 1);
+    } else if(heightCoordinate > 0.7) {
+        vec3 baseColor = vec3(0.96f, 0.99f, 1.0f);
+        return vec4(baseColor, 1);
+    } else if(heightCoordinate > 0.6) {
+        vec3 baseColor = vec3(0.52f);
+        return vec4(baseColor, 1);
     }
 }
 
 void main() {
-    float heightCoordinate = clamp(map(length(positionInWorldSpace), baseRadius, baseRadius + maxPositiveHeight - 10, 0, 1), 0, 1);
-    float slopeCoordinate = clamp(map(log(vertexSlope + 1), 0, log(3.0), 0, 1), 0, 1);
-
-    vec2 textureCoordinates = vec2(heightCoordinate, slopeCoordinate);
-    vec4 materialDiffuseColor = texture(heightSlopeBasedColorMap, textureCoordinates);
+    vec4 materialDiffuseColor = diffuseColor();
     vec4 materialAmbientColor = 0.03 * materialDiffuseColor;
-
     vec3 diffuseLight = calculateLight(lightPower, lightColor, lightDirectionInCameraSpace);
-
     color = materialAmbientColor + materialDiffuseColor * vec4(diffuseLight, 1);
 }

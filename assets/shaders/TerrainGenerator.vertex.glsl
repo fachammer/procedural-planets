@@ -93,7 +93,7 @@ float map(float value, float inMin, float inMax, float outMin, float outMax) {
 }
 
 float noise(vec3 position, out vec3 gradient) {
-    return psrdnoise(position + noiseOffset, vec3(100), 0, gradient);
+    return psrdnoise(position + noiseOffset, vec3(200), 1, gradient);
 }
 
 float smax(float a, float b, float k, out float h) {
@@ -103,8 +103,8 @@ float smax(float a, float b, float k, out float h) {
     return result;
 }
 
-float[] amplitudes = float[](0.5, 2, 4, 3, 1, 1, 0.5);
-float[] frequencies = float[](2 / 1000.0, 4 / 1000.0, 8 / 1000.0, 32 / 1000.0, 64 / 1000.0, 128 / 1000.0, 256 / 1000.0);
+float[] amplitudes = float[](2, 2, 4, 3, 1, 1, 0.5, 0.2, 0.05, 0.01);
+float[] frequencies = float[](4 / 1000.0, 8 / 1000.0, 16 / 1000.0, 32 / 1000.0, 64 / 1000.0, 128 / 1000.0, 256 / 1000.0, 512 / 1000.0, 1024 / 1000.0, 2048 / 1000.0);
 float elevation(vec3 position, float minElevation, float maxElevation, out vec3 gradient) {
     float totalElevation = 0;
     gradient = vec3(0, 0, 0);
@@ -153,8 +153,7 @@ vec3 normal(vec3 position, vec3 gradient, float elevation, out float slope) {
     vec3 u_tangent = normalize(u) * jacobian;
     vec3 v_tangent = normalize(v) * jacobian;
     vec3 normal = normalize(cross(u_tangent, v_tangent));
-    slope = length(gradient - dot(gradient, unitPosition) * unitPosition);
-
+    slope = length(gradient);
     return normal;
 }
 
