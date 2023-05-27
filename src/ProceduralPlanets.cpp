@@ -194,7 +194,6 @@ Mesh generateSphere(GLfloat radius, int subdivisions)
 struct AnimationParameters
 {
     glm::vec3 noiseOffset;
-    glm::vec3 lightDirection;
 };
 
 struct Animation
@@ -210,7 +209,6 @@ struct Animation
         const float parameter = glm::sineEaseInOut(glm::clamp(progress, 0.0f, 1.0f));
         return AnimationParameters{
             .noiseOffset = parameter * target.noiseOffset + (1 - parameter) * source.noiseOffset,
-            .lightDirection = parameter * target.lightDirection + (1 - parameter) * source.lightDirection,
         };
     }
 };
@@ -222,6 +220,7 @@ struct Scene
 
     Camera camera;
     DirectionalLight light;
+    float lightRotationSpeed = 0.2f;
 
     State state;
     Planet planet;
@@ -256,7 +255,7 @@ struct Scene
         planet.shaderIndex = 1;
 
         light = DirectionalLight{
-            .direction = -UP,
+            .direction = glm::vec3(0, 0, 1),
             .color = glm::vec3(1, 1, 1),
             .power = 1.f,
         };
@@ -264,12 +263,10 @@ struct Scene
         animation.active = false;
         animation.source = AnimationParameters{
             .noiseOffset = planet.noiseOffset,
-            .lightDirection = light.direction,
         };
 
         animation.target = AnimationParameters{
             .noiseOffset = planet.noiseOffset,
-            .lightDirection = light.direction,
         };
         animation.progress = 0;
 
@@ -326,6 +323,11 @@ void updatePlanetMovement(Scene &scene, float deltaTime)
     scene.planet.modelMatrix = glm::rotate(IDENTITY, scene.planet.angle, UP);
 }
 
+void updateLight(Scene &scene, float deltaTime)
+{
+    scene.light.direction = glm::rotate(IDENTITY, scene.lightRotationSpeed * deltaTime, glm::vec3(1, 1, 0)) * glm::vec4(scene.light.direction, 0);
+}
+
 std::random_device device;
 std::mt19937 generator(device());
 
@@ -355,7 +357,6 @@ void updateAnimation(Scene &scene, float deltaTime)
     }
     const AnimationParameters parameters = scene.animation.current();
     scene.planet.noiseOffset = parameters.noiseOffset;
-    scene.light.direction = parameters.lightDirection;
 }
 
 glm::vec3 orthogonal(const glm::vec3 vector)
@@ -398,7 +399,6 @@ void update(GLFWwindow *window, Scene &scene)
     {
         scene.animation.source = AnimationParameters{
             .noiseOffset = scene.planet.noiseOffset,
-            .lightDirection = scene.light.direction,
         };
         float phi = random_in_range(0, 3.14);
         float theta = random_in_range(-1.57, 1.57);
@@ -406,7 +406,6 @@ void update(GLFWwindow *window, Scene &scene)
 
         scene.animation.target = AnimationParameters{
             .noiseOffset = scene.planet.noiseOffset + 0.5f * glm::vec3(glm::sin(theta) * glm::cos(phi), glm::sin(theta) * glm::sin(phi), glm::cos(phi)),
-            .lightDirection = glm::rotate(IDENTITY, 1.0f, rotation_axis) * glm::vec4(scene.light.direction, 0),
         };
         scene.animation.progress = 0;
         scene.animation.duration = 0.5;
@@ -420,6 +419,7 @@ void update(GLFWwindow *window, Scene &scene)
     }
 
     updatePlanetMovement(scene, deltaTime);
+    updateLight(scene, deltaTime);
     updateAnimation(scene, deltaTime);
 
     scene.state.lastTime = currentTime;
