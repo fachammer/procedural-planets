@@ -6,11 +6,9 @@ Procedural generation of planets with atmospheric scattering in OpenGL
 
 https://github.com/fachammer/procedural-celestial-bodies/assets/6183947/d17c1bc5-0b76-49e5-a019-5cf57f89486f
 
-<img width="205" alt="procedural-planets-2" src="https://github.com/fachammer/procedural-celestial-bodies/assets/6183947/23df4e7c-fbba-4be2-a07d-a40cd60e4114">
-
-<img width="205" alt="procedural-planets-4" src="https://github.com/fachammer/procedural-celestial-bodies/assets/6183947/0bb71092-1063-4b86-82f7-ce71fd627c14">
-
-<img width="205" alt="procedural-planets-3" src="https://github.com/fachammer/procedural-celestial-bodies/assets/6183947/a8d81533-f5f9-4488-92ad-0fabaf210be5">
+<img width="333" alt="Bildschirmfoto 2023-05-31 um 07 28 14" src="https://github.com/fachammer/procedural-planets/assets/6183947/e01f0567-dd16-4835-b1c0-dd2806f7646f">
+<img width="333" alt="Bildschirmfoto 2023-05-31 um 07 27 32" src="https://github.com/fachammer/procedural-planets/assets/6183947/a7c78f60-a3af-490a-81e7-006b3c0bbdb3">
+<img width="333" alt="Bildschirmfoto 2023-05-31 um 07 27 24" src="https://github.com/fachammer/procedural-planets/assets/6183947/7735e8d2-c4bf-492c-b224-bf12f3d699d4">
 
 ## Controls
 
