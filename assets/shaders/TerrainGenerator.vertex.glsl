@@ -103,8 +103,8 @@ float smax(float a, float b, float k, out float h) {
     return result;
 }
 
-float[] amplitudes = float[](2, 2, 4, 3, 1, 1, 0.5, 0.2, 0.05, 0.01);
-float[] frequencies = float[](4 / 1000.0, 8 / 1000.0, 16 / 1000.0, 32 / 1000.0, 64 / 1000.0, 128 / 1000.0, 256 / 1000.0, 512 / 1000.0, 1024 / 1000.0, 2048 / 1000.0);
+float[] amplitudes = float[](2, 2, 4, 3, 1, 1, 0.5, 0.2, 0.05, 0.02, 0.02);
+float[] frequencies = float[](4 / 1000.0, 8 / 1000.0, 16 / 1000.0, 32 / 1000.0, 64 / 1000.0, 128 / 1000.0, 256 / 1000.0, 512 / 1000.0, 1024 / 1000.0, 2048 / 1000.0, 4096 / 1000.0);
 float elevation(vec3 position, float minElevation, float maxElevation, out vec3 gradient) {
     float totalElevation = 0;
     gradient = vec3(0, 0, 0);
